@@ -1,0 +1,16 @@
+README
+setup.py
+lib/pyHCA/__init__.py
+lib/pyHCA/_testhca.py
+lib/pyHCA/annotateHCA.py
+lib/pyHCA/classHCA.py
+lib/pyHCA/drawHCA.py
+lib/pyHCA/ioHCA.py
+lib/pyHCA/searchHCA.py
+lib/pyHCA/seq_util.py
+lib/pyHCA/utilities.py
+pyHCA.egg-info/PKG-INFO
+pyHCA.egg-info/SOURCES.txt
+pyHCA.egg-info/dependency_links.txt
+pyHCA.egg-info/top_level.txt
+scripts/hca_annotation

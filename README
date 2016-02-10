@@ -1,0 +1,14 @@
+pyHCA is a python library for the Hydrocluster Cluster Analysis of protein sequences.
+
+The package includes the following modules:
+
+
+- drawing module: (I: one sequence or several sequences, O: one or several svg as string)
+- annotation module: (I: one sequence, O: a list of position)
+	* domain creation: w or w/o taking into account previous annotation
+	* hydrophobic clusters
+- search: (I: one sequence, O: proteins with the searched domains)
+
+
+
+
