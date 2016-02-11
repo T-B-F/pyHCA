@@ -13,8 +13,10 @@ __institute__ = "Institute for Evolution and Biodiversity, Muenster Germany"
 
 # problem of the SeqIO module: not memory efficient
 
-__all__ = ["itercodon", "six_frames"]
+__all__ = ["itercodon", "six_frames", "transform_seq"]
 
+def transform_seq(seq):
+    return seq.replace("*", "").replace("-", "").replace("?", "").replace("!","")
 
 def itercodon(seq, frame, offset, table, reverse=False):
     stop = 0

@@ -1,14 +1,54 @@
-pyHCA is a python library for the Hydrocluster Cluster Analysis of protein sequences.
+pyHCA and hcatk (HCA toolkit) are a python library and executable for the Hydrophobic Cluster Analysis of protein sequences.
+pyHCA implements various class and function for handling sequences and analyses them
+hcatk provides off the hands set of program to perform hydrophobic cluster analyses.
 
-The package includes the following modules:
+Requires
+========
+- Biopython >= 1.65
+- python3   >= 3.4
 
+Installation
+============
+pip3 install .
 
-- drawing module: (I: one sequence or several sequences, O: one or several svg as string)
-- annotation module: (I: one sequence, O: a list of position)
-	* domain creation: w or w/o taking into account previous annotation
-	* hydrophobic clusters
-- search: (I: one sequence, O: proteins with the searched domains)
+Usage
+=====
 
+annotate
+--------
 
+$ hcatk annotate -h
+
+usage: hcatk annotate [-h] -i INPUTF -o OUTPUTF [-v]
+                      [-m {cluster1,cluster2,domain}]
+                      [-t {aminoacid,nucleotide}]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -i INPUTF             an amino-acid sequence files in fasta format
+  -o OUTPUTF            the output file with annotation
+  -v                    keep temporary results
+  -m {cluster1,cluster2,domain}
+                        method to use, cluster: will report *the hydrophobic
+                        clusters found in the sequence, domain: will delineate
+                        domains based on the hydrophobic cluster profile of
+                        the sequence
+  -t {aminoacid,nucleotide}
+                        the type of the biological sequences passed in the
+                        input file
+
+draw
+----
+
+$ hcatk draw -h
+
+usage: hcatk draw [-h] -i FASTAFILE [-d DOMAIN] [-f {pfam,seghca}] -o SVGFILE
+
+optional arguments:
+  -h, --help        show this help message and exit
+  -i FASTAFILE      the fasta file
+  -d DOMAIN         the domain file
+  -f {pfam,seghca}  the domain file format
+  -o SVGFILE        the svg file
 
 

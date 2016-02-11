@@ -978,7 +978,7 @@ def _annotation(dseq, seq_type="aminoacid", t=0.1, method="domain", verbose=Fals
 def _process_params():
     """ Process parameters when the script annotateHCA is directly called
     """
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(prog="{} {}".format(os.path.basename(sys.argv[0]), "annotate"))
     parser.add_argument("-i", action="store", dest="inputf", required=True,
         help="an amino-acid sequence files in fasta format")
     parser.add_argument("-o", action="store", dest="outputf", required=True,

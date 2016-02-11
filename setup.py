@@ -22,7 +22,7 @@ PACKAGE_DIR = {}
 for pkg in PACKAGES:
     PACKAGE_DIR[pkg] = join('lib', *pkg.split('.'))
 
-SCRIPTS = ['scripts/hca_annotation']
+SCRIPTS = ['scripts/hcatk']
 
 if (platform.system() == 'Windows' or 
     len(sys.argv) > 1 and sys.argv[1] not in ('build', 'install')):

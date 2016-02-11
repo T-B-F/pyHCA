@@ -13,4 +13,5 @@ pyHCA.egg-info/PKG-INFO
 pyHCA.egg-info/SOURCES.txt
 pyHCA.egg-info/dependency_links.txt
 pyHCA.egg-info/top_level.txt
+scripts/drawhca
 scripts/hca_annotation

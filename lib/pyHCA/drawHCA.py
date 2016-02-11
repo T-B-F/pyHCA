@@ -7,7 +7,7 @@ from __future__ import print_function
 import os, sys, argparse, string
 import Bio.SeqIO
 import Bio
-from seq_util import transform_seq
+from pyHCA.seq_util import transform_seq
 
 __author__ = "Tristan Bitard-Feildel"
 __licence__= "MIT"
@@ -1011,18 +1011,19 @@ def drawing(dfasta, annotation, pathout):
 def get_params():
     """ get command line ArgumentParser
     """
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-i", action="store", dest="fastafile", help="the fasta file")
+    parser = argparse.ArgumentParser(prog="{} {}".format(os.path.basename(sys.argv[0]), "draw"))
+    parser.add_argument("-i", action="store", dest="fastafile", help="the fasta file", required=True)
     parser.add_argument("-d", action="store", dest="domain", help="the domain file")
     parser.add_argument("-f", action="store", dest="domformat", help="the domain file format", choices=["pfam", "seghca"])
-    parser.add_argument("-o", action="store", dest="svgfile", help="the svg file")
+    parser.add_argument("-o", action="store", dest="svgfile", help="the svg file", required=True)
     params = parser.parse_args()
     return params
 
 def main():
     # params 
     params = get_params()
-    from ioHCA import read_multifasta
+    
+    from pyHCA.ioHCA import read_multifasta
 
     # read fasta file
     dfasta = read_multifasta(params.fastafile)
