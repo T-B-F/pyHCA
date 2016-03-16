@@ -20,7 +20,7 @@ annotate
 $ hcatk annotate -h
 
 usage: hcatk annotate [-h] -i INPUTF -o OUTPUTF [-v]
-                      [-m {cluster1,cluster2,domain}]
+                      [-m {cluster,domain}]
                       [-t {aminoacid,nucleotide}]
 
 optional arguments:
