@@ -837,7 +837,7 @@ def _annotation_aminoacids(seq, t=0.1, method="domain", verbose=False):
     annotat : list
         the annotation results
     """
-    annotat = []
+    annotat = {"cluster": [], "domain": []}
     # obsolete identify low complexity segment by SEG algorithm
     low_complexity = []#getSEGLW(fseq)
     seqori = seq[:]
@@ -866,15 +866,16 @@ def _annotation_aminoacids(seq, t=0.1, method="domain", verbose=False):
         domains = _findAccurateLimit(limit_domain, list_of_group, 
                                              keepCluster, seqamas, 
                                              final_only=True)
-        annotat = list_amas + domains
+        annotat["cluster"] = list_amas 
+        annotat["domain"] = domains
     
     elif method=="cluster1":
         seqtrans = seqtrans2.replace("P", "0")#_removeProline(seqtrans2)
         list_amas, seqamas = _getAmas(seqtrans)
-        annotat = list_amas[:]
+        annotat["cluster"] = list_amas[:]
     else:
         list_amas, seqamas = _getAmas(seqtrans2)
-        annotat = list_amas[:]
+        annotat["cluster"] = list_amas[:]
     return annotat
 
 
@@ -912,8 +913,10 @@ def _annotation(dseq, seq_type="aminoacid", t=0.1, method="domain", verbose=Fals
                     annotations = _annotation_aminoacids(sequence, t=t, method=method, 
                                                         verbose=verbose)
                     outf.write(">{} {}\n".format(prot, len(sequence)))
-                    for annotation in annotations:
-                        outf.write("{}\n".format(str(annotation)))
+                    for domannot in annotations["domain"]:
+                        outf.write("{}\n".format(str(domannot)))
+                    for clustannot in annotations["cluster"]:
+                        outf.write("{}\n".format(str(clustannot)))
             else:
                 cnt, nb_dot = 0, 0
                 for name in dseq:
@@ -932,15 +935,19 @@ def _annotation(dseq, seq_type="aminoacid", t=0.1, method="domain", verbose=Fals
                         else:
                             new_name = "{}_3'5'_Frame_{}_start_{}".format(name, frame+1, start+1)
                         
-                        annotations = []
-                        for dom in _annotation_aminoacids(protseq, t=t, method=method, verbose=verbose):
-                            #dom.add_offset(start)
-                            annotations.append(dom)
+                        annotations = {"cluster": [], "domain": []}
+                        cur_annotation = _annotation_aminoacids(protseq, t=t, method=method, verbose=verbose)
+                        for domannot in cur_annotation["domain"]:
+                            annotations["domain"].append(domannot)
+                        for clustannot in cur_annotation["cluster"]:
+                            annotations["cluster"].append(clustannot)
                             
                         if annotations:
                             outf.write(">{} {}\n".format(new_name, len(protseq)))
-                            for annotation in annotations:
-                                outf.write("{}\n".format(str(annotation)))
+                            for domannot in annotations["domain"]:
+                                outf.write("{}\n".format(str(domannot)))
+                            for clustannot in annotations["cluster"]:
+                                outf.write("{}\n".format(str(clustannot)))
                 sys.stdout.write("\n")
 
     else:
@@ -967,18 +974,22 @@ def _annotation(dseq, seq_type="aminoacid", t=0.1, method="domain", verbose=Fals
                         new_name = "{}_5'3'_Frame_{}".format(name, frame+1)
                     else:
                         new_name = "{}_3'5'_Frame_{}".format(name, frame+1)
-                    
-                    annotation = [dom.add_offset(start) 
-                                for dom in _annotation_aminoacids(protseq, t=t, 
-                                                    method=method, verbose=verbose)]
-                    danno.setdefault(new_name, []).extend(annotation)
+                    if new_name not in dannot:
+                        danno[new_name] = {"cluster": [], "domain": []}
+                    cur_annotation = _annotation_aminoacids(protseq, t=t, method=method, verbose=verbose) 
+                    for domannot in cur_annotation["domain"]:
+                        domannot.add_offset(start)
+                        danno[new_name]["domain"].append(domannot)
+                    for clustannot in cur_annotation["cluster"]:
+                        clustannot.add_offset(start) 
+                        danno[new_name]["cluster"].append(clustannot)
                     
         return danno
 
 def _process_params():
     """ Process parameters when the script annotateHCA is directly called
     """
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(prog="{} {}".format(os.path.basename(sys.argv[0]), "annotate"))
     parser.add_argument("-i", action="store", dest="inputf", required=True,
         help="an amino-acid sequence files in fasta format")
     parser.add_argument("-o", action="store", dest="outputf", required=True,

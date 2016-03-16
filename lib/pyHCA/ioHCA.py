@@ -56,7 +56,9 @@ def write_annotHCA(output, dannotate, sizes, verbose=False):
     with open(output, "w") as outf:
         for prot in dannotate:
             outf.write(">{} {}\n".format(prot, sizes[prot]))
-            for annotation in dannotate[prot]:
+            for annotation in dannotate[prot]["domain"]:
+                outf.write("{}\n".format(str(annotation)))
+            for annotation in dannotate[prot]["cluster"]:
                 outf.write("{}\n".format(str(annotation)))
 
         
