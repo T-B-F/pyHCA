@@ -869,7 +869,7 @@ def _annotation_aminoacids(seq, t=0.1, method="domain", verbose=False):
         annotat["cluster"] = list_amas 
         annotat["domain"] = domains
     
-    elif method=="cluster1":
+    elif method=="cluster_removeP":
         seqtrans = seqtrans2.replace("P", "0")#_removeProline(seqtrans2)
         list_amas, seqamas = _getAmas(seqtrans)
         annotat["cluster"] = list_amas[:]
@@ -997,7 +997,7 @@ def _process_params():
     parser.add_argument("-v", action="store_true", dest="verbose", default=False,
         help="keep temporary results")
     parser.add_argument("-m", action="store", dest="method", default="cluster1", 
-        choices=["cluster1","cluster2","domain"], help=("method to use, cluster: will "
+        choices=["cluster","domain"], help=("method to use, cluster: will "
         "report *the hydrophobic clusters found in the sequence, domain: will "
         "delineate domains based on the hydrophobic cluster profile of the "
         "sequence"))
