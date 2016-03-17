@@ -62,3 +62,79 @@ def write_annotHCA(output, dannotate, sizes, verbose=False):
                 outf.write("{}\n".format(str(annotation)))
 
         
+def read_annotation(inputfile, formatf):
+    """ read domain annotation from pfam or HCA domain file
+
+    Parameters
+    ----------
+    inputfile: string
+        path to the annotation
+    formatf: string
+        file format either pfam or seghca
+
+    Return
+    ------
+    annotaton: dict
+        the domain annotation
+    """
+    annotation = dict()
+    if formatf == "seghca":
+        annotation = read_hcadomain(inputfile)
+    elif formatf == "pfam":
+        annotation = read_pfamdomain(inputfile)
+    else:
+        print("Error, no function defined to read domains in format {}".format(formatf), file=sys.stderr)
+        sys.exit(1)
+    return annotation
+
+def read_hcadomain(inputfile):
+    """ read hca domain
+
+    Parameters    
+    ---------- 
+    inputfile: string
+        path to the annotation
+
+    Return
+    ------
+    annotaton: dict
+        the domain annotation
+    """
+    annotation = dict()
+    with open(inputfile) as inf:
+        for line in inf:
+            if line[0] == ">":
+                prot, size = line[1:-1].split()
+                annotation[prot] = []
+            else:
+                tmp = line.split()
+                if tmp[0] == "domain":
+                    start, stop = int(tmp[1])-1, int(tmp[2])
+                    annotation[prot].append((start, stop, tmp[0], "!", None))
+    return annotation
+
+def read_pfamdomain(inputfile):
+    """ read pfam domain
+
+    Parameters 
+    ---------- 
+    inputfile: string
+        path to the annotation
+
+    Return   
+    ------ 
+    annotaton: dict 
+        the domain annotation
+    """  
+    annotation = dict()
+    with open(inputfile) as inf:
+        for line in inf: 
+            if line[0] == "#" or line[0] == "\n":
+                continue
+            tmp = line.split()
+            prot = tmp[0]
+            name = tmp[1]
+            start, stop = int(tmp[2]), int(tmp[3])
+            status = "!"
+            annotation.setdefault(prot, []).append((start, stop, name, status, None))
+    return annotation      

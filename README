@@ -17,18 +17,22 @@ Usage
 annotate
 --------
 
+Use the composition in hydrophobic cluster of a sequence to detect domains.
+
 $ hcatk annotate -h
 
 usage: hcatk annotate [-h] -i INPUTF -o OUTPUTF [-v]
-                      [-m {cluster1,cluster2,domain}]
+                      [-m {cluster,domain}]
                       [-t {aminoacid,nucleotide}]
 
-optional arguments:
+Arguments:
+~~~~~~~~~
+
   -h, --help            show this help message and exit
   -i INPUTF             an amino-acid sequence files in fasta format
   -o OUTPUTF            the output file with annotation
   -v                    keep temporary results
-  -m {cluster1,cluster2,domain}
+  -m {cluster,domain}
                         method to use, cluster: will report *the hydrophobic
                         clusters found in the sequence, domain: will delineate
                         domains based on the hydrophobic cluster profile of
@@ -40,15 +44,24 @@ optional arguments:
 draw
 ----
 
+Draw the HCA diagram of a sequence.
+Optionnaly, can display the domain annotation of a sequence if provied.
+
 $ hcatk draw -h
 
 usage: hcatk draw [-h] -i FASTAFILE [-d DOMAIN] [-f {pfam,seghca}] -o SVGFILE
 
-optional arguments:
+Arguments:
+~~~~~~~~~
+
   -h, --help        show this help message and exit
+
+required arguments:
   -i FASTAFILE      the fasta file
+  -o SVGFILE        the svg file
+
+optional arguments:
   -d DOMAIN         the domain file
   -f {pfam,seghca}  the domain file format
-  -o SVGFILE        the svg file
 
 

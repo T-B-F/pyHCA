@@ -3,11 +3,11 @@
 sequences (with or without domain annotation
 """
 
-from __future__ import print_function
 import os, sys, argparse, string
 import Bio.SeqIO
 import Bio
 from pyHCA.seq_util import transform_seq
+from pyHCA.ioHCA import read_annotation
 
 __author__ = "Tristan Bitard-Feildel"
 __licence__= "MIT"
@@ -1013,7 +1013,7 @@ def get_params():
     """
     parser = argparse.ArgumentParser(prog="{} {}".format(os.path.basename(sys.argv[0]), "draw"))
     parser.add_argument("-i", action="store", dest="fastafile", help="the fasta file", required=True)
-    parser.add_argument("-d", action="store", dest="domain", help="the domain file")
+    parser.add_argument("-d", action="store", dest="domain", help="[optionnal] provide domain annoation")
     parser.add_argument("-f", action="store", dest="domformat", help="the domain file format", choices=["pfam", "seghca"])
     parser.add_argument("-o", action="store", dest="svgfile", help="the svg file", required=True)
     params = parser.parse_args()
