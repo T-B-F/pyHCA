@@ -930,7 +930,7 @@ def getSeqFromGi(gi):
     os.close(temp_fd)
     return temp_filename
 
-def createHCAsvg(prot, seq, prev_seq, nbaa, domains, b, yoffset=0):
+def createHCAsvg(seq, nbaa, domains, b, yoffset=0):
     """
     brief draw the svg of hca
     param seq is the sequence with 4 spaces at both begining and end
@@ -939,7 +939,7 @@ def createHCAsvg(prot, seq, prev_seq, nbaa, domains, b, yoffset=0):
     param b is the position to begin (for the ruler)
     """
     hydrophobe  = "YIMLFVW"
-    
+    seq = "    "+seq+"    "
     # n case with 6 sides in booleans
     seqside = getsideborder(seq, hydrophobe, nbaa)
     
@@ -954,10 +954,9 @@ def createHCAsvg(prot, seq, prev_seq, nbaa, domains, b, yoffset=0):
     #plt.savefig(pathfig)
     #plt.close()
     # draw the svg
-    namesvg = draw_protnames(prot, yoffset=yoffset)
-    hcasvg = dosvg(seq, coord, seqside, hydrophobe, nbaa, b, yoffset=yoffset)
-    domsvg = drawDomains(domains, coord, yoffset)
-    svg = namesvg + hcasvg + domsvg # + omegasvg
+    svg = dosvg(seq, coord, seqside, hydrophobe, nbaa, b, yoffset=yoffset)
+    if domains:
+        svg += drawDomains(domains, coord, yoffset)
     return svg
     
 def drawHCA(prot, seq, nbaa, domains, output, b, yoffset=0):
@@ -968,14 +967,14 @@ def drawHCA(prot, seq, nbaa, domains, output, b, yoffset=0):
     param output is the address of output file
     param b is the position to begin (for the ruler)
     """
-    seq = "    "+seq+"    "
     svgheader = getSVGheader(nbaa)
-    svg = createHCAsvg(prot, seq, "", nbaa, domains, output, b, yoffset=yoffset)
-    fout = open(output, "w")
-    fout.write(svgheader)
-    fout.write(svg)
-    fout.write("</svg>")
-    fout.close()    
+    namesvg = draw_protnames(prot, yoffset=yoffset)
+    svg = createHCAsvg(seq, nbaa, domains, output, b, yoffset=yoffset)
+    with open(output, "w") as outf:
+        fout.write(svgheader)
+        fout.write(namesvg)
+        fout.write(svg)
+        fout.write("</svg>")
     return int_coord
 
 
@@ -993,21 +992,19 @@ def drawing(dfasta, annotation, pathout):
         if nbaa > max_aa:
             max_aa = nbaa
         b = 0
-        seq = "    "+seq+"    "
         annot = annotation.get(prot, [])
-        tmp_svg = createHCAsvg(prot, seq, prev_seq, nbaa, annot, b, yoffset=cnt*230)
-        svg += tmp_svg
+        svg += draw_protnames(prot, yoffset=cnt*230)
+        svg += createHCAsvg(seq, nbaa, annot, b, yoffset=cnt*230)
         cnt += 1
     
     # analys the new annotated domain, selective pressure from PAML
     #evolution_rate(pathnt, params.pathtree)
     svgheader = getSVGheader(max_aa, (cnt+1)*230)
-    fout = open(pathout, "w")
-    fout.write(svgheader)
-    fout.write(svg)
-    fout.write("</svg>")
-    fout.close()
-
+    with open(pathout, "w") as fout:
+        fout.write(svgheader)
+        fout.write(svg)
+        fout.write("</svg>")
+    
 def get_params():
     """ get command line ArgumentParser
     """
@@ -1032,7 +1029,6 @@ def main():
     annotation = {}
     if params.domain:
         annotation = read_annotation(params.domain, params.domformat)
-        print(annotation)
         
     # draw
     drawing(dfasta, annotation, params.svgfile)
