@@ -1032,7 +1032,6 @@ def main():
     annotation = {}
     if params.domain:
         annotation = read_annotation(params.domain, params.domformat)
-        print(annotation)
         
     # draw
     drawing(dfasta, annotation, params.svgfile)
