@@ -8,7 +8,16 @@ __licence__= "MIT"
 __version__ = 0.1
 __email__ = "t.bitard.feildel [you know what] uni-muenster.de"
 __institute__ = "Institute for Evolution and Biodiversity, Muenster Germany"
-        
+
+class Seq(object):
+    """ A Sequence object """
+    def __init__(self, name,  description, seq):
+        """ hold the name, the description and the amino acid sequence of a fasta entry
+        """
+        self.name = name
+        self.descr = description
+        self.seq = seq
+
 class HydroCluster(object):
     """ the class definning the amas of hydrophobic clusters
     """
