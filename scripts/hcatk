@@ -31,6 +31,7 @@ __version__ = 0.1
 
 import pyHCA,  sys
 import pyHCA.drawHCA as drawHCA
+from pyHCA.tremoloHCA import main as tremolo_main
 import sys
 
 def usage():
@@ -38,6 +39,7 @@ def usage():
     """
     print("""Please use hcatk with one of the following argument:
 - 'draw'     : to draw hca pattern of a sequence in a svg file
+- 'tremolo'  : to perform remote domain search over a sequence database
 - 'annotate' : to compute clusters and hca based domains of a sequence
 - 'help'     : to display this help message
 
@@ -49,7 +51,7 @@ def main():
     """ Executable script for annotationHCA modules
     """
     ext=0
-    if len(sys.argv) < 2 or sys.argv[1] not in ["annotate", "draw", "help"]:
+    if len(sys.argv) < 2 or sys.argv[1] not in ["annotate", "draw", "tremolo", "help"]:
         if len(sys.argv) < 2:
             print("Missing program argument")
         else:
@@ -65,6 +67,9 @@ def main():
     elif sys.argv[1] == "draw":
         sys.argv.pop(1)
         drawHCA.main()
+    elif sys.argv[1] == "tremolo":
+        sys.argv.pop(1)
+        ext = tremolo_main()
     else:
         print("Error, something went wrong")
         print()
