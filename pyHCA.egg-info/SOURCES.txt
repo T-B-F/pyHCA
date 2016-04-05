@@ -5,9 +5,11 @@ lib/pyHCA/_testhca.py
 lib/pyHCA/annotateHCA.py
 lib/pyHCA/classHCA.py
 lib/pyHCA/drawHCA.py
+lib/pyHCA/external.py
 lib/pyHCA/ioHCA.py
 lib/pyHCA/searchHCA.py
 lib/pyHCA/seq_util.py
+lib/pyHCA/tremoloHCA.py
 lib/pyHCA/utilities.py
 pyHCA.egg-info/PKG-INFO
 pyHCA.egg-info/SOURCES.txt

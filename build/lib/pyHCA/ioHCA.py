@@ -138,3 +138,49 @@ def read_pfamdomain(inputfile):
             status = "!"
             annotation.setdefault(prot, []).append((start, stop, name, status, None))
     return annotation      
+
+def write_tremolo_results(targets, cddres, groups, output):
+    """ write grouped results for domain res
+    
+    Parameters 
+    ---------- 
+    targets: dict
+        contains for each query domain, the protein and the hits from hhblits
+    cddres: dict
+        contains the domain annotation
+    groups: dict
+        group the proteins per domain arrangement
+    output: string
+        path to the output file
+
+    """
+    with open(output, "w") as outf:
+        for querydom in groups:
+            outf.write("# Domain number {}\n\n".format(querydom))
+            # order da depending on best evalue
+            orderedda = orderda(groups[querydom], targets[querydom])
+            # write all domain arrangement at the beginning an dthe number of proteins
+            outf.write("# Domain Domain_arrangement number_of_protein\n")
+            for da in orderedda:
+                outf.write("INFO\t{}\t{}\t{}\n".format(querydom, da, len(groups[querydom][da])))
+            outf.write("\n")
+            for da in orderedda:
+                # sort prot by evalues
+                proteins = groups[querydom][da]
+                outf.write("##\n")
+                order, flat = flatres(targets[querydom], proteins)
+                for prot in order:
+                    outf.write(">{}\n".format(prot))
+                    if prot in cddres:
+                        for start, stop, dom, d_e_val, bitscore, types in cddres[prot]:
+                            outf.write("domain\t{}\t{}\t{}\t{}\t{}\t{}\n".format(querydom, dom, start+1, stop, d_e_val, bitscore))
+                    else:
+                        outf.write("domain\t{}\t{}\n".format(querydom, "None"))
+                    for hit in flat[prot]:
+                        e_val, descr, prob, score, ident, sim, sprob, qstart, qstop, tstart, tstop, qali, qcons, tali, tcons = flat[prot][hit]
+                        outf.write("Hit\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(querydom, hit, e_val, prob, score, ident, sim))
+                        outf.write("HitQali\t{}\t{}\t{}\t{}\t{}\n".format(querydom, hit, qstart+1, qstop, qali))
+                        outf.write("HitQcon\t{}\t{}\t{}\t{}\t{}\n".format(querydom, hit, qstart+1, qstop, qcons))
+                        outf.write("HitTcon\t{}\t{}\t{}\t{}\t{}\n".format(querydom, hit, tstart+1, tstop, tcons))
+                        outf.write("HitTali\t{}\t{}\t{}\t{}\t{}\n".format(querydom, hit, tstart+1, tstop, tali))
+                        outf.write("//\n")
