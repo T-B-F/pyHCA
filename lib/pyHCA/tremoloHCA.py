@@ -154,7 +154,7 @@ def main():
     if len(inputquery) > 1:
         print("Error, the query should contain only one sequence", file=sys.stderr)
         sys.exit(1)
-    for record in inputquery
+    for record in inputquery:
         query = Seq(record.id, record.descr, str(record.seq))
 
     # domains? whole sequence? segmentation?
