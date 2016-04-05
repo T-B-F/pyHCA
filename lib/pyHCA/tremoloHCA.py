@@ -13,6 +13,7 @@ import os, sys, argparse
 from pyHCA.annotateHCA import _annotation_aminoacids as segmentation
 from pyHCA.ioHCA import read_multifasta, write_tremolo_results
 from pyHCA.external import targets_hhblits, cdd_search
+from pyHCA.classHCA import Seq
 
 ## domains
 def read_domainpos(query, positions):
@@ -76,57 +77,6 @@ def group_resda(targets, cddres):
                 groups[querydom].setdefault("None", list()).append(prot)
     return groups
 
-## reorganize results
-def flatres(targets, proteins):
-    """ flatten results for sorting from a list of proteins
-    """
-    # flatten dictionary
-    #flattargets = list()
-    flattargets = dict()
-    prot_orders = dict()
-    for name in proteins:
-        flattargets[name] = dict()
-        for hitnum in targets[name]:
-            res = targets[name][hitnum]
-            if name in prot_orders:
-                if res["E-value"] < prot_orders[name]:
-                    prot_orders[name] = res["E-value"]
-            else:
-                prot_orders[name] = res["E-value"]
-            flattargets[name][hitnum] = [res["E-value"], res["descr"], 
-                res["Probab"], res["Score"], res["Identities"], res["Similarity"], res["Sum_probs"],
-                res["Qstart"], res["Qstop"], res["Tstart"], res["Tstop"], 
-                res["Qali"], res["Qcons"], res["Tali"], res["Tcons"]]
-            #flattargets.append([name, hitnum, res["E-value"], res["descr"], 
-                #res["Probab"], res["Score"], res["Identities"], res["Similarity"], res["Sum_probs"],
-                #res[d"Qstart"], res["Qstop"], res["Tstart"], res["Tstop"], 
-                #res["Qali"], res["Qcons"], res["Tali"], res["Tcons"]])
-    flatorders = sorted([(prot_orders[prot], prot) for prot in prot_orders])
-    evalues, order = zip(*flatorders) 
-    #flattargets.sort()
-    return order, flattargets
-
-def orderda(arrangements, targets):
-    """ order domain arrangements according to best evalue in the set of hit
-    """
-    keptda = list()
-    for da in arrangements:
-        #if da == None:
-            #continue
-        for prot in arrangements[da]:
-            for hitnum in targets[prot]:
-                keptda.append((targets[prot][hitnum]["E-value"], da))
-    # sort 
-    orderedda = list()
-    keptda.sort()
-    visited = dict()
-    for evalue, da in keptda:
-        if da not in visited:
-            print(evalue, da)
-            orderedda.append(da)
-            visited[da] = 1
-    return orderedda
-            
 
 def get_cmd():
     """ get command line arguments
@@ -155,7 +105,7 @@ def main():
         print("Error, the query should contain only one sequence", file=sys.stderr)
         sys.exit(1)
     for record in inputquery:
-        query = Seq(record.id, record.descr, str(record.seq))
+        query = Seq(inputquery[record].id, inputquery[record].description, str(inputquery[record].seq))
 
     # domains? whole sequence? segmentation?
     domains = read_domainpos(query, params.domains)
