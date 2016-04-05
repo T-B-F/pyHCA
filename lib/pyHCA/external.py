@@ -62,11 +62,11 @@ def cdd_search(listofids, workdir):
         #with open(os.path.join(workdir, "tmp_cdd.out")) as inf:
             #raw_cddres = inf.read()
     #else:
-    try:
-        raw_cddres = subprocess.check_output(shlex.split(cmd), input="\n".join(listofids), universal_newlines=True)
-    except:
-        print("Unable to run CDD search for ids {}".format(" ".join(listofids)), file=sys.stderr)
-        sys.exit(1)
+    #try:
+    raw_cddres = subprocess.check_output(shlex.split(cmd), input="\n".join(listofids), universal_newlines=True)
+    #except:
+    #    print("Unable to run CDD search for ids {}".format(" ".join(listofids)), file=sys.stderr)
+    #    sys.exit(1)
     #with open(os.path.join(workdir, "tmp_cdd.out"), "w") as outf:
         #outf.write(raw_cddres)
     # read cdd res

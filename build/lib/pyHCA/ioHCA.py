@@ -139,6 +139,57 @@ def read_pfamdomain(inputfile):
             annotation.setdefault(prot, []).append((start, stop, name, status, None))
     return annotation      
 
+## reorganize results
+def flatres(targets, proteins):
+    """ flatten results for sorting from a list of proteins
+    """
+    # flatten dictionary
+    #flattargets = list()
+    flattargets = dict()
+    prot_orders = dict()
+    for name in proteins:
+        flattargets[name] = dict()
+        for hitnum in targets[name]:
+            res = targets[name][hitnum]
+            if name in prot_orders:
+                if res["E-value"] < prot_orders[name]:
+                    prot_orders[name] = res["E-value"]
+            else:
+                prot_orders[name] = res["E-value"]
+            flattargets[name][hitnum] = [res["E-value"], res["descr"], 
+                res["Probab"], res["Score"], res["Identities"], res["Similarity"], res["Sum_probs"],
+                res["Qstart"], res["Qstop"], res["Tstart"], res["Tstop"], 
+                res["Qali"], res["Qcons"], res["Tali"], res["Tcons"]]
+            #flattargets.append([name, hitnum, res["E-value"], res["descr"], 
+                #res["Probab"], res["Score"], res["Identities"], res["Similarity"], res["Sum_probs"],
+                #res[d"Qstart"], res["Qstop"], res["Tstart"], res["Tstop"], 
+                #res["Qali"], res["Qcons"], res["Tali"], res["Tcons"]])
+    flatorders = sorted([(prot_orders[prot], prot) for prot in prot_orders])
+    evalues, order = zip(*flatorders) 
+    #flattargets.sort()
+    return order, flattargets
+
+def orderda(arrangements, targets):
+    """ order domain arrangements according to best evalue in the set of hit
+    """
+    keptda = list()
+    for da in arrangements:
+        #if da == None:
+            #continue
+        for prot in arrangements[da]:
+            for hitnum in targets[prot]:
+                keptda.append((targets[prot][hitnum]["E-value"], da))
+    # sort 
+    orderedda = list()
+    keptda.sort()
+    visited = dict()
+    for evalue, da in keptda:
+        if da not in visited:
+            print(evalue, da)
+            orderedda.append(da)
+            visited[da] = 1
+    return orderedda
+            
 def write_tremolo_results(targets, cddres, groups, output):
     """ write grouped results for domain res
     
