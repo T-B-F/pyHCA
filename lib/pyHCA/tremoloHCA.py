@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!#/usr/bin/env python
 """ this is an entirely revised version of tremoloHCA:
 
 NEW features:
@@ -12,7 +12,7 @@ NEW features:
 import os, sys, argparse
 from pyHCA.annotateHCA import _annotation_aminoacids as segmentation
 from pyHCA.ioHCA import read_multifasta, write_tremolo_results
-from pyHCA.external import targets_hhblits, cdd_search
+from pyHCA.external import targets_hhblits, cdd_search, interpro_search
 from pyHCA.classHCA import Seq
 
 ## domains
@@ -21,13 +21,19 @@ def read_domainpos(query, positions):
     """
     domains = []
     if positions == None:
-        # perform segmentation
-        seg = segmentation(str(query.seq))
-        for dom in seg["domain"]:
-            domains.append((dom.start, dom.stop))
+        if len(query.seq) == 1:
+            # perform segmentation if it's only one sequence
+            seg = segmentation(str(query.seq[0]))
+            for dom in seg["domain"]:
+                domains.append((dom.start, dom.stop))
+        else:
+            #use orphhca on multiple sequence alignments
+            # TODO
+            print("Error, hca domain detection not yet implemented", file=sys.stderr)
+            sys.exit(1)
     elif positions[0] == "whole":
         # use the whole sequence
-        domains = [(0, len(query.seq))]
+        domains = [(0, query.length)]
     else:
         # use user defined positions
         for val in positions:
@@ -39,7 +45,7 @@ def read_domainpos(query, positions):
     return domains
 
 ## targets
-def search_domains(query, domains, database, parameters, workdir):
+def search_domains(query, domains, database, hhblits_evalue, parameters, workdir):
     """ look for targets
     """
     targets = dict()
@@ -50,12 +56,15 @@ def search_domains(query, domains, database, parameters, workdir):
         if not os.path.isdir(pathdom):
             os.makedirs(pathdom)
         # use sub part of sequence to search for targets
-        subseq = str(query.seq)[start: stop]
         pathquery = os.path.join(pathdom, "query_{}.fasta".format(i))
         with open(pathquery, "w") as outf:
-            outf.write(">query_{} {}-{}\n{}\n".format(i, start+1, stop, subseq))
+            for j, name in enumerate(query.name):
+                subseq = str(query.seq[j])[start: stop]
+                # IMPORTANT: the name of the sequence will be used as input for hhblits
+                # a regular expression is set on "Q query_" to catch input name
+                outf.write(">query_{} {} {}-{}\n{}\n".format(i, name, start+1, stop, subseq))
         # perform hhblits
-        subtargets = targets_hhblits(pathquery, pathdom, database, parameters)
+        subtargets = targets_hhblits(pathquery, pathdom, database, hhblits_evalue, parameters)
         alltargetids = alltargetids.union(set(subtargets.keys()))
         targets[i] = subtargets
     return targets, list(alltargetids)
@@ -82,12 +91,33 @@ def get_cmd():
     """ get command line arguments
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument("-f", action="store", dest="inputfasta", help="input fasta file", required=True)
-    parser.add_argument("-d", action="store", dest="domains", nargs="+", help="list of domain positions (start and stop inclusive and separated by comma : -d 1,10 20,30 60,100. If not provided the search will be performed on each domain found after segmentation of the input sequence. To use the whole protein use -d all.")
-    parser.add_argument("-w", action="store", dest="workdir", help="working directory")
-    parser.add_argument("-o", action="store", dest="output", help="output file")
-    parser.add_argument("--hhblits-params", action="store", dest="hhblitsparams", help="parameters to pass to hhblits, between quotes")
-    parser.add_argument("--hhblits-db", action="store", dest="hhblitsdb", help="path to the database to use with hhblits")
+    parser.add_argument("-f", action="store", dest="inputfasta", 
+            help="input fasta file", required=True)
+    parser.add_argument("-d", action="store", dest="domains", nargs="+", 
+            help="list of domain positions (start and stop inclusive and "
+            "separated by comma : -d 1,10 20,30 60,100. If not provided "
+            "the search will be performed on each domain found after "
+            "segmentation of the input sequence. "
+            "To use the whole protein use -d whole.")
+    parser.add_argument("-w", action="store", dest="workdir",
+            help="working directory")
+    parser.add_argument("-a", action="store", dest="annotation", 
+            choices=["CDD", "Interpro"], default="Interpro",
+            help="defined annotation method to use (default=%(default)s)")
+    parser.add_argument("--p2ipr", action="store", dest="p2ipr",
+            help="path to the Interpro annotation of UniproKBt proteins. "
+                "If the argument is not specified and '-a Interpro' is set, "
+                "the annotation will be retrieve using web queries of Biomart"
+                " service which will be slower.")
+    parser.add_argument("-E", action="store", dest="evalue", 
+            help="filter hhblits results by evalue (default=%(default)f)", 
+            type=float, default=0.001)
+    parser.add_argument("-o", action="store", dest="output", 
+            help="output file")
+    parser.add_argument("--hhblits-params", action="store", dest="hhblitsparams",
+            help="parameters to pass to hhblits, between quotes")
+    parser.add_argument("--hhblits-db", action="store", dest="hhblitsdb", 
+            help="path to the database to use with hhblits")
     params = parser.parse_args()
     return params
 
@@ -101,26 +131,41 @@ def main():
 
     # read input sequence
     inputquery = read_multifasta(params.inputfasta)
-    if len(inputquery) > 1:
-        print("Error, the query should contain only one sequence", file=sys.stderr)
-        sys.exit(1)
+    names, seqs, descrs = list(), list(), list()
     for record in inputquery:
-        query = Seq(inputquery[record].id, inputquery[record].description, str(inputquery[record].seq))
+        names.append(inputquery[record].id)
+        descrs.append(inputquery[record].description)
+        seqs.append(str(inputquery[record].seq))
+    query = Seq(names, descrs, seqs, len(seqs[0]))
 
     # domains? whole sequence? segmentation?
     domains = read_domainpos(query, params.domains)
 
     # perform search method on each selected parts
-    targets, alltargetids = search_domains(query, domains, params.hhblitsdb, params.hhblitsparams, params.workdir)
+    targets, alltargetids = search_domains(query, domains, params.hhblitsdb, params.evalue, params.hhblitsparams, params.workdir)
+    if alltargetids == []:
+        print("Unable to find any targets with hhblits in database {}".format(params.hhblitsdb), file=sys.stderr)
+        print("with parameters {}".format(params.hhblitsparams), file=sys.stderr)
+        print("Please try less stringent parameters or a different database", file=sys.stderr)
+        with open(params.output, "w") as outf:
+            outf.write("# Unable to find any targets with hhblits in database {}\n".format(params.hhblitsdb))
+            outf.write("# with parameters {}\n".format(params.hhblitsparams))
+            outf.write("# Please try less stringent parameters or a different database\n")
 
-    # get domain annotation from CDD
-    cddres = cdd_search(alltargetids, params.workdir)
+        sys.exit(0)
+
+    if params.annotation == "CDD":
+        # get domain annotation from CDD
+        annotation = cdd_search(alltargetids, params.workdir)
+    else:
+        # get domain from Interpro
+        annotation = interpro_search(alltargetids, params.workdir, params.p2ipr)
 
     # group by domain arrangement
-    groups = group_resda(targets, cddres)
+    groups = group_resda(targets, annotation)
 
     # write output
-    write_tremolo_results(targets, cddres, groups, params.output)
+    write_tremolo_results(query, domains, targets, annotation, groups, params.output)
 
     sys.exit(0)
 
