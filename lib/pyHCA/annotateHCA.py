@@ -845,6 +845,8 @@ def _annotation_aminoacids(seq, t=0.1, method="domain", verbose=False):
     if verbose:
         print("Transform amino acid sequence into binary sequence")
     seqtrans2 = _transformSequence(seqori, low_complexity)
+    #print(seqori)
+    #print("".join(str(val) for val in seqtrans2))
     
     # get amas
     # list_amas -> [ [position of the amas, amas], [...], ... ]
@@ -852,8 +854,11 @@ def _annotation_aminoacids(seq, t=0.1, method="domain", verbose=False):
         print("Create hydrophobic clusters")
     if method == "domain":
         list_amas, seqamas = _getAmas(seqtrans2)
+        #print("".join(seqamas))
         keepCluster, newseq = _removeSmallAmas(list_amas, seqamas)
+        #print("".join(newseq))
         seqbin = _codeSequence(keepCluster, newseq, smooth = True)
+        #print("".join([str(val) for val in seqbin]))
         # get density of hydrophobe mean by windows
         hydrotable, thresolds = _getDensity(seqbin, t)
         # mean by position of all windows
