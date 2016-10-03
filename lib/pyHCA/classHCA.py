@@ -11,9 +11,10 @@ __institute__ = "Institute for Evolution and Biodiversity, Muenster Germany"
 
 class Seq(object):
     """ A Sequence object """
-    def __init__(self, name,  description, seq):
+    def __init__(self, name,  description, seq, length):
         """ hold the name, the description and the amino acid sequence of a fasta entry
         """
+        self.length = length
         self.name = name
         self.descr = description
         self.seq = seq

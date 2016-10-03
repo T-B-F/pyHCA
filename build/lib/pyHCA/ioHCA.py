@@ -27,7 +27,7 @@ def read_multifasta(path, verbose=False):
     """
     if verbose:
         print("Read fasta inputfile ..")
-    if os.path.splitext(path) in [".gz", ".gzip"]:
+    if os.path.splitext(path)[1] in [".gz", ".gzip"]:
         with gzip.open(path, 'rt', encoding='utf-8') as handle: #Python3 fix
             record_dict = SeqIO.to_dict(SeqIO.parse(handle, "fasta"))
     else:
@@ -185,12 +185,47 @@ def orderda(arrangements, targets):
     visited = dict()
     for evalue, da in keptda:
         if da not in visited:
-            print(evalue, da)
             orderedda.append(da)
             visited[da] = 1
     return orderedda
             
-def write_tremolo_results(targets, cddres, groups, output):
+def summary_tremolo(targets, groups, xbest=100):
+    """ write a short summary table for the X best hits
+
+    Parameters
+    ----------
+    targets: dict
+        contains for each query domain, the protein and the hits from hhblits
+    groups: dict
+        proteins grouped by domain arrangement
+    xbest: int
+        number of hits to display
+
+    Return
+    ------
+    summary: string
+        the summary table in string, ready to be written
+    """
+    summary = ""
+    for querydom in targets:
+        prot2grp = dict()
+        for da in groups[querydom]:
+            for prot in groups[querydom][da]:
+                prot2grp[prot] = da
+        cnt = 0
+        data = []
+        for prot in targets[querydom]:
+            for hitnum in targets[querydom][prot]:
+                data.append((targets[querydom][prot][hitnum]["E-value"],
+                             targets[querydom][prot][hitnum]["Probab"],
+                             prot, hitnum, prot2grp[prot]))
+        data.sort()
+        data = data[:xbest]
+        for evalue, probab, prot, hitnum, da in data:
+            summary += "Qdom {}\t{}\t{}\t{}\t{}\t{}\n".format(querydom+1, prot, hitnum, da, evalue, probab)
+    return summary
+
+def write_tremolo_results(query, positions, targets, cddres, groups, output, xbest=100):
     """ write grouped results for domain res
     
     Parameters 
@@ -206,11 +241,37 @@ def write_tremolo_results(targets, cddres, groups, output):
 
     """
     with open(output, "w") as outf:
-        for querydom in groups:
-            outf.write("# Domain number {}\n\n".format(querydom))
+        # header
+        outf.write("# Traveling into REmote hoMOLOgy with HCA (TREMOLO) \n")
+        outf.write("# tremolo v1.0 was developped by Guillem Faure at Isabelle Callebaut's team\n")
+        outf.write("# tremolo v2.0 is developped and maintained by Tristan Bitard-Feildel\n")
+        outf.write("#\n")
+        outf.write("# Please cite\n")
+        outf.write("# Identification of hidden relationships from the coupling of hydrophobic cluster analysis and domain architecture information.\n")
+        outf.write("# G. Faure & I. Callebaut.\n")
+        outf.write("Bioinformatics. 2013 Jul 15;29(14):1726-33. doi: 10.1093/bioinformatics/btt271.")
+        outf.write("\n\n")
+
+        # write query information
+        for i, name in enumerate(query.name):
+            outf.write("Qname\t{}\n".format(name))
+            outf.write("Qdesc\t{}\n".format(query.descr[i]))
+            outf.write("Qseq\t{}\n\n".format(query.seq[i]))
+        # write domain positions
+        querydoms = []
+        for ite, (start, stop) in enumerate(positions):
+            outf.write("Qdom {}\t{}\t{}\n".format(ite+1, start+1, stop))
+            querydoms.append(ite)
+        outf.write("\n")
+
+        # write summary
+        outf.write(summary_tremolo(targets, groups, xbest))
+        outf.write("\n")
+        for querydom in querydoms:
+            outf.write("# Query domain {}\n\n".format(querydom+1))
             # order da depending on best evalue
             orderedda = orderda(groups[querydom], targets[querydom])
-            # write all domain arrangement at the beginning an dthe number of proteins
+            # write all domain arrangement at the beginning an the number of proteins
             outf.write("# Domain Domain_arrangement number_of_protein\n")
             for da in orderedda:
                 outf.write("INFO\t{}\t{}\t{}\n".format(querydom, da, len(groups[querydom][da])))
@@ -224,14 +285,14 @@ def write_tremolo_results(targets, cddres, groups, output):
                     outf.write(">{}\n".format(prot))
                     if prot in cddres:
                         for start, stop, dom, d_e_val, bitscore, types in cddres[prot]:
-                            outf.write("domain\t{}\t{}\t{}\t{}\t{}\t{}\n".format(querydom, dom, start+1, stop, d_e_val, bitscore))
+                            outf.write("Qdom {}\t{}\t{}\t{}\t{}\t{}\n".format(querydom+1, dom, start+1, stop, d_e_val, bitscore))
                     else:
-                        outf.write("domain\t{}\t{}\n".format(querydom, "None"))
+                        outf.write("Qdom {}\t{}\n".format(querydom+1, "None"))
                     for hit in flat[prot]:
                         e_val, descr, prob, score, ident, sim, sprob, qstart, qstop, tstart, tstop, qali, qcons, tali, tcons = flat[prot][hit]
-                        outf.write("Hit\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(querydom, hit, e_val, prob, score, ident, sim))
-                        outf.write("HitQali\t{}\t{}\t{}\t{}\t{}\n".format(querydom, hit, qstart+1, qstop, qali))
-                        outf.write("HitQcon\t{}\t{}\t{}\t{}\t{}\n".format(querydom, hit, qstart+1, qstop, qcons))
-                        outf.write("HitTcon\t{}\t{}\t{}\t{}\t{}\n".format(querydom, hit, tstart+1, tstop, tcons))
-                        outf.write("HitTali\t{}\t{}\t{}\t{}\t{}\n".format(querydom, hit, tstart+1, tstop, tali))
+                        outf.write("Hit\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(querydom+1, hit, e_val, prob, score, ident, sim))
+                        outf.write("HitQali\t{}\t{}\t{}\t{}\t{}\n".format(querydom+1, hit, qstart+1, qstop, qali))
+                        outf.write("HitQcon\t{}\t{}\t{}\t{}\t{}\n".format(querydom+1, hit, qstart+1, qstop, qcons))
+                        outf.write("HitTcon\t{}\t{}\t{}\t{}\t{}\n".format(querydom+1, hit, tstart+1, tstop, tcons))
+                        outf.write("HitTali\t{}\t{}\t{}\t{}\t{}\n".format(querydom+1, hit, tstart+1, tstop, tali))
                         outf.write("//\n")
