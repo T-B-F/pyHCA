@@ -7,7 +7,7 @@ stop positions) on sequence databases.
 
 import os, sys, time, re
 import subprocess, shlex
-import apsw, sqlite3 
+import sqlite3 
 debug = True
 
 ### CDD
@@ -95,29 +95,29 @@ def interpro_search(listofids, workdir, path_p2ipr):
         print("Web search not yet implemented")
         sys.exit(1)
 
-def read_annotation_sqlite3(uniprotids, path_p2ipr):
-    """ read interpro annotation stored in a sqlite3 database
-    """
+#def read_annotation_sqlite3(uniprotids, path_p2ipr):
+    #""" read interpro annotation stored in a sqlite3 database
+    #"""
 
-    annotation = dict()
-    t1 = time.time()
-    conn = apsw.Connection(path_p2ipr)
+    #annotation = dict()
+    #t1 = time.time()
+    #conn = apsw.Connection(path_p2ipr)
                 
-    cur = conn.cursor()
+    #cur = conn.cursor()
                         
-    for prot in uniprotids:
-        print(prot)
-        name = uniprotids[prot]
-        cur.execute("select start, stop, interprodom, domain from interpro where protein=?", (prot,))
-        for row in cur:
-            annotation.setdefault(name, list()).append((row[0], row[1], row[2]))
+    #for prot in uniprotids:
+        #print(prot)
+        #name = uniprotids[prot]
+        #cur.execute("select start, stop, interprodom, domain from interpro where protein=?", (prot,))
+        #for row in cur:
+            #annotation.setdefault(name, list()).append((row[0], row[1], row[2]))
 
-    cur.close()
-    conn.close()
+    #cur.close()
+    #conn.close()
 
-    t2 = time.time()
-    print("Done in {}".format(t2-t1))
-    return annotation
+    #t2 = time.time()
+    #print("Done in {}".format(t2-t1))
+    #return annotation
 
 def read_annotation(uniprotids, path_p2ipr):
     """ read interpro annotation

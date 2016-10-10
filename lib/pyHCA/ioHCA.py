@@ -260,7 +260,7 @@ def write_tremolo_results(query, positions, targets, cddres, groups, output, xbe
         # write domain positions
         querydoms = []
         for ite, (start, stop) in enumerate(positions):
-            outf.write("Qdom {}\t{}\t{}\n".format(ite+1, start+1, stop))
+            outf.write("Qdom\t{}\t{}\t{}\n".format(ite+1, start+1, stop))
             querydoms.append(ite)
         outf.write("\n")
 
@@ -285,9 +285,9 @@ def write_tremolo_results(query, positions, targets, cddres, groups, output, xbe
                     outf.write(">{}\n".format(prot))
                     if prot in cddres:
                         for start, stop, dom, d_e_val, bitscore, types in cddres[prot]:
-                            outf.write("Qdom {}\t{}\t{}\t{}\t{}\t{}\n".format(querydom+1, dom, start+1, stop, d_e_val, bitscore))
+                            outf.write("Qdom\t{}\t{}\t{}\t{}\t{}\t{}\n".format(querydom+1, dom, start+1, stop, d_e_val, bitscore))
                     else:
-                        outf.write("Qdom {}\t{}\n".format(querydom+1, "None"))
+                        outf.write("Qdom\t{}\t{}\n".format(querydom+1, "None"))
                     for hit in flat[prot]:
                         e_val, descr, prob, score, ident, sim, sprob, qstart, qstop, tstart, tstop, qali, qcons, tali, tcons = flat[prot][hit]
                         outf.write("Hit\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(querydom+1, hit, e_val, prob, score, ident, sim))

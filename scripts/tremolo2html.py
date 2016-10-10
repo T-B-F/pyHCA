@@ -98,6 +98,7 @@ def svg_tremolo(dfasta, hits, domains, dhca, sizes, workdir):
     
     # for each protein draw its domain arrangement, its hydrophobic cluster domains, its clusters, its query hits
     # also draw the alignment between 
+
     for prot in dhca:
         if prot != "query":
             create_annotation(prot, hits[prot], sizes[prot], domains[prot], dhca[prot], pathsvg)
@@ -362,37 +363,43 @@ def read_tremolo(path):
     """ read table tremolo results
     """
     proteins = set()
-    order = list()
+    order = dict()
     hits = dict()
     domains = dict()
+    prot = None
     with open(path) as inf:
         for line in inf:
             if line[0] == "\n" and line[0] == "#":
+                prot = None
                 continue
             tmp = line.strip().split("\t")
             if line[0] == ">":
                 prot = line[1:].split()[0]
+            elif prot != None and line.startswith("Qdom"):
+                qdom = tmp[0].split()[1]
+                domains.setdefault(prot, list())
                 proteins.add(prot)
-            elif tmp[0] == "domain":
-                domains.setdefault(prot, [])
-                if tmp[2] != "None":
-                    dom = tmp[2]
-                    start = int(tmp[3]) - 1
-                    stop = int(tmp[4])
+                if tmp[1] != "None":
+                    dom = tmp[1]
+                    start = int(tmp[2]) - 1
+                    stop = int(tmp[3])
                     domain = (start, stop, dom)
-                    domains[prot].append(domain)
+                    domains.setdefault(prot, list())..append(domain)
             elif tmp[0] == "Hit":
                 #"score", prot, dom, e_val, prob, score, ident, sim
+                qdom = tmp[1]
                 hitnum = int(tmp[2])
                 order.append((prot, hitnum))
                 hits.setdefault(prot, dict())
                 hits[prot][hitnum] = {"E-value":float(tmp[3]), "Probab":float(tmp[4]), "Bitscore":float(tmp[5]), "Identities":float(tmp[6]), "Similarity":float(tmp[7])}
             elif tmp[0] == "HitQali":
+                qdom = tmp[1]
                 hitnum = int(tmp[2])
                 hits[prot][hitnum]["Qstart"] = int(tmp[3])-1
                 hits[prot][hitnum]["Qstop"] = int(tmp[4])
                 hits[prot][hitnum]["Qali"] = tmp[5]
             elif tmp[0] == "HitTali":
+                qdom = tmp[1]
                 hitnum = int(tmp[2])
                 hits[prot][hitnum]["Tstart"] = int(tmp[3])-1
                 hits[prot][hitnum]["Tstop"] = int(tmp[4])
@@ -418,15 +425,17 @@ def read_fasta(query, proteins, ffdata, ffindex):
     # get seq and sizes
     sizes = dict()
     fasta = dict()
-    with open(ffdata) as inf:
+    with open(ffdata, "rb") as inf:
         for prot in data_ffindex:
             start, size = data_ffindex[prot]
             inf.seek(start)
-            seqpart = inf.read(size)
+            seqpart = inf.read(size).decode()
             tokeep = False
             for line in seqpart.split("\n"):
+                if line == "\x00":
+                    continue
                 if line[0] == ">":
-                    name = line[1:].split()[0]
+                    name = line[1:].split()[0].split("|")[1]
                     tokeep = False
                     if name == prot:
                         tokeep = True
