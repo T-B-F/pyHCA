@@ -222,7 +222,7 @@ def summary_tremolo(targets, groups, xbest=100):
         data.sort()
         data = data[:xbest]
         for evalue, probab, prot, hitnum, da in data:
-            summary += "Qdom {}\t{}\t{}\t{}\t{}\t{}\n".format(querydom+1, prot, hitnum, da, evalue, probab)
+            summary += "Qdom\t{}\t{}\t{}\t{}\t{}\t{}\n".format(querydom+1, prot, hitnum, da, evalue, probab)
     return summary
 
 def write_tremolo_results(query, positions, targets, cddres, groups, output, xbest=100):
