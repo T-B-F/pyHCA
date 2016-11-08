@@ -142,6 +142,8 @@ def create_hcasvg(dhits, dfasta, pathsvg):
     """
     qseq = dfasta["query"]
     for prot in dhits:
+        if prot not in dfasta:
+            continue
         tseq = dfasta[prot]
         for hitnum in dhits[prot]:
             # get start, stop and sub sequences
@@ -263,6 +265,8 @@ def create_alitopo(dhits, dhca, dfasta, pathsvg):
         
     for prot in dhits:
         amas = set()
+        if prot not in dhca:
+            continue
         for clust in dhca[prot]["cluster"]:
             amas.update(set(range(clust.start, clust.stop)))
             
