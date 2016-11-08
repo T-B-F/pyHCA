@@ -142,6 +142,8 @@ def create_hcasvg(dhits, dfasta, pathsvg):
     """
     qseq = dfasta["query"]
     for prot in dhits:
+        if prot not in dfasta:
+            continue
         tseq = dfasta[prot]
         for hitnum in dhits[prot]:
             # get start, stop and sub sequences
@@ -263,6 +265,8 @@ def create_alitopo(dhits, dhca, dfasta, pathsvg):
         
     for prot in dhits:
         amas = set()
+        if prot not in dhca:
+            continue
         for clust in dhca[prot]["cluster"]:
             amas.update(set(range(clust.start, clust.stop)))
             
@@ -363,7 +367,7 @@ def read_tremolo(path):
     """ read table tremolo results
     """
     proteins = set()
-    order = dict()
+    order = list()
     hits = dict()
     domains = dict()
     prot = None
@@ -384,7 +388,7 @@ def read_tremolo(path):
                     start = int(tmp[2]) - 1
                     stop = int(tmp[3])
                     domain = (start, stop, dom)
-                    domains.setdefault(prot, list())..append(domain)
+                    domains.setdefault(prot, list()).append(domain)
             elif tmp[0] == "Hit":
                 #"score", prot, dom, e_val, prob, score, ident, sim
                 qdom = tmp[1]
@@ -435,7 +439,7 @@ def read_fasta(query, proteins, ffdata, ffindex):
                 if line == "\x00":
                     continue
                 if line[0] == ">":
-                    name = line[1:].split()[0].split("|")[1]
+                    name = line[1:].split()[0]
                     tokeep = False
                     if name == prot:
                         tokeep = True
