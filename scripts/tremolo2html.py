@@ -363,7 +363,7 @@ def read_tremolo(path):
     """ read table tremolo results
     """
     proteins = set()
-    order = dict()
+    order = list()
     hits = dict()
     domains = dict()
     prot = None
@@ -384,7 +384,7 @@ def read_tremolo(path):
                     start = int(tmp[2]) - 1
                     stop = int(tmp[3])
                     domain = (start, stop, dom)
-                    domains.setdefault(prot, list())..append(domain)
+                    domains.setdefault(prot, list()).append(domain)
             elif tmp[0] == "Hit":
                 #"score", prot, dom, e_val, prob, score, ident, sim
                 qdom = tmp[1]
@@ -422,6 +422,7 @@ def read_fasta(query, proteins, ffdata, ffindex):
             if tmp[0] in shorter_prots:
                 name = shorter_prots[tmp[0]]
                 data_ffindex[name] = (int(tmp[1]), int(tmp[2]))
+
     # get seq and sizes
     sizes = dict()
     fasta = dict()
@@ -435,7 +436,7 @@ def read_fasta(query, proteins, ffdata, ffindex):
                 if line == "\x00":
                     continue
                 if line[0] == ">":
-                    name = line[1:].split()[0].split("|")[1]
+                    name = line[1:].split()[0]
                     tokeep = False
                     if name == prot:
                         tokeep = True
