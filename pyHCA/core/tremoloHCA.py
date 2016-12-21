@@ -117,8 +117,9 @@ def get_cmd():
     parser.add_argument("--hhblits-params", action="store", dest="hhblitsparams",
             help="parameters to pass to hhblits, between quotes")
     parser.add_argument("--hhblits-db", action="store", dest="hhblitsdb", 
-            help="path to the database to use with hhblits")
+            help="path to the database to use with hhblits", required=True)
     params = parser.parse_args()
+        
     return params
 
 #### MAIN

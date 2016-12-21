@@ -61,7 +61,113 @@ def write_annotHCA(output, dannotate, sizes, verbose=False):
             for annotation in dannotate[prot]["cluster"]:
                 outf.write("{}\n".format(str(annotation)))
 
+def read_tremolo(path, fetch="domain"):
+    """ read tremolo results
+    """
+    if fetch=="domain":
+        return read_tremolo_domains(path)
+    elif fetch=="all":
+        return read_tremolo_all(path)
+    else:
+        print("Tremolo results fetch parameter {} is not supported".format(fetch), file=sys.stderr)
+        sys.exit(1)
         
+def read_tremolo_all(path):
+    """ read table tremolo results
+    """
+    proteins = set()
+    order = list()
+    hits = dict()
+    domains = dict()
+    prot = None
+    with open(path) as inf:
+        for line in inf:
+            if line[0] == "\n" and line[0] == "#":
+                prot = None
+                continue
+            tmp = line.strip().split("\t")
+            if line[0] == ">":
+                prot, size = line[1:].split()
+            elif prot != None and line.startswith("Qdom"):
+                qdom = tmp[0].split()[1]
+                domains.setdefault(prot, list())
+                proteins.add(prot)
+                if tmp[1] != "None":
+                    dom = tmp[1]
+                    start = int(tmp[2]) - 1
+                    stop = int(tmp[3])
+                    domain = (start, stop, dom)
+                    domains.setdefault(prot, list()).append(domain)
+            elif tmp[0] == "Hit":
+                #"score", prot, dom, e_val, prob, score, ident, sim
+                qdom = tmp[1]
+                hitnum = int(tmp[2])
+                order.append((prot, hitnum))
+                hits.setdefault(prot, dict())
+                hits[prot][hitnum] = {"E-value":float(tmp[3]), "Probab":float(tmp[4]), "Bitscore":float(tmp[5]), "Identities":float(tmp[6]), "Similarity":float(tmp[7])}
+            elif tmp[0] == "HitQali":
+                qdom = tmp[1]
+                hitnum = int(tmp[2])
+                hits[prot][hitnum]["Qstart"] = int(tmp[3])-1
+                hits[prot][hitnum]["Qstop"] = int(tmp[4])
+                hits[prot][hitnum]["Qali"] = tmp[5]
+            elif tmp[0] == "HitTali":
+                qdom = tmp[1]
+                hitnum = int(tmp[2])
+                hits[prot][hitnum]["Tstart"] = int(tmp[3])-1
+                hits[prot][hitnum]["Tstop"] = int(tmp[4])
+                hits[prot][hitnum]["Tali"] = tmp[5]
+    
+    return order, hits, domains, proteins
+        
+def read_tremolo_domains(path):
+    """ read tremolo domain results
+    """
+    domains = dict()
+    dsizes = dict()
+    Tname = None
+    with open(path) as inf :
+        for line in inf:
+            #print(line)
+            if line[0] == "\n" or line[0] == "#":
+                Tname = None
+                continue
+            tmp = line.strip().split("\t")
+            if line.startswith("Qdom") and len(tmp) == 4:
+                domain = tmp[1]
+                start, stop = int(tmp[2])-1, int(tmp[3])
+                domains.setdefault(domain, dict())
+                domains[domain]["QPos"] = (start, stop)
+            elif line.startswith(">"):
+                Tname, Tsize = line[1:].strip().split()
+                dsizes[Tname] = int(Tsize)
+            elif line.startswith("Qdom") and Tname != None:
+                domain = tmp[1]
+                Tdomain = tmp[2]
+                if Tdomain.startswith("IPR"):
+                    Tdomain = Tdomain.split("/")[0]
+                domains[domain].setdefault(Tname, dict())
+                start, stop = int(tmp[3])-1, int(tmp[4])
+                domains[domain][Tname].setdefault("Tpos", list()).append((start, stop, Tdomain))
+            elif tmp[0] == "Hit" and Tname != None:
+                domain = tmp[1]
+                domains[domain].setdefault(Tname, dict())
+                hitnb = tmp[2]
+                evalue = float(tmp[3])
+                domains[domain][Tname].setdefault("Hit", dict()).setdefault(hitnb, dict())
+                domains[domain][Tname]["Hit"][hitnb]["evalue"] = evalue
+            elif tmp[0] == "HitQali" and Tname != None:
+                domain = tmp[1]
+                hitnb = tmp[2]
+                start, stop = int(tmp[3])-1, int(tmp[4])
+                domains[domain][Tname]["Hit"][hitnb]["Qali"] = (start, stop)
+            elif tmp[0] == "HitTali" and Tname != None:
+                domain = tmp[1]
+                hitnb = tmp[2]
+                start, stop = int(tmp[3])-1, int(tmp[4])
+                domains[domain][Tname]["Hit"][hitnb]["Tali"] = (start, stop)
+    return domains, dsizes
+
 def read_annotation(inputfile, formatf):
     """ read domain annotation from pfam or HCA domain file
 

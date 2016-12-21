@@ -4,8 +4,9 @@
 
 import os, sys, argparse
 import numpy as np
-from pyHCA.drawHCA import createHCAsvg
-from pyHCA.annotateHCA import _annotation_aminoacids as segmentation
+from pyHCA.core.drawHCA import createHCAsvg
+from pyHCA.core.ioHCA import read_tremolo
+from pyHCA.core.annotateHCA import _annotation_aminoacids as segmentation
 from myPython.Residu import AA1
 
 def get_cmd():
@@ -363,53 +364,6 @@ def create_alitopo(dhits, dhca, dfasta, pathsvg):
                 outf.write("</svg>")
     
 ### I/O
-def read_tremolo(path):
-    """ read table tremolo results
-    """
-    proteins = set()
-    order = list()
-    hits = dict()
-    domains = dict()
-    prot = None
-    with open(path) as inf:
-        for line in inf:
-            if line[0] == "\n" and line[0] == "#":
-                prot = None
-                continue
-            tmp = line.strip().split("\t")
-            if line[0] == ">":
-                prot = line[1:].split()[0]
-            elif prot != None and line.startswith("Qdom"):
-                qdom = tmp[0].split()[1]
-                domains.setdefault(prot, list())
-                proteins.add(prot)
-                if tmp[1] != "None":
-                    dom = tmp[1]
-                    start = int(tmp[2]) - 1
-                    stop = int(tmp[3])
-                    domain = (start, stop, dom)
-                    domains.setdefault(prot, list()).append(domain)
-            elif tmp[0] == "Hit":
-                #"score", prot, dom, e_val, prob, score, ident, sim
-                qdom = tmp[1]
-                hitnum = int(tmp[2])
-                order.append((prot, hitnum))
-                hits.setdefault(prot, dict())
-                hits[prot][hitnum] = {"E-value":float(tmp[3]), "Probab":float(tmp[4]), "Bitscore":float(tmp[5]), "Identities":float(tmp[6]), "Similarity":float(tmp[7])}
-            elif tmp[0] == "HitQali":
-                qdom = tmp[1]
-                hitnum = int(tmp[2])
-                hits[prot][hitnum]["Qstart"] = int(tmp[3])-1
-                hits[prot][hitnum]["Qstop"] = int(tmp[4])
-                hits[prot][hitnum]["Qali"] = tmp[5]
-            elif tmp[0] == "HitTali":
-                qdom = tmp[1]
-                hitnum = int(tmp[2])
-                hits[prot][hitnum]["Tstart"] = int(tmp[3])-1
-                hits[prot][hitnum]["Tstop"] = int(tmp[4])
-                hits[prot][hitnum]["Tali"] = tmp[5]
-    
-    return order, hits, domains, proteins
     
 def read_fasta(query, proteins, ffdata, ffindex): 
     """ get protein sizes and fasta sequences
@@ -598,7 +552,7 @@ def main():
     params.workdir = fullwork
             
     # read tremolo result
-    order, hits, domains, proteins = read_tremolo(params.inputres)
+    order, hits, domains, proteins = read_tremolo(params.inputres, fetch="all")
     
     # get sequences and sizes
     fasta, sizes = read_fasta(params.query, proteins, params.ffdata, params.ffindex)
