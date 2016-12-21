@@ -30,8 +30,14 @@ Arguments:
 **********
 
     -h, --help            show this help message and exit
+    
+required arguments:
+
     -i INPUTF             an amino-acid sequence files in fasta format
     -o OUTPUTF            the output file with annotation
+    
+optional arguments:
+
     -v                    keep temporary results
     -m {cluster,domain}   method to use, cluster: will report *the hydrophobic
                           clusters found in the sequence, domain: will delineate
@@ -58,10 +64,12 @@ Arguments:
     -h, --help        show this help message and exit
 
 required arguments:
+
     -i FASTAFILE      the fasta file
     -o SVGFILE        the svg file
 
 optional arguments:
+
     -d DOMAIN         the domain file
     -f {pfam,seghca}  the domain file format
 
@@ -85,11 +93,13 @@ Arguments:
     -h, --help            show this help message and exit
 
 required arguments:
+
     -f INPUTFASTA         input fasta file
     -o OUTPUT             output file
     -w WORKDIR            working directory
 
 optional arguments:
+
     -d DOMAINS [DOMAINS ...] list of domain positions (start and stop inclusive
                              and separated by comma : -d 1,10 20,30 60,100. 
                              If not provided the search will be performed on 
