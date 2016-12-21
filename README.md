@@ -9,7 +9,9 @@ Requires
 
 Installation
 ============
+``` bash
 pip3 install .
+```
 
 Usage
 =====
@@ -19,15 +21,18 @@ annotate
 
 Use the composition in hydrophobic cluster of a sequence to detect domains.
 
+```bash
 $ hcatk annotate -h
 
 usage: hcatk annotate [-h] -i INPUTF -o OUTPUTF [-v]
                       [-m {cluster,domain}]
                       [-t {aminoacid,nucleotide}]
+```
 
 Arguments:
 ~~~~~~~~~
 
+```
   -h, --help            show this help message and exit
   -i INPUTF             an amino-acid sequence files in fasta format
   -o OUTPUTF            the output file with annotation
@@ -40,6 +45,7 @@ Arguments:
   -t {aminoacid,nucleotide}
                         the type of the biological sequences passed in the
                         input file
+```
 
 draw
 ----
@@ -47,13 +53,16 @@ draw
 Draw the HCA diagram of a sequence.
 Optionnaly, can display the domain annotation of a sequence if provied.
 
+```bash
 $ hcatk draw -h
 
 usage: hcatk draw [-h] -i FASTAFILE [-d DOMAIN] [-f {pfam,seghca}] -o SVGFILE
+```
 
 Arguments:
 ~~~~~~~~~
 
+```
   -h, --help        show this help message and exit
 
 required arguments:
@@ -63,23 +72,25 @@ required arguments:
 optional arguments:
   -d DOMAIN         the domain file
   -f {pfam,seghca}  the domain file format
-
+```
 
 tremolo
 -------
 
 Use TremoloHCA to find remote homologous proteins with domain context.
 
-
+```bash
 $ hcatk tremolo -h
 
 usage: hcatk [-h] -f INPUTFASTA [-d DOMAINS [DOMAINS ...]] [-w WORKDIR]
              [-E EVALUE] [-o OUTPUT] [--hhblits-params HHBLITSPARAMS]
              [--hhblits-db HHBLITSDB]
+```
 
 Arguments:
 ~~~~~~~~~~
 
+```
   -h, --help            show this help message and exit
 
 required arguments:
@@ -104,6 +115,8 @@ optional arguments:
                         parameters to pass to hhblits, between quotes
   --hhblits-db HHBLITSDB
                         path to the database to use with hhblits
+
+```
 
 The interpo domain annoation can be downloaded at:
 wget ftp://ftp.ebi.ac.uk/pub/databases/interpro/protein2ipr.dat.gz
