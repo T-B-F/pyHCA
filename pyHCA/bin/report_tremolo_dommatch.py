@@ -3,6 +3,7 @@
 """
 
 import os, sys, argparse
+from pyHCA.core.ioHCA import read_tremolo
 
 def get_cmd():
     """ get command line argument
@@ -14,50 +15,6 @@ def get_cmd():
     parser.add_argument("--evalue", action="store", dest="evalue", type=float, default=0.001)
     params = parser.parse_args()
     return params
-
-def read_tremolo(path):
-    """ read tremolo domain results
-    """
-    domains = dict()
-    Tname = None
-    with open(path) as inf :
-        for line in inf:
-            #print(line)
-            if line[0] == "\n" or line[0] == "#":
-                Tname = None
-                continue
-            tmp = line.strip().split("\t")
-            if line.startswith("Qdom") and len(tmp) == 4:
-                domain = tmp[1]
-                start, stop = int(tmp[2])-1, int(tmp[3])
-                domains.setdefault(domain, dict())
-                domains[domain]["QPos"] = (start, stop)
-            elif line.startswith(">"):
-                Tname = line[1:].strip()
-            elif line.startswith("Qdom") and Tname != None:
-                domain = tmp[1]
-                Tdomain = tmp[2]
-                domains[domain].setdefault(Tname, dict())
-                start, stop = int(tmp[3])-1, int(tmp[4])
-                domains[domain][Tname].setdefault("Tpos", list()).append((start, stop, Tdomain))
-            elif tmp[0] == "Hit" and Tname != None:
-                domain = tmp[1]
-                domains[domain].setdefault(Tname, dict())
-                hitnb = tmp[2]
-                evalue = float(tmp[3])
-                domains[domain][Tname].setdefault("Hit", dict()).setdefault(hitnb, dict())
-                domains[domain][Tname]["Hit"][hitnb]["evalue"] = evalue
-            elif tmp[0] == "HitQali" and Tname != None:
-                domain = tmp[1]
-                hitnb = tmp[2]
-                start, stop = int(tmp[3])-1, int(tmp[4])
-                domains[domain][Tname]["Hit"][hitnb]["Qali"] = (start, stop)
-            elif tmp[0] == "HitTali" and Tname != None:
-                domain = tmp[1]
-                hitnb = tmp[2]
-                start, stop = int(tmp[3])-1, int(tmp[4])
-                domains[domain][Tname]["Hit"][hitnb]["Tali"] = (start, stop)
-    return domains
 
 def find_dommatch(tremolo_res, qcov, tcov, cutoff_evalue):
     """ find positions matchin a domain
@@ -85,8 +42,7 @@ def find_dommatch(tremolo_res, qcov, tcov, cutoff_evalue):
 def main():
     params = get_cmd()
     
-    tremolo_res = read_tremolo(params.tremolores)
-    
+    tremolo_res, dsizes = read_tremolo(params.tremolores, fetch="domain")
     find_match = find_dommatch(tremolo_res, params.min_qcov, params.min_tcov, params.evalue)
     
     sys.exit(0)
