@@ -32,6 +32,7 @@ __version__ = 0.1
 from pyHCA import annotate_main
 from pyHCA import draw_main
 from pyHCA import tremolo_main
+from pyHCA import dom_ontree_main
 
 import pyHCA,  sys
 import sys
@@ -43,7 +44,7 @@ def usage():
 Please use hcatk with one of the following argument:
 - 'draw'     : to draw hca pattern of a sequence in a svg file
 - 'tremolo'  : to perform remote domain search over a sequence database
-- 'domOntree': to visuzalize tremolo results on a phylogenetic tree
+- 'domOnTree': to visuzalize tremolo results on a phylogenetic tree
 - 'segment' : to compute clusters and hca based domains of a sequence
 - 'help'     : to display this help message
 
@@ -68,18 +69,20 @@ def main():
         ext = print_exit()
     elif sys.argv[1] == "help":
         usage()
-    elif sys.argv[1] == "segment":
-        sys.argv.pop(1)
-        ext = annotate_main()
-    elif sys.argv[1] == "draw":
-        sys.argv.pop(1)
-        ext = draw_main()
-    elif sys.argv[1] == "tremolo":
-        sys.argv.pop(1)
-        ext = tremolo_main()
     else:
-        print("Error, something went wrong")
-        ext = print_exit()
+        method = sys.argv[1]
+        sys.argv.pop(1)
+        if method == "segment":
+            ext = annotate_main()
+        elif method == "draw":
+            ext = draw_main()
+        elif method == "tremolo":
+            ext = tremolo_main()
+        elif method == "domOnTree":
+            ext = dom_ontree_main()
+        else:
+            print("Error, something went wrong")
+            ext = print_exit()
     sys.exit(ext)
 
 if __name__ == '__main__':

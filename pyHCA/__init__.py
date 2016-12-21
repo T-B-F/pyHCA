@@ -5,6 +5,7 @@ __release__ = __version__  + '-dev' # comment out '-dev' before a release
 from pyHCA.core.annotateHCA import main as annotate_main
 from pyHCA.core.drawHCA import main as draw_main
 from pyHCA.core.tremoloHCA  import main as tremolo_main
+from pyHCA.core.domains_on_tree  import main as dom_ontree_main
 
 
 #def annotateHCA_main():
