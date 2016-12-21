@@ -265,16 +265,9 @@ def combine_features(data, dsizes, tree, taxid2sp, prot2taxid, taxa_to_merge):
                     sizes, names, dom_archs, prots = zip(*sizes_and_proteins)
                     proteins.append(names[0])
                     features[names[0]] = (prots[0], dom_archs[0])
-                if len(proteins) == 1:
-                    # no need for subtree
-                    node.name = proteins[0]
-                    children = [node]
-                else:
-                    # multiple proteins for species, make subtree
-                    subtree = ete3.Tree("({});".format(", ".join(proteins)))
-                    node.add_child(subtree)
-                    children = subtree
-                for new_node in children:
+                subtree = ete3.PhyloTree("({});".format(", ".join(proteins)))
+                node.add_child(subtree)
+                for new_node in subtree:
                     prot, dom_arch = features[new_node.name]
                     seq = "G" * dsizes[prot]
                     m = motifs[node_sp][prot]
