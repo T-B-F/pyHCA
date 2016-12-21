@@ -5,9 +5,9 @@ from setuptools import setup, find_packages
 
 __version__ = "0.1"
 
-#def readme():
-    #with open("README.md") as inf:
-        #return f.read()
+def readme():
+    with open("README.md") as inf:
+        return f.read()
 
 script_dir = os.path.join("pyHCA", "bin")
 all_scripts = list()
@@ -20,8 +20,8 @@ setup(name='pyHCA',
     author_email='tristan.bitard-feildel@impmc.upmc.fr',
     url='http://www.bornberglab.org/',
     description='Python library for HCA analysis',
-    #long_description=readme(),
-    long_description="",
+    long_description=readme(),
+
     #classifiers=[
         #'Development Status :: 3 - Alpha',
         #'License :: OSI Approved :: MIT License',
