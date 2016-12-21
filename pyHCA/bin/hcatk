@@ -39,31 +39,36 @@ import sys
 def usage():
     """ print usage
     """
-    print("""Please use hcatk with one of the following argument:
+    print("""
+Please use hcatk with one of the following argument:
 - 'draw'     : to draw hca pattern of a sequence in a svg file
 - 'tremolo'  : to perform remote domain search over a sequence database
-- 'annotate' : to compute clusters and hca based domains of a sequence
+- 'domOntree': to visuzalize tremolo results on a phylogenetic tree
+- 'segment' : to compute clusters and hca based domains of a sequence
 - 'help'     : to display this help message
 
 To get help for a specific sub program use:
 hcatk <argument> -h
 """)
     
+    
+def print_exit():
+    usage()
+    return 1
+    
 def main():
     """ Executable script for annotationHCA modules
     """
     ext=0
-    if len(sys.argv) < 2 or sys.argv[1] not in ["annotate", "draw", "tremolo", "help"]:
-        if len(sys.argv) < 2:
-            print("Missing program argument")
-        else:
-            print("Program argument {} not recognized".format(sys.argv[1]))
-        print()
-        usage()
-        ext = 1
+    if len(sys.argv) < 2:
+        print("Missing program argument")
+        ext = print_exit()
+    elif sys.argv[1] not in ["segment", "draw", "tremolo", "domOnTree", "help"]:
+        print("Program argument '{}' not recognized".format(sys.argv[1]))
+        ext = print_exit()
     elif sys.argv[1] == "help":
         usage()
-    elif sys.argv[1] == "annotate":
+    elif sys.argv[1] == "segment":
         sys.argv.pop(1)
         ext = annotate_main()
     elif sys.argv[1] == "draw":
@@ -74,9 +79,7 @@ def main():
         ext = tremolo_main()
     else:
         print("Error, something went wrong")
-        print()
-        usage()
-        ext = 1
+        ext = print_exit()
     sys.exit(ext)
 
 if __name__ == '__main__':

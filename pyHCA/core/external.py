@@ -197,8 +197,8 @@ def read_hhblits(pathin):
                     hitnum = hitnumber[name] + 1
                 hitnumber[name] = hitnum
                 alltargets.add(name)
-                targets[name][hitnum] = {"descr": descr, "Tstart":1e10, "Tstop":-1, "Tcons":"", "Tali":"",
-                                                 "Qstart":1e10, "Qstop":-1, "Qcons":"", "Qali":"",
+                targets[name][hitnum] = {"descr": descr, "Tstart":1e10, "Tstop":-1, "Tcons":"", "Tali":"", "Tsize": 0,
+                                                 "Qstart":1e10, "Qstop":-1, "Qcons":"", "Qali":"", "Qsize": 0,
                                  "Probab":-1, "E-value":-1, "Score":-1, "Identities":-1, "Similarity":-1, "Sum_probs":-1,
                                 }
             elif line.startswith("Probab="):
@@ -210,12 +210,13 @@ def read_hhblits(pathin):
                         val = val[:-1]
                     targets[name][hitnum][key] = float(val)
             elif line.startswith("Q ") and line.split()[1] != "Consensus":
-                m = re.match("\s*(\d+)\s+([\-\w]*)\s+(\d+)",line[16:])
+                m = re.match("\s*(\d+)\s+([\-\w]*)\s+(\d+)\s\((\d+)\)",line[16:])
                 if m:
-                    start, ali, stop = int(m.group(1))-1, m.group(2), int(m.group(3))
+                    start, ali, stop, size = int(m.group(1))-1, m.group(2), int(m.group(3)), int(m.group(4))
                     targets[name][hitnum]["Qstart"] = min(targets[name][hitnum]["Qstart"], start)
                     targets[name][hitnum]["Qstop"] = max(targets[name][hitnum]["Qstop"], stop)
                     targets[name][hitnum]["Qali"] += ali
+                    targets[name][hitnum]["Qsize"] = size
                 else:
                     print("FAILED", line, pathin)
             elif line.startswith("Q Consensus"):
@@ -233,12 +234,13 @@ def read_hhblits(pathin):
                 else:
                     print("FAILED", line, pathin)
             elif line.startswith("T "):
-                m = re.match("\s*(\d+)\s+([\-\w]*)\s+(\d+)",line[16:])
+                m = re.match("\s*(\d+)\s+([\-\w]*)\s+(\d+)\s\((\d+)\)",line[16:])
                 if m:
-                    start, ali, stop = int(m.group(1)), m.group(2), int(m.group(3))
+                    start, ali, stop, size = int(m.group(1)), m.group(2), int(m.group(3)), int(m.group(4))
                     targets[name][hitnum]["Tstart"] = min(targets[name][hitnum]["Tstart"], start)
                     targets[name][hitnum]["Tstop"] = max(targets[name][hitnum]["Tstop"], stop)
                     targets[name][hitnum]["Tali"] += ali
+                    targets[name][hitnum]["Tsize"] = size
                 elif debug:
                     print("FAILED", line, pathin)
     return targets
