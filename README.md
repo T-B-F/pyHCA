@@ -32,6 +32,7 @@ usage: hcatk annotate [-h] -i INPUTF -o OUTPUTF [-v]
 Arguments:
 ~~~~~~~~~
 
+
     -h, --help            show this help message and exit
     -i INPUTF             an amino-acid sequence files in fasta format
     -o OUTPUTF            the output file with annotation
@@ -45,6 +46,7 @@ Arguments:
                             the type of the biological sequences passed in the
                             input file
 
+
 draw
 ----
 
@@ -57,8 +59,10 @@ $ hcatk draw -h
 usage: hcatk draw [-h] -i FASTAFILE [-d DOMAIN] [-f {pfam,seghca}] -o SVGFILE
 ```
 
+
 Arguments:
 ~~~~~~~~~
+
 
     -h, --help        show this help message and exit
 
@@ -69,6 +73,7 @@ Arguments:
     optional arguments:
     -d DOMAIN         the domain file
     -f {pfam,seghca}  the domain file format
+
 
 tremolo
 -------
