@@ -1,50 +1,46 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-import os,sys, shlex, subprocess
-from os.path import join
-import platform
-import distutils
-from distutils import sysconfig
-from setuptools import find_packages
-from distutils.core import setup
+import os
+from setuptools import setup, find_packages
 
+__version__ = "0.1"
 
-__version__ = ''
-with open('lib/pyHCA/__init__.py') as inp:
-  for line in inp:
-      if line.startswith('__version__'):
-          exec(line.strip())
-          break
-          
-PACKAGES = ['pyHCA']
+#def readme():
+    #with open("README.md") as inf:
+        #return f.read()
 
-PACKAGE_DIR = {}
-for pkg in PACKAGES:
-    PACKAGE_DIR[pkg] = join('lib', *pkg.split('.'))
+script_dir = os.path.join("pyHCA", "bin")
+all_scripts = list()
+for binf in ["hcatk"]: # add script names here
+    all_scripts.append(os.path.join(script_dir, binf))
 
-SCRIPTS = ['scripts/hcatk']
-
-if (platform.system() == 'Windows' or 
-    len(sys.argv) > 1 and sys.argv[1] not in ('build', 'install')):
-    for script in list(SCRIPTS):
-        SCRIPTS.append(script + '.bat')
-
-setup(
-    name='pyHCA',
+setup(name='pyHCA',
     version=__version__,
     author='Tristan Bitard-Feildel, Guillem Faure',
-    author_email='t.bitard.feildel@uni-muenster.de',
+    author_email='tristan.bitard-feildel@impmc.upmc.fr',
     url='http://www.bornberglab.org/',
     description='Python library for HCA analysis',
+    #long_description=readme(),
     long_description="",
-    license='MIT',
+    #classifiers=[
+        #'Development Status :: 3 - Alpha',
+        #'License :: OSI Approved :: MIT License',
+        #'Programming Language :: Python :: 3',
+        #'Topic :: Text Processing :: Linguistic',
+        #],
+    
     keywords=('protein, domain, HCA, '),
-    packages=PACKAGES,
-    package_dir=PACKAGE_DIR,
-    scripts=SCRIPTS,
+    license='MIT',
+    scripts=all_scripts,
+    packages=find_packages(exclude=[script_dir,]),
+    include_package_data=True,
+    #install_requires=['biopython>=1.68', 
+                      #'scikit-learn>=0.18.1',
+                      #'numpy>=1.11.2'n
+                      #'cython>=0.25.1',
+                      #'hdbscan',
+                      #],
     provides=['pyHCA({0:s})'.format(__version__)],
+    zip_safe=False,
 )
-
-
-
 
