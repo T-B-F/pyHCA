@@ -147,6 +147,7 @@ def flatres(targets, proteins):
     #flattargets = list()
     flattargets = dict()
     prot_orders = dict()
+    dsize = dict()
     for name in proteins:
         flattargets[name] = dict()
         for hitnum in targets[name]:
@@ -160,14 +161,20 @@ def flatres(targets, proteins):
                 res["Probab"], res["Score"], res["Identities"], res["Similarity"], res["Sum_probs"],
                 res["Qstart"], res["Qstop"], res["Tstart"], res["Tstop"], 
                 res["Qali"], res["Qcons"], res["Tali"], res["Tcons"]]
+            if name not in dsize:
+                dsize[name] = res["Tsize"]
+            else:
+                if dsize[name] != res["Tsize"]:
+                    print("Warning different sizes ({} and {}) found for target protein {} in hhblits results".format(dsize[name], res["Tsize"], name))
             #flattargets.append([name, hitnum, res["E-value"], res["descr"], 
                 #res["Probab"], res["Score"], res["Identities"], res["Similarity"], res["Sum_probs"],
                 #res[d"Qstart"], res["Qstop"], res["Tstart"], res["Tstop"], 
                 #res["Qali"], res["Qcons"], res["Tali"], res["Tcons"]])
     flatorders = sorted([(prot_orders[prot], prot) for prot in prot_orders])
     evalues, order = zip(*flatorders) 
+    order_and_size = [(prot, dsize[prot]) for prot in order]
     #flattargets.sort()
-    return order, flattargets
+    return order_and_size, flattargets
 
 def orderda(arrangements, targets):
     """ order domain arrangements according to best evalue in the set of hit
@@ -281,8 +288,8 @@ def write_tremolo_results(query, positions, targets, cddres, groups, output, xbe
                 proteins = groups[querydom][da]
                 outf.write("##\n")
                 order, flat = flatres(targets[querydom], proteins)
-                for prot in order:
-                    outf.write(">{}\n".format(prot))
+                for (prot, size) in order:
+                    outf.write(">{} {}\n".format(prot, size))
                     if prot in cddres:
                         for start, stop, dom, d_e_val, bitscore, types in cddres[prot]:
                             outf.write("Qdom\t{}\t{}\t{}\t{}\t{}\t{}\n".format(querydom+1, dom, start+1, stop, d_e_val, bitscore))

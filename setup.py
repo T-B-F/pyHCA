@@ -7,7 +7,7 @@ __version__ = "0.1"
 
 def readme():
     with open("README.md") as inf:
-        return f.read()
+        return inf.read()
 
 script_dir = os.path.join("pyHCA", "bin")
 all_scripts = list()
@@ -34,12 +34,10 @@ setup(name='pyHCA',
     scripts=all_scripts,
     packages=find_packages(exclude=[script_dir,]),
     include_package_data=True,
-    #install_requires=['biopython>=1.68', 
+    install_requires=['biopython>=1.68',
                       #'scikit-learn>=0.18.1',
                       #'numpy>=1.11.2'n
-                      #'cython>=0.25.1',
-                      #'hdbscan',
-                      #],
+                      ],
     provides=['pyHCA({0:s})'.format(__version__)],
     zip_safe=False,
 )
