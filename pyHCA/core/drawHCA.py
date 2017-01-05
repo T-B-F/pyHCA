@@ -978,6 +978,18 @@ def drawHCA(prot, seq, nbaa, domains, output, b, yoffset=0):
     return int_coord
 
 
+def make_svg(prot, prev_seq, annot, cnt):
+    """ create svg for a given sequence
+    """
+    seq = transform_seq(prev_seq)
+    nbaa = len(seq)
+    
+    b = 0
+    svg = draw_protnames(prot, yoffset=cnt*230)
+    svg += createHCAsvg(seq, nbaa, annot, b, yoffset=cnt*230)
+    return svg, nbaa
+
+
 def drawing(dfasta, annotation, pathout):
     """ draw multiple fasta sequences
     """
@@ -987,14 +999,10 @@ def drawing(dfasta, annotation, pathout):
     for prot, prev_seq in dfasta.items():
         if type(prev_seq) == Bio.SeqRecord.SeqRecord:
             prev_seq = str(prev_seq.seq)
-        seq = transform_seq(prev_seq)
-        nbaa = len(seq)
+        cur_svg, nbaa = make_svg(prot, prev_seq, annotation.get(prot, []), cnt)
+        svg += cur_svg
         if nbaa > max_aa:
-            max_aa = nbaa
-        b = 0
-        annot = annotation.get(prot, [])
-        svg += draw_protnames(prot, yoffset=cnt*230)
-        svg += createHCAsvg(seq, nbaa, annot, b, yoffset=cnt*230)
+            max_aa = nb_aa
         cnt += 1
     
     # analys the new annotated domain, selective pressure from PAML
