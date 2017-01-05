@@ -19,6 +19,8 @@ def get_cmd():
 def find_dommatch(tremolo_res, qcov, tcov, cutoff_evalue):
     """ find positions matchin a domain
     """
+    print("Domain Id\tTarget protein\tDomain\tDom beg\tDom end\t"
+          "Thit beg\tThit end\tQhit beg\tQhit end\tevalue\ttarget cov.\tquery cov.")
     for domain in tremolo_res:
         qdom_start, qdom_stop = tremolo_res[domain]["QPos"]
         del tremolo_res[domain]["QPos"]
