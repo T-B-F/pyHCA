@@ -14,6 +14,7 @@ import Bio
 from Bio import Seq 
 from Bio import SeqIO
 from .annotateHCA import _annotation_aminoacids
+from .drawHCA import make_svg, getSVGheader
 
 class HCA(object):
     """ HCA class provides an API interface to all the standalone programs
@@ -183,8 +184,43 @@ class HCA(object):
 
 
     ### DrAW-HCA
-    def draw(self):
-        pass
+    def draw(self, external_annotation=dict(), show_hca_dom=False, outputfile=None):
+        """ draw a HCA plot in svg of each sequence
+        """
+        self.all_svg = dict()
+        max_aa = 0
+        cnt = 0
+        # create hca plot for each sequence
+        for i in range(len(self.querynames)):
+            prot = self.querynames[i]
+            prev_seq = self.sequences[i]
+            # read domain annotation if provided
+            annotation = list()
+            if prot in external_annotation:
+                for start, stop, dom in external_annotation[prot]:
+                    annotation.append((start, stop, dom, "!", None))
+            if show_hca_dom:
+                for dom in self.domains[prot]:
+                    start = dom.start
+                    stop = dom.stop
+                    annotation.append((start, stop, "domain", "!", None))
+            # make svg
+            cur_svg, nbaa = make_svg(prot, prev_seq, annotation, cnt)
+            self.all_svg[prot] = cur_svg
+            if nbaa > max_aa:
+                max_aa = nbaa
+            cnt += 1
+        # write in outputfile if provided
+        if outputfile != None:
+            svgheader = getSVGheader(max_aa, (cnt+1)*230)
+            with open(outputfile, "w") as fout:
+                fout.write(svgheader)
+                for i in range(len(self.querynames)):
+                    prot = self.querynames[i]
+                    fout.write(self.all_svg[prot])
+                fout.write("</svg>")
+        # return the svg dictionary
+        return self.all_svg
     
 def check_seq_type(seq):
     """ check that sequence is of correct type
