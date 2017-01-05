@@ -178,11 +178,6 @@ class HCA(object):
                 for clustannot in self.clusters[prot]:
                     outf.write("{}\n".format(str(clustannot)))
             
-    ### TREMOLO-HCA
-    def tremolo(self):
-        pass
-
-
     ### DrAW-HCA
     def draw(self, external_annotation=dict(), show_hca_dom=False, outputfile=None):
         """ draw a HCA plot in svg of each sequence
