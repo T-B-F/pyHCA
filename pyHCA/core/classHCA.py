@@ -6,8 +6,8 @@ domain created through hydrophobic clusters.
 __author__ = "Tristan Bitard-Feildel"
 __licence__= "MIT"
 __version__ = 0.1
-__email__ = "t.bitard.feildel [you know what] uni-muenster.de"
-__institute__ = "Institute for Evolution and Biodiversity, Muenster Germany"
+__email__ = "tristan.bitard-feildel [you know what] impmc.upmc.fr"
+__institute__ = "IMPMC, UPMC"
 
 class Seq(object):
     """ A Sequence object """
