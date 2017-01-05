@@ -45,8 +45,9 @@ def retrieve_sp(proteins):
                 print("Unable to retrieve species information for protein {}".format(prot), file=sys.stderr)
                 to_remove.append(fullprot)
             else:
-                start_parenthesis = sp.index("(")
-                sp = sp[:start_parenthesis].strip()
+                if "(" in sp:
+                    start_parenthesis = sp.index("(")
+                    sp = sp[:start_parenthesis].strip()
                 prot2taxid[fullprot] = taxid
                 taxid2sp[taxid] = sp
         else:
