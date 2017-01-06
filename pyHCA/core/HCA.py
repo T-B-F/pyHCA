@@ -49,7 +49,7 @@ class HCA(object):
                     qnames.append(qname)
                     self._number_of_sequences += 1
             else:
-                seq, qname = check_seq_type(s)
+                seq, qname = check_seq_type(seq)
                 self.sequences.append(seq)
                 qnames = [qname]
                 self._number_of_sequences += 1
@@ -89,7 +89,10 @@ class HCA(object):
                             self.__clusters[name] = list()
                         else:
                             raise RuntimeError("Error, multiple proteins found with the same name {}".format(name))
-        
+            elif isinstance(querynames, str):
+                self.querynames.append(querynames)
+            else:
+                raise ValueError("Error, querynames should be a list of names or a string")
         else:
             # it's a file
             if not os.path.isfile(seqfile):
@@ -105,7 +108,7 @@ class HCA(object):
                         self.__clusters[record.id ] = list()
                     else:
                         raise RuntimeError("Error, multiple proteins found with the same name {}".format(record.id ))
-    
+        
     ### SEG-HCA
     @property
     def domains(self):
