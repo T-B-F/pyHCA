@@ -3,6 +3,8 @@
 domain created through hydrophobic clusters.
 """
 
+import numpy as np
+
 __author__ = "Tristan Bitard-Feildel"
 __licence__= "MIT"
 __version__ = 0.1
@@ -19,6 +21,29 @@ class Seq(object):
         self.descr = description
         self.seq = seq
 
+PDB_SEQRES_FREQ = {
+"A":       0.0859929227395,
+"C":       0.0206946259759,
+"E":       0.0648133592624,
+"D":       0.0549383608817,
+"G":       0.0830137574641,
+"F":       0.0378506807406,
+"I":       0.0547752297123,
+"H":       0.0260798136952,
+"K":       0.057416225372,
+"M":       0.0230113512204,
+"L":       0.0871762434274,
+"N":       0.0408935875728,
+"Q":       0.0364996548365,
+"P":       0.045826092199,
+"S":       0.0602061283907,
+"R":       0.0504294572634,
+"T":       0.05511062539,
+"W":       0.0131711008412,
+"V":       0.068839479608,
+"Y":       0.0332613034068,
+}
+
 class HydroCluster(object):
     """ the class definning the amas of hydrophobic clusters
     """
@@ -26,7 +51,9 @@ class HydroCluster(object):
     def __init__(self, start, stop, hydro_cluster):
         self.__start = start
         self.__stop = stop
-        self.__hydro_cluster = hydro_cluster[:]
+        #self.__hydro_cluster = hydro_cluster[:]
+        self.__str_hydro_cluster = hydro_cluster[:]
+        self.__hydro_cluster = [int(val) for val in hydro_cluster]
 
     @property
     def start(self):
@@ -44,7 +71,7 @@ class HydroCluster(object):
         """ write position, indexes are inclusive and start from 1
         """
         return "cluster\t{}\t{}\t{}".format(self.__start+1, self.__stop, 
-                                                           self.__hydro_cluster)
+                                                           self.__str_hydro_cluster)
     def add_offset(self, offset):
         """ add an offset to the hydrophobic clusters
         """
@@ -63,14 +90,21 @@ class HydroCluster(object):
 class DomHCA(object):
     """ the class definning the domain delineated by the HCA segmentation
     """
-    __slots__ = ["__start", "__stop", "__clusters"]
-    def __init__(self, start, stop): #, list_of_hcclusters):
+    __slots__ = ["__start", "__stop", "__pvalue", "score"]
+    def __init__(self, start, stop, clusters): #, list_of_hcclusters):
         self.__start = start
         self.__stop = stop
+        self.score = -1 
+        self.__pvalue = self._compute_pvalue(clusters)
+        
         #self.__clusters = list_of_hcclusters[:]
     @property
     def start(self):
         return self.__start
+    
+    @property
+    def pvalue(self):
+        return self.__pvalue
     
     @property
     def stop(self):
@@ -93,10 +127,31 @@ class DomHCA(object):
         #return iter(self.__clusters)
             
     def __str__(self):
-        domain = "domain\t{}\t{}".format(self.__start+1, self.__stop)
+        domain = "domain\t{}\t{}\t{}\t{}".format(self.__start+1, self.__stop, self.__pvalue, self.score)
         #clusters = "\n".join(domain+"\t"+str(clust) for clust in self.__clusters)
         #if clusters:
             #return clusters
         return domain
 
+    def _compute_pvalue(self, clusters):
+        """ compute the domain pvalue based on length, and clusters
+        """
+        #return 0
+        size = self.stop - self.start
+        N = size # 2 * size
+        nb_cluster = len(clusters)
+        cov = np.zeros(size)
+        cov.fill(-2)
+        for clust in clusters:
+            cov[clust.start - self.start: clust.stop - self.start] = [2 if clust.hydro_cluster[i] == 1 else 1 for i in range(len(clust.hydro_cluster))]
+        sum_cov = sum(cov)
+        # covered residues are contributing negatively to the score
+        # other residues are contributing positively
+        score = sum_cov
+        self.score = score
+        lambda_val, K  = 0.060000, 0.005489
+        #lambda_val, K = 0.375363, 0.107698
 
+        return 1-np.exp(-K*100*np.exp(-lambda_val*score))
+    
+        

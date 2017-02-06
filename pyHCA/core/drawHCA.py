@@ -1002,7 +1002,7 @@ def drawing(dfasta, annotation, pathout):
         cur_svg, nbaa = make_svg(prot, prev_seq, annotation.get(prot, []), cnt)
         svg += cur_svg
         if nbaa > max_aa:
-            max_aa = nb_aa
+            max_aa = nbaa
         cnt += 1
     
     # analys the new annotated domain, selective pressure from PAML
