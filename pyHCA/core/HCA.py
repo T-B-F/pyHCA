@@ -13,6 +13,7 @@ import time, os
 import Bio
 from Bio import Seq 
 from Bio import SeqIO
+import numpy as np
 from .annotateHCA import _annotation_aminoacids
 from .drawHCA import make_svg, getSVGheader
 
@@ -33,6 +34,7 @@ class HCA(object):
         self.querynames = list()
         self.__domains = dict()
         self.__clusters = dict()
+        self.__scores = dict()
         
         self._number_of_sequences = 0
         self._segments_done = False
@@ -117,7 +119,11 @@ class HCA(object):
     @property
     def clusters(self):
         return self.__clusters
-        
+    
+    @property
+    def scores(self):
+        return self.__scores
+    
     @domains.setter
     def domains(self, domains):
         self.__domains = domains
@@ -125,6 +131,10 @@ class HCA(object):
     @clusters.setter
     def clusters(self, clusters):
         self.__clusters = clusters
+    
+    @scores.setter
+    def scores(self, scores):
+        self.__scores = scores
         
     def segments(self, t=0.1, verbose=False):
         """ run the segmentation in domains, store domain and cluster positions
@@ -137,6 +147,7 @@ class HCA(object):
                 annotations = _annotation_aminoacids(seq, t=t, method="domain", verbose=verbose)
                 self.domains[prot] = annotations["domain"]
                 self.clusters[prot] = annotations["cluster"]
+                self.scores[prot] = annotations["scores"]
                 self._segments_done = True
                 self._segments_done_with_t = t
         elif verbose:
@@ -155,7 +166,10 @@ class HCA(object):
             if prot not in self.domains:
                 raise KeyError("Error, unable to find proteins '{}' in domain results".format(prot))
             return self.domains[prot]
-        return [self.domains[prot] for prot in self.querynames]
+        elif self._number_of_sequences == 1:
+            return self.domains[self.querynames[0]]
+        else:
+            return [self.domains[prot] for prot in self.querynames]
     
     def get_clusters(self, prot=None):
         """ get cluster positions
@@ -166,7 +180,25 @@ class HCA(object):
             if prot not in self.clusters:
                 raise KeyError("Error, unable to find proteins '{}' in cluster results".format(prot))
             return self.clusters[prot]
-        return [self.clusters[prot] for prot in self.querynames]
+        elif self._number_of_sequences == 1:
+            return self.clusters[self.querynames[0]]
+        else:
+            return [self.clusters[prot] for prot in self.querynames]
+        
+    
+    def get_scores(self, prot=None):
+        """ get scores positions
+        """
+        if not self._segments_done:
+            self.segments()
+        if prot != None:
+            if prot not in self.scores:
+                raise KeyError("Error, unable to find proteins '{}' in scores results".format(prot))
+            return self.scores[prot]
+        elif self._number_of_sequences == 1:
+            return self.scores[self.querynames[0]]
+        else:
+            return [self.scores[prot] for prot in self.querynames]
     
     def save_annotation(self, output):
         """ save the seg-HCA annotation to a file

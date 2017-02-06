@@ -294,38 +294,38 @@ def _removeSmallAmas(list_amas, seq):
         
         # # is there a big amas close?
         # can we search after?
-        if ite != len(list_amas)+1:
-            # after?  ite+1 we search 1 amas to n after the current
-            for next_pos_amas in list_amas[ite+1:]:                
-                next_pos = next_pos_amas.start 
-                next_amas = next_pos_amas.hydro_cluster
-                # next_pos is the begin of the next amas pos+len(amas) is 
-                # the end of the current amas
-                distance = next_pos - pos + len(amas) 
-                if distance > 7:
-                    break
-                if len(next_amas) > 2:
-                    keepCluster.append(hyclust)
-                    add = True
-                    break
+        #if ite != len(list_amas)+1:
+            ## after?  ite+1 we search 1 amas to n after the current
+            #for next_pos_amas in list_amas[ite+1:]:                
+                #next_pos = next_pos_amas.start 
+                #next_amas = next_pos_amas.hydro_cluster
+                ## next_pos is the begin of the next amas pos+len(amas) is 
+                ## the end of the current amas
+                #distance = next_pos - pos + len(amas) 
+                #if distance > 7:
+                    #break
+                #if len(next_amas) > 2:
+                    #keepCluster.append(hyclust)
+                    #add = True
+                    #break
             
         # can we search before ?
         # we do not add if we already find a big cluster after
-        if ite != 0 and add == False:
-            # before? [::-1] -> reverse the list_amas len(list_amas)-ite begin 
-            # at the first previous amas
-            for prev_pos_amas in list_amas[::-1][len(list_amas)-ite:]:  
-                prev_pos = prev_pos_amas.start
-                prev_amas = prev_pos_amas.hydro_cluster
-                # pos is the begining of the current amas 
-                # prev_pos+len(prev_amas) is the end of the previous amas
-                distance = pos - (prev_pos+len(prev_amas)) 
-                if distance > 7:
-                    break
-                if len(prev_amas) > 2:
-                    keepCluster.append(hyclust)
-                    add = True
-                    break
+        #if ite != 0 and add == False:
+            ## before? [::-1] -> reverse the list_amas len(list_amas)-ite begin 
+            ## at the first previous amas
+            #for prev_pos_amas in list_amas[::-1][len(list_amas)-ite:]:  
+                #prev_pos = prev_pos_amas.start
+                #prev_amas = prev_pos_amas.hydro_cluster
+                ## pos is the begining of the current amas 
+                ## prev_pos+len(prev_amas) is the end of the previous amas
+                #distance = pos - (prev_pos+len(prev_amas)) 
+                #if distance > 7:
+                    #break
+                #if len(prev_amas) > 2:
+                    #keepCluster.append(hyclust)
+                    #add = True
+                    #break
         # small amas is transform in RUPTOR
         if add == False:
             newseq = newseq[:pos]+len(amas)*"R"+newseq[pos+len(amas):]
@@ -350,8 +350,9 @@ def _codeSequence(keepCluster, seq, smooth = False):
         start, stop, amas = hyclust.get("all")
         if smooth:
             seq = seq[:start]+len(amas)*"1"+seq[stop:]
-        pass
-    return list(map(int, list(seq.replace("R", "0"))))
+        #pass
+    #list(map(int, list(seq.replace("R", "0"))))
+    return np.array([int(val) for val in seq.replace("R", "0")], dtype=np.uint8)
 
 def _removeProline(seqtransclean):
     """ this function replace Proline by 0 to obtain a perfect binary string, 
@@ -389,73 +390,6 @@ def _removeProline(seqtransclean):
     
     return seqpro
 
-
-def _smoothCluster(seqbin):
-    """ link the cluster if the connectivity distance is inferior to 0000
-    
-    Parameter
-    ---------
-    seqbin: string
-        is the string code of the sequence
-    
-    Return
-    seqbin: string
-        the cluster are linked 101 becomes 111
-    """
-        
-    # add Proline as a ruptor
-    ite_i=0
-    noiterate = False
-    for ite, i in enumerate(seqbin):
-        if ite_i >= len(seqbin):
-            break
-        
-        start_mover = False
-        
-        # we find a 0000 ruptor
-        if seqbin[ite_i:ite_i+5] == "00001":
-            start_mover = 5
-        
-        # we find a Proline ruptor
-        if seqbin[ite_i] == "P": 
-            # direct ruptor? P0000 or PP
-            if seqbin[ite_i:ite_i+5] == "P0000" or seqbin[ite_i+1] == "P":
-                ite_i+=1
-                continue
-            
-            start_mover = 1 
-            
-        # we find a rutpor let is search for the end of ruptor
-        if start_mover:
-            for ite_j in range(ite_i + start_mover, len(seqbin)):
-                
-                stop_mover = False
-                
-                if seqbin[ite_j:ite_j+5] == "10000":
-                    stop_mover = 5
-                
-                if seqbin[ite_j] == "P":
-                    # is there hydrophobe amas? P00000P or PXP with X contains 1
-                    if "1" not in seqbin[ite_i+start_mover:ite_j]:
-                        break
-                    stop_mover = 1
-                
-                # the end of the sequence
-                if ite_j >= len(seqbin)-1:
-                    stop_mover = ite_j
-                
-                if stop_mover:
-                    seqbin = seqbin[:ite_i+start_mover]+ len(seqbin[ite_i+start_mover:ite_j])*'1' + seqbin[ite_j:]
-                    ite_i = ite_j
-                    noiterate = True
-                    break
-        if noiterate == False:
-            ite_i+=1
-        else:
-            noiterate = False
-                    
-    return seqbin
-
   
 def _getDensity(seqbin, t=0.1):
     """ computes the number of hydrophobe in a window
@@ -472,7 +406,6 @@ def _getDensity(seqbin, t=0.1):
     """
     
     # each size of word
-    hydrotable = []
     begin = True
     
     # we reduce the windows if sequence are too small
@@ -489,9 +422,8 @@ def _getDensity(seqbin, t=0.1):
     
     # improvement lscore += [-1] * (size_word/2)
     begin = True
-    cutting = range(0, len(seqbin)-size_word+1)
-    for iter_seq in cutting:
-        score = sum(seqbin[iter_seq: iter_seq + size_word])/float(size_word)
+    for iter_seq in range(0, len(seqbin)-size_word+1):
+        score = sum(seqbin[iter_seq: iter_seq + size_word])/size_word
         
         if begin:
             # for the begining of the window we put the first score
@@ -506,8 +438,6 @@ def _getDensity(seqbin, t=0.1):
     # for the end of the position in the window we put the same score
     lscore += [score] * diff 
     lthres += [score > t] * diff 
-    #hydrotable.append(lscore[:])
-    #print(lscore)
     return lscore, lthres
     
     
@@ -517,8 +447,8 @@ def _sumDensityWindow(hydrotable):
     Parameter
     ---------
     hydrotable : list 
-        a table containing [[density for each position for window1], 
-                            [density for each position for window2], ...]
+        a table containing [density for each position for window1, 
+                            density for each position for window2, ...]
                             
     Return
     ------
@@ -548,6 +478,10 @@ def _sumDensityWindow(hydrotable):
 
 def _findMinima(list_score_position, thresholds, size, t=0.2, nb_under_threshold=4):
     """ alternative to the old _findMinima function
+    list_score_position : list
+        for each position, sum by windows / size windows of hydrophobe after smooth
+    size : int
+        length of the amino acid sequence
     """
     #print(thresholds)
     dlimit_domain = dict()
@@ -695,33 +629,62 @@ def _findMinima_old(list_score_position, thresholds, size, t=0.2):
     return limit_domain
 
 
-def _findAccurateLimit(limit_domain, list_of_group, keepCluster, seq, final_only = False):
+def _findAccurateLimit(limit_domain, keepCluster, seq, final_only = False):
     """
     """
+    #print(limit_domain)
+    #print(list_of_group)
+    #list_of_group.sort()
     list_final_limit = []
+    #for i in range(0,len(limit_domain), 2):
+        #if i >= len(limit_domain)-1:
+            #break
+        #beg, end = limit_domain[i], limit_domain[i+1]
+        #potential_domain = []
+        #for jb, je in list_of_group:
+            #gap = abs(beg-jb) + abs(end-je)
+            ##print(beg, end, jb, je)
+            #potential_domain.append([gap, (jb, je)])
+        ##print(">>", potential_domain, min(potential_domain))
+        #if len(potential_domain) == 0:
+            #if not final_only:
+                #list_final_limit.append((beg, end))
+        #else:
+            #size, lim = min(potential_domain)
+            #list_final_limit.append(lim)
+            #tmp_list_of_group = list()
+            #for jb, je in list_of_group:
+                #if jb != lim[0] and je != lim[1]:
+                    #tmp_list_of_group.append([jb, je])
+            #list_of_group = tmp_list_of_group[:]
+            
     for i in range(0,len(limit_domain), 2):
         if i >= len(limit_domain)-1:
             break
         beg, end = limit_domain[i], limit_domain[i+1]
         potential_domain = []
-        for jb, je in list_of_group:
-            gap = abs(beg-jb) + abs(end-je)
-            potential_domain.append([gap, (jb, je)])
+        for clust in keepCluster:
+            start = max(clust.start, beg)
+            stop = min(clust.stop, end)
+            if stop-start > 0:
+                potential_domain.append((clust.start, clust.stop))
         if len(potential_domain) == 0:
             if not final_only:
                 list_final_limit.append((beg, end))
         else:
-            size, lim = min(potential_domain)
-            list_final_limit.append(lim)
+            potential_domain.sort()
+            list_final_limit.append([potential_domain[0][0], potential_domain[-1][1]])
+    
     final_domains = []
     for start, stop in list_final_limit:
+        #print(start, stop)
         hydro_dom = []
-        #for hydroclust in keepCluster:
-            #hstart, hstop = hydroclust.get("start"), hydroclust.get("stop")
+        for hydroclust in keepCluster:
+            hstart, hstop = hydroclust.get("start"), hydroclust.get("stop")
             #print(start, stop, hstart, hstop)
-            #if start <= hstart and hstop <= stop:
-                #hydro_dom.append(hydroclust)
-        final_domains.append(DomHCA(start, stop))
+            if start <= hstart and hstop <= stop:
+                hydro_dom.append(hydroclust)
+        final_domains.append(DomHCA(start, stop, hydro_dom))
     return final_domains
     
         
@@ -742,10 +705,10 @@ def _clusterizeCluster(seqbin):
     dcluster = {}
     cluster = False
     for ite, is_amas in enumerate(seqbin):
-        if not cluster and int(is_amas) == 1:
+        if not cluster and is_amas == 1:
             start = ite
             cluster = True
-        elif cluster and (int(is_amas) == 0):
+        elif cluster and is_amas == 0:
             stop = ite
             ocluster = (start, stop)
             dcluster[start] = ocluster 
@@ -815,7 +778,70 @@ def _clusterizeCluster(seqbin):
     
     return list(selected)
 
-def _annotation_aminoacids(seq, t=0.1, method="domain", verbose=False):
+def compute_loc_score(seq, clusters, dist=16):
+    """ compute local score
+    """
+    models ={"C": 0.38888888888888884, "P": 0.8333333333333333, "S": 0.8518518518518517, 
+             "M": 0.27777777777777773, "Q": 0.8518518518518517, "V": 0.27777777777777773, 
+             "F": 0.0185185185185186, "A": 0.6851851851851851, "Y": 0.4259259259259259, 
+             "D": 0.9074074074074073, "I": 0.11111111111111116, "R": 0.8148148148148148, 
+             "E": 0.9074074074074073, "W": 0.2962962962962963, "K": 1.0, "H": 0.6851851851851851, 
+             "G": 0.7962962962962962, "L": 0.0, "T": 0.7592592592592592, "N": 0.8703703703703702}
+    #models = {"K": 0.17, "A": 0.0, "C": -0.16, "S": 0.09, "F": -0.36,
+              #"G": 0.06, "M": -0.22, "H": 0.0, "E": 0.12, "I": -0.31,
+              #"R": 0.07, "Y": -0.14, "L": -0.37, "P": 0.08, "V": -0.22,
+              #"D": 0.12, "T": 0.04, "Q": 0.09, "W": -0.21, "N": 0.1}
+    scores = list()
+    pos_lng_clusters = np.zeros(len(seq), dtype=np.uint8)
+    pos_clusters = np.zeros(len(seq), dtype=np.uint8)
+    part_clusters = np.zeros(len(seq), dtype=np.uint8)
+    part_lng_clusters = np.zeros(len(seq), dtype=np.uint8)
+    for clust in clusters:
+        hclust = np.array([int(val) for val in clust.hydro_cluster], dtype=np.uint8)
+        part_clusters[clust.start: clust.stop] = 1
+        pos_clusters[clust.start: clust.stop] = hclust
+        if len(hclust) > 2:
+            part_lng_clusters[clust.start: clust.stop] = 1
+            pos_lng_clusters[clust.start: clust.stop] = hclust
+            
+    for i in range(len(seq)):
+        subseq = seq[max(0,i-dist): min(i+dist+1, len(seq))]
+        hscore = 0
+        for aa in models:
+            cnt = subseq.count(aa)
+            hscore += cnt * models[aa] #* -1
+        hscore /= len(subseq)
+        # -range(i, i+1+d), i, range(1, i+1+d)
+        subh_exp = part_clusters[max(0,i-dist): min(i+dist+1, len(seq))]
+        cnth_exp = sum(subh_exp)
+        exp = cnth_exp - 1
+        subh_obs = part_lng_clusters[max(0,i-dist): min(i+dist+1, len(seq))]
+        obs = 0
+        for j in range(0, len(subh_obs)-1):
+            if subh_obs[j] == 1:
+                if j+1 < len(subh_obs) and subh_obs[j+1] == 1:
+                    obs += 1
+                #elif j+2 < len(subh_obs) and subh_obs[j+2] == 1:
+                    #obs += 1
+                #elif j+3 < len(subh_obs) and subh_obs[j+3] == 1:
+                    #obs += 1
+                #elif j+4 < len(subh_obs) and subh_obs[j+4] == 1:
+                    #obs += 1
+        if cnth_exp >= 2:
+            score2 = obs / exp
+        else:
+            score2 = 0
+        #print(i, subh_exp, cnth_exp, subh_obs, obs, score2,  cnth_exp/len(subseq))
+        scores.append(score2)
+      
+    #smooth_scores = list()
+    ## smooth averaging
+    #for i in range(len(seq)):
+        #sub_scores = scores[max(0,i-dist): min(i+dist+1, len(seq))]
+        #smooth_scores.append(sum(sub_scores)/len(sub_scores))
+    return np.array(scores)
+
+def _annotation_aminoacids(seq, t=0.1, method="domain", verbose=False, dist=16):
     """ The amino acids annotation function. Two methods are avaliable: 'domain'
     and 'cluster' 
     
@@ -837,7 +863,7 @@ def _annotation_aminoacids(seq, t=0.1, method="domain", verbose=False):
     annotat : list
         the annotation results
     """
-    annotat = {"cluster": [], "domain": []}
+    annotat = {"cluster": [], "domain": [], "scores": []}
     # obsolete identify low complexity segment by SEG algorithm
     low_complexity = []#getSEGLW(fseq)
     seqori = seq[:]
@@ -854,25 +880,27 @@ def _annotation_aminoacids(seq, t=0.1, method="domain", verbose=False):
         print("Create hydrophobic clusters")
     if method == "domain":
         list_amas, seqamas = _getAmas(seqtrans2)
-        #print("".join(seqamas))
         keepCluster, newseq = _removeSmallAmas(list_amas, seqamas)
-        #print("".join(newseq))
         seqbin = _codeSequence(keepCluster, newseq, smooth = True)
-        #print("".join([str(val) for val in seqbin]))
+        #print(newseq)
+        #print(seqbin)
         # get density of hydrophobe mean by windows
         hydrotable, thresolds = _getDensity(seqbin, t)
+        #print(hydrotable)
         # mean by position of all windows
         #list_score_position = _sumDensityWindow(hydrotable) # TODO Useless, the size of the window is fixe at 17
         limit_domain = _findMinima(hydrotable, thresolds, len(seqbin), t)
+        #print(limit_domain)
         if verbose:
             print("Group HC to delineate domains")
-        list_of_group = _clusterizeCluster(seqbin)
+        #list_of_group = _clusterizeCluster(seqbin)
         # get limits
-        domains = _findAccurateLimit(limit_domain, list_of_group, 
-                                             keepCluster, seqamas, 
-                                             final_only=True)
+        #print(list_of_group)
+        domains = _findAccurateLimit(limit_domain, keepCluster, seqamas, final_only=True)
+        #compute_pvalues_domains(domains)
         annotat["cluster"] = list_amas 
         annotat["domain"] = domains
+        
     
     elif method=="cluster_removeP":
         seqtrans = seqtrans2.replace("P", "0")#_removeProline(seqtrans2)
@@ -881,10 +909,11 @@ def _annotation_aminoacids(seq, t=0.1, method="domain", verbose=False):
     else:
         list_amas, seqamas = _getAmas(seqtrans2)
         annotat["cluster"] = list_amas[:]
+    #annotat["scores"] = compute_loc_score(seq, annotat["cluster"], dist)
     return annotat
 
 
-def _annotation(dseq, seq_type="aminoacid", t=0.1, method="domain", verbose=False, output=None):
+def _annotation(output, dseq, seq_type="aminoacid", t=0.1, method="domain", verbose=False, dist=16):
     """ The main annotation function. Two methods are avaliable: 'domain' and 
     'cluster' 
     
@@ -910,58 +939,17 @@ def _annotation(dseq, seq_type="aminoacid", t=0.1, method="domain", verbose=Fals
         the annotation for each protein or each frame of each nucleotide
         sequences
     """
-    if output:
-        with open(output, "w") as outf:
-            if seq_type == "aminoacid":
-                for prot in dseq:
-                    sequence = str(dseq[prot].seq)
-                    annotations = _annotation_aminoacids(sequence, t=t, method=method, 
-                                                        verbose=verbose)
-                    outf.write(">{} {}\n".format(prot, len(sequence)))
-                    for domannot in annotations["domain"]:
-                        outf.write("{}\n".format(str(domannot)))
-                    for clustannot in annotations["cluster"]:
-                        outf.write("{}\n".format(str(clustannot)))
-            else:
-                cnt, nb_dot = 0, 0
-                for name in dseq:
-                    for strand, frame, start, protseq in six_frames(dseq[name]):
-                        cnt += 1
-                        if cnt == 1000:
-                            cnt = 0
-                            sys.stdout.write(".")
-                            sys.stdout.flush()
-                            nb_dot += 1
-                        if nb_dot == 80:
-                            nb_dot = 0
-                            sys.stdout.write("\n")
-                        if strand > 0:
-                            new_name = "{}_5'3'_Frame_{}_start_{}".format(name, frame+1, start+1)
-                        else:
-                            new_name = "{}_3'5'_Frame_{}_start_{}".format(name, frame+1, start+1)
-                        
-                        annotations = {"cluster": [], "domain": []}
-                        cur_annotation = _annotation_aminoacids(protseq, t=t, method=method, verbose=verbose)
-                        for domannot in cur_annotation["domain"]:
-                            annotations["domain"].append(domannot)
-                        for clustannot in cur_annotation["cluster"]:
-                            annotations["cluster"].append(clustannot)
-                            
-                        if annotations:
-                            outf.write(">{} {}\n".format(new_name, len(protseq)))
-                            for domannot in annotations["domain"]:
-                                outf.write("{}\n".format(str(domannot)))
-                            for clustannot in annotations["cluster"]:
-                                outf.write("{}\n".format(str(clustannot)))
-                sys.stdout.write("\n")
-
-    else:
-        danno = {}
+    with open(output, "w") as outf:
         if seq_type == "aminoacid":
             for prot in dseq:
                 sequence = str(dseq[prot].seq)
-                danno[prot] = _annotation_aminoacids(sequence, t=t, method=method, 
-                                                    verbose=verbose)
+                annotations = _annotation_aminoacids(sequence, t=t, method=method, 
+                                                    verbose=verbose, dist=dist)
+                outf.write(">{} {}\n".format(prot, len(sequence)))
+                for domannot in annotations["domain"]:
+                    outf.write("{}\n".format(str(domannot)))
+                for clustannot in annotations["cluster"]:
+                    outf.write("{}\n".format(str(clustannot)))
         else:
             cnt, nb_dot = 0, 0
             for name in dseq:
@@ -976,20 +964,101 @@ def _annotation(dseq, seq_type="aminoacid", t=0.1, method="domain", verbose=Fals
                         nb_dot = 0
                         sys.stdout.write("\n")
                     if strand > 0:
-                        new_name = "{}_5'3'_Frame_{}".format(name, frame+1)
+                        new_name = "{}_5'3'_Frame_{}_start_{}".format(name, frame+1, start+1)
                     else:
-                        new_name = "{}_3'5'_Frame_{}".format(name, frame+1)
-                    if new_name not in dannot:
-                        danno[new_name] = {"cluster": [], "domain": []}
-                    cur_annotation = _annotation_aminoacids(protseq, t=t, method=method, verbose=verbose) 
-                    for domannot in cur_annotation["domain"]:
-                        domannot.add_offset(start)
-                        danno[new_name]["domain"].append(domannot)
-                    for clustannot in cur_annotation["cluster"]:
-                        clustannot.add_offset(start) 
-                        danno[new_name]["cluster"].append(clustannot)
+                        new_name = "{}_3'5'_Frame_{}_start_{}".format(name, frame+1, start+1)
                     
-        return danno
+                    annotations = {"cluster": [], "domain": []}
+                    cur_annotation = _annotation_aminoacids(protseq, t=t, method=method, verbose=verbose, dist=dist)
+                    for domannot in cur_annotation["domain"]:
+                        annotations["domain"].append(domannot)
+                    for clustannot in cur_annotation["cluster"]:
+                        annotations["cluster"].append(clustannot)
+                        
+                    if annotations:
+                        outf.write(">{} {}\n".format(new_name, len(protseq)))
+                        for domannot in annotations["domain"]:
+                            outf.write("{}\n".format(str(domannot)))
+                        for clustannot in annotations["cluster"]:
+                            outf.write("{}\n".format(str(clustannot)))
+            sys.stdout.write("\n")
+
+
+
+def _scores(output, dseq, seq_type="aminoacid", t=0.1, method="domain", verbose=False, dist=16):
+    """ The main annotation function. Two methods are avaliable: 'domain' and 
+    'cluster' 
+    
+    Parameters
+    ----------
+    dseq : dictionary
+        the biological sequences, keys are string, values are biopython Sequence
+        object from SeqIO
+    seq_type: string, ["aminoacids", "nucleotides"]
+        the type of biological sequence
+    t : float
+        parameter controlling the domain creation based on cluster density
+    method : string
+        the method used, 
+        domain: will return a list of domain positions
+        cluster: will return a list of cluster positions
+    verbose: bool
+        print interesting stuff
+    
+    Return:
+    -------
+    danno : dictionarry
+        the annotation for each protein or each frame of each nucleotide
+        sequences
+    """
+    with open(output, "w") as outf:
+        if seq_type == "aminoacid":
+            for prot in dseq:
+                sequence = str(dseq[prot].seq)
+                annotations = _annotation_aminoacids(sequence, t=t, method=method, 
+                                                    verbose=verbose, dist=dist)
+                outf.write(">{} {}\n".format(prot, len(sequence)))
+                if method =="domain":
+                    posdomains = np.zeros(len(sequence), dtype=np.uint8)
+                    for domannot in annotations["domain"]:
+                        posdomains[domannot.start: domannot.stop] = 1
+                    for i in range(len(sequence)):
+                        outf.write("{:.5f}\t{}\n".format(annotations["scores"][i], posdomains[i]))
+                else:
+                    for i in range(len(sequence)):
+                        outf.write("{:.5f}\tNaN\n".format(annotations["scores"][i]))
+        else:
+            cnt, nb_dot = 0, 0
+            for name in dseq:
+                for strand, frame, start, protseq in six_frames(dseq[name]):
+                    cnt += 1
+                    if cnt == 1000:
+                        cnt = 0
+                        sys.stdout.write(".")
+                        sys.stdout.flush()
+                        nb_dot += 1
+                    if nb_dot == 80:
+                        nb_dot = 0
+                        sys.stdout.write("\n")
+                    if strand > 0:
+                        new_name = "{}_5'3'_Frame_{}_start_{}".format(name, frame+1, start+1)
+                    else:
+                        new_name = "{}_3'5'_Frame_{}_start_{}".format(name, frame+1, start+1)
+                    
+                    annotations = _annotation_aminoacids(protseq, t=t, method=method, verbose=verbose, dist=dist)                            
+                    if annotations:
+                        outf.write(">{} {}\n".format(new_name, len(protseq)))
+                        if method =="domain":
+                            posdomains = np.zeros(len(protseq), dtype=np.uint8)
+                            for domannot in annotations["domain"]:
+                                posdomains[domannot.start: domannot.stop] = 1
+                            for i in range(len(protseq)):
+                                outf.write("{:.5f}\t{}\n".format(annotations["scores"][i], pos_domains[i]))
+                        else:
+                            for i in range(len(protseq)):
+                                outf.write("{:.5f}\tNaN\n".format(annotations["scores"][i]))
+            sys.stdout.write("\n")
+
 
 def _process_params():
     """ Process parameters when the script annotateHCA is directly called
@@ -1009,10 +1078,13 @@ def _process_params():
     parser.add_argument("-t", action="store", dest="seqtype", 
         default="aminoacid", choices=["aminoacid","nucleotide"], help=("the "
         "type of the biological sequences passed in the input file"))
+    parser.add_argument("-d", action="store", dest="wdist", 
+        default=8, type=int, help="the windows ditance size [i-d,i, i+d]")
     params = parser.parse_args()
     return params
 
-def main():
+    
+def main_segment():
     """ the main function is called after direct invocation of the software
     """
     params = _process_params()
@@ -1020,18 +1092,28 @@ def main():
     dseq = read_multifasta(params.inputf, verbose=params.verbose)
     
     # annotation
-    dannotation = _annotation(dseq, seq_type=params.seqtype, t=0.1, 
-                             method=params.method, verbose=params.verbose,
-                             output=params.outputf)
+    _annotation(params.outputf, dseq, seq_type=params.seqtype, t=0.1, 
+                              method=params.method, verbose=params.verbose,
+                              dist=params.wdist)
         
-    #write output
-    #write_annotHCA(params.outputf, dannotation, verbose=params.verbose)
-    
     sys.exit(0)
     
+
+def main_score():
+    """ the main function is called after direct invocation of the software
+    """
+    params = _process_params()
+    # read sequence
+    dseq = read_multifasta(params.inputf, verbose=params.verbose)
     
+    # annotation
+    dannotation = _scores(params.outputf, dseq, seq_type=params.seqtype, t=0.1, 
+                             method=params.method, verbose=params.verbose,
+                             dist=params.wdist)
+        
+    sys.exit(0)
 if __name__ == "__main__":
-    main()
+    main_segment()
     
     
     
