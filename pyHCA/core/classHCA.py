@@ -4,6 +4,7 @@ domain created through hydrophobic clusters.
 """
 
 import numpy as np
+import scipy.stats as st
 
 __author__ = "Tristan Bitard-Feildel"
 __licence__= "MIT"
@@ -91,6 +92,7 @@ class DomHCA(object):
     """ the class definning the domain delineated by the HCA segmentation
     """
     __slots__ = ["__start", "__stop", "__pvalue", "score"]
+ 
     def __init__(self, start, stop, clusters): #, list_of_hcclusters):
         self.__start = start
         self.__stop = stop
@@ -141,17 +143,17 @@ class DomHCA(object):
         N = size # 2 * size
         nb_cluster = len(clusters)
         cov = np.zeros(size)
-        cov.fill(-2)
+        cov.fill(-3)
         for clust in clusters:
-            cov[clust.start - self.start: clust.stop - self.start] = [2 if clust.hydro_cluster[i] == 1 else 1 for i in range(len(clust.hydro_cluster))]
-        sum_cov = sum(cov)
+            if len(clust.hydro_cluster) > 2:
+                cov[clust.start - self.start: clust.stop - self.start] = [2 if clust.hydro_cluster[i] == 1 else 1 for i in range(len(clust.hydro_cluster))]
+        score = sum(cov) / size
+        self.score = score
         # covered residues are contributing negatively to the score
         # other residues are contributing positively
-        score = sum_cov
-        self.score = score
-        lambda_val, K  = 0.060000, 0.005489
+        #lambda_val, K  = 0.060000, 0.005489
         #lambda_val, K = 0.375363, 0.107698
+        #return 1-np.exp(-K*100*np.exp(-lambda_val*score))
 
-        return 1-np.exp(-K*100*np.exp(-lambda_val*score))
-    
+        return st.recipinvgauss.sf(score, *[0.2971416368851072, -3.1233023222495855, 0.19934082502134615]    )
         
