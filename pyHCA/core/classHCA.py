@@ -91,12 +91,12 @@ class HydroCluster(object):
 class DomHCA(object):
     """ the class definning the domain delineated by the HCA segmentation
     """
-    __slots__ = ["__start", "__stop", "__pvalue", "score"]
+    __slots__ = ["__start", "__stop", "__pvalue", "__score"]
  
     def __init__(self, start, stop, clusters): #, list_of_hcclusters):
         self.__start = start
         self.__stop = stop
-        self.score = -1 
+        self.__score = -np.inf 
         self.__pvalue = self._compute_pvalue(clusters)
         
         #self.__clusters = list_of_hcclusters[:]
@@ -107,6 +107,10 @@ class DomHCA(object):
     @property
     def pvalue(self):
         return self.__pvalue
+    
+    @property
+    def score(self):
+        return self.__score
     
     @property
     def stop(self):
@@ -129,7 +133,7 @@ class DomHCA(object):
         #return iter(self.__clusters)
             
     def __str__(self):
-        domain = "domain\t{}\t{}\t{}\t{}".format(self.__start+1, self.__stop, self.__pvalue, self.score)
+        domain = "domain\t{}\t{}\t{}\t{}".format(self.__start+1, self.__stop, self.__pvalue, self.__score)
         #clusters = "\n".join(domain+"\t"+str(clust) for clust in self.__clusters)
         #if clusters:
             #return clusters
@@ -148,12 +152,13 @@ class DomHCA(object):
             if len(clust.hydro_cluster) > 2:
                 cov[clust.start - self.start: clust.stop - self.start] = [2 if clust.hydro_cluster[i] == 1 else 1 for i in range(len(clust.hydro_cluster))]
         score = sum(cov) / size
-        self.score = score
+        self.__score = score
         # covered residues are contributing negatively to the score
         # other residues are contributing positively
         #lambda_val, K  = 0.060000, 0.005489
         #lambda_val, K = 0.375363, 0.107698
         #return 1-np.exp(-K*100*np.exp(-lambda_val*score))
-
-        return st.recipinvgauss.sf(score, *[0.2971416368851072, -3.1233023222495855, 0.19934082502134615]    )
+        
+        # inverse gaussian parameters fitted from disprot v7 sequence scores
+        return st.recipinvgauss.sf(score, *[0.2971416368851072, -3.1233023222495855, 0.19934082502134615])
         
