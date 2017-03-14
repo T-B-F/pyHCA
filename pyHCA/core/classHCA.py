@@ -153,12 +153,7 @@ class DomHCA(object):
                 cov[clust.start - self.start: clust.stop - self.start] = [2 if clust.hydro_cluster[i] == 1 else 1 for i in range(len(clust.hydro_cluster))]
         score = sum(cov) / size
         self.__score = score
-        # covered residues are contributing negatively to the score
-        # other residues are contributing positively
-        #lambda_val, K  = 0.060000, 0.005489
-        #lambda_val, K = 0.375363, 0.107698
-        #return 1-np.exp(-K*100*np.exp(-lambda_val*score))
-        
+
         # inverse gaussian parameters fitted from disprot v7 sequence scores
         return st.recipinvgauss.sf(score, *[0.2971416368851072, -3.1233023222495855, 0.19934082502134615])
         

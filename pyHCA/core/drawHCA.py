@@ -4,9 +4,11 @@ sequences (with or without domain annotation
 """
 
 import os, sys, argparse, string
-import Bio.SeqIO
 import Bio
-from pyHCA.core.seq_util import transform_seq
+import Bio.SeqIO
+import matplotlib
+import matplotlib.pyplot as plt
+from pyHCA.core.seq_util import transform_seq, is_msa, compute_conserved_positions
 from pyHCA.core.ioHCA import read_annotation
 
 __author__ = "Tristan Bitard-Feildel"
@@ -138,7 +140,7 @@ def getborder(x, y, F, yoffset=0):
     return lside, polygon
 
 
-def getCoordBorder(x, y, F=1, bis = 0, yoffset=0):
+def getCoordBorder(x, y, color="black", opacity=0.0, F=1, bis = 0, yoffset=0):
     """
     brief get the size limit of an amino acide in a HCAplot
     param x is the coord of the amino acid letter
@@ -168,7 +170,7 @@ def getCoordBorder(x, y, F=1, bis = 0, yoffset=0):
         
         polygon += "%f,%f %f,%f "%(nxb+80, -nyb+80+bis+yoffset, nxe+80, -nye+80+bis+yoffset)
     
-    polygon += """ " visibility="visible" style="fill:black; fill-opacity:0.0" onclick="aa_click(evt)"/>"""
+    polygon += """ " visibility="visible" style="fill:{}; fill-opacity:{}" onclick="aa_click(evt)"/>""".format(color, opacity)
     return lside, polygon
     
 
@@ -648,7 +650,7 @@ def linkCluster(seq, coords, n, dx, dy, yoffset=0):
     return svg
         
 
-def dosvg(seq, coord, seqside, hydrophobe, nbaa, b, F=1, pathout=None, int_coords=None, yoffset=0):
+def dosvg(seq, coord, seqside, hydrophobe, conservation, nbaa, b, F=1, yoffset=0):
     """
     brief draw a svg hca plot
     param seq is a list containing sequence and 4 spaces at the begining and at the end
@@ -657,21 +659,7 @@ def dosvg(seq, coord, seqside, hydrophobe, nbaa, b, F=1, pathout=None, int_coord
     param nbaa is the number of residue
     param b if the begining if we use cutting option
     """
-    
-    """
-    To make figure
-    """
-    """
-    f = open("/home/guilhem/ARTICLE_DOMAIN/data/yeats/amasbreaker.res")
-    for i in f:
-        if i[0] == "H":
-            hy =map(int, i.split()[1:])
-        if i[0] == "B":
-            br =map(int, i.split()[1:])
-        if i[0] == "I":
-            ic =map(int, i.split()[1:])
-    f.close()
-    """
+
     F = 1 # factor zoom
     FX = 12
     FY = 40
@@ -685,45 +673,18 @@ def dosvg(seq, coord, seqside, hydrophobe, nbaa, b, F=1, pathout=None, int_coord
     for i, j in coord:
         coordbis.append([i, j-40])
     
-    #im = Image.new("RGB", (,))
-    
-    if int_coords != None:
-        int_coords2, int_coords_bis = [], []
-        max_x, max_y = 0, 0
-        max_x_bis, max_y_bis = 0, 0
-        min_x, min_y = 1e10, 1e10
-        min_x_bis, min_y_bis = 1e10, 1e10
-        for x,y in int_coords:
-            if max_x < x: 
-                max_x = x
-                max_x_bis = x
-            if min_x > x: 
-                min_x = x
-                min_x_bis = x
-            if max_y < y: 
-                max_y = y
-            if min_y > y: 
-                min_y = y
-            if max_y_bis < y - 40: 
-                max_y_bis = y - 40
-            if min_y_bis > y - 40: 
-                min_y_bis = y - 40
-            #print min_x, max_x, min_y, max_y
-            #print x, y, y-40
-            int_coords_bis.append((x/10, (y-40)/10))
-            int_coords2.append((x/10, y/10))
-        xlim = max(abs(max_x), abs(max_x_bis))
-        int_coords2 = np.array(int_coords2)
-        int_coords_bis= np.array(int_coords_bis)
-        xlim = max(np.max(np.abs(int_coords2)), np.max(np.abs(int_coords_bis)))
-        matrix = np.zeros( (9, xlim+1) )
-        #print matrix.shape
-
     outsvg = ""
     
     for n in range(0, len(seq)):
+        idx_seq = n - 4
+        #print(idx_seq)
+        color="black"
+        opacity=0.0
+        info_annot_position = conservation.get(idx_seq, dict())
+        if "poly" in info_annot_position:
+            color, opacity = info_annot_position["poly"]
         
-        lside, polygon = getCoordBorder(coord[n][0], coord[n][1], yoffset=yoffset)
+        lside, polygon = getCoordBorder(coord[n][0], coord[n][1], color, opacity, yoffset=yoffset)
         lsides, polygon2 = getCoordBorder(coordbis[n][0], coordbis[n][1], yoffset=yoffset)
         
         x, y = coord[n]
@@ -739,9 +700,6 @@ def dosvg(seq, coord, seqside, hydrophobe, nbaa, b, F=1, pathout=None, int_coord
         if seq[n] == "P":
             outsvg += drawProline(x, y, yoffset)
             outsvg += drawProline(x, ys, yoffset)
-            if int_coords != None:
-                matrix[ abs(int_coords2[n][1]), int_coords2[n][0] ] = -1
-                matrix[ abs(int_coords_bis[n][1]), int_coords_bis[n][0] ] = -1
         elif seq[n] == "S":
             outsvg += drawSerine(x, y, yoffset)
             outsvg += drawSerine(x, ys, yoffset)
@@ -752,17 +710,11 @@ def dosvg(seq, coord, seqside, hydrophobe, nbaa, b, F=1, pathout=None, int_coord
             outsvg += drawGlycine(x, y, yoffset)
             outsvg += drawGlycine(x, ys, yoffset)
         elif seq[n] == "C":
-            if int_coords != None:
-                matrix[ abs(int_coords2[n][1]), int_coords2[n][0] ] = -2
-                matrix[ abs(int_coords_bis[n][1]), int_coords_bis[n][0] ] = -2
             outsvg += """<text x="%f" y="%f" style="fill:black;font-size:8px;font-family:Times-Roman;stroke:black;stroke-width:0.4">%s</text>\n"""%(x*F, (y+yoffset)*F, seq[n])
             outsvg += """<text x="%f" y="%f" style="fill:black;font-size:8px;font-family:Times-Roman;stroke:black;stroke-width:0.4">%s</text>\n"""%(x*F, (ys+yoffset)*F, seq[n])
         else:
             outsvg += """<text x="%f" y="%f" style="fill:black;font-size:8px;font-family:Times-Roman">%s</text>\n"""%(x*F, (y+yoffset)*F, seq[n])
             outsvg += """<text x="%f" y="%f" style="fill:black;font-size:8px;font-family:Times-Roman">%s</text>\n"""%(x*F, (ys+yoffset)*F, seq[n])
-            if seq[n] in hydrophobe and int_coords != None:
-                matrix[ abs(int_coords2[n][1]), int_coords2[n][0] ] = 1
-                matrix[ abs(int_coords_bis[n][1]), int_coords_bis[n][0] ] = 1
                 
         # <ruler>
         if  n> 5 and ( n - 4 + 1) % ( 10) == 0 and n>=3:
@@ -799,27 +751,8 @@ def dosvg(seq, coord, seqside, hydrophobe, nbaa, b, F=1, pathout=None, int_coord
             outsvg += drawside(lside[iteside], -dybis, yoffset=yoffset)
             outsvg += drawside(lsides[iteside], -dybis2, yoffset=yoffset)
         
-        """ for the figure
-        if  not (n>3 and n<len(seq)-4):
-            continue
-        if n-4 in hy:
-            polygon = polygon.replace("blue", "blue").replace("opacity:0.0", "opacity:0.2")
-            polygon2 = polygon2.replace("blue", "blue").replace("opacity:0.0", "opacity:0.2")
-            pass
-        elif n-4 in ic:
-            #polygon = polygon.replace("blue", "gray").replace("opacity:0.0", "opacity:0.2")
-            #polygon2 = polygon2.replace("blue", "gray").replace("opacity:0.0", "opacity:0.2")
-            pass
-        else:
-            polygon = polygon.replace("blue", "red").replace("opacity:0.0", "opacity:0.2")
-            polygon2 = polygon2.replace("blue", "red").replace("opacity:0.0", "opacity:0.2")
-            pass
-        """
         outsvg += polygon
         outsvg += polygon2
-    
-    if int_coords != None:
-        np.savez(pathout, mat=matrix)
     
     return outsvg
 
@@ -930,7 +863,7 @@ def getSeqFromGi(gi):
     os.close(temp_fd)
     return temp_filename
 
-def createHCAsvg(seq, nbaa, domains, b, yoffset=0):
+def createHCAsvg(seq, nbaa, domains, conservation, b, yoffset=0):
     """
     brief draw the svg of hca
     param seq is the sequence with 4 spaces at both begining and end
@@ -954,29 +887,11 @@ def createHCAsvg(seq, nbaa, domains, b, yoffset=0):
     #plt.savefig(pathfig)
     #plt.close()
     # draw the svg
-    svg = dosvg(seq, coord, seqside, hydrophobe, nbaa, b, yoffset=yoffset)
+    svg = dosvg(seq, coord, seqside, hydrophobe, conservation, nbaa, b, yoffset=yoffset)
     if domains:
         svg += drawDomains(domains, coord, yoffset)
     return svg
     
-def drawHCA(prot, seq, nbaa, domains, output, b, yoffset=0):
-    """
-    brief draw the svg of hca
-    param seq is the sequence with 4 spaces at both begining and end
-    param nbaa is the true number of aa
-    param output is the address of output file
-    param b is the position to begin (for the ruler)
-    """
-    svgheader = getSVGheader(nbaa)
-    namesvg = draw_protnames(prot, yoffset=yoffset)
-    svg = createHCAsvg(seq, nbaa, domains, output, b, yoffset=yoffset)
-    with open(output, "w") as outf:
-        fout.write(svgheader)
-        fout.write(namesvg)
-        fout.write(svg)
-        fout.write("</svg>")
-    return int_coord
-
 
 def make_svg(prot, prev_seq, annot, cnt):
     """ create svg for a given sequence
@@ -986,7 +901,7 @@ def make_svg(prot, prev_seq, annot, cnt):
     
     b = 0
     svg = draw_protnames(prot, yoffset=cnt*230)
-    svg += createHCAsvg(seq, nbaa, annot, b, yoffset=cnt*230)
+    svg += createHCAsvg(seq, nbaa, annot.get("domains", list()), annot.get("positions", dict()), b, yoffset=cnt*230)
     return svg, nbaa
 
 
@@ -996,10 +911,13 @@ def drawing(dfasta, annotation, pathout):
     svg = ""
     max_aa = 0
     cnt = 0
-    for prot, prev_seq in dfasta.items():
-        if type(prev_seq) == Bio.SeqRecord.SeqRecord:
-            prev_seq = str(prev_seq.seq)
-        cur_svg, nbaa = make_svg(prot, prev_seq, annotation.get(prot, []), cnt)
+    
+    for prot, prot_seq in dfasta.items():
+        if isinstance(prot_seq, Bio.SeqRecord.SeqRecord):
+            prot_seq= str(prot_seq.seq)
+        elif not isinstance(prot_seq, str):
+            raise ValueError("Unknown amino acid sequence format {} for prot {} ".format(type(prot_seq), prot))
+        cur_svg, nbaa = make_svg(prot, prot_seq, annotation.get(prot, dict()), cnt)
         svg += cur_svg
         if nbaa > max_aa:
             max_aa = nbaa
@@ -1012,7 +930,40 @@ def drawing(dfasta, annotation, pathout):
         fout.write(svgheader)
         fout.write(svg)
         fout.write("</svg>")
-    
+
+def colorize_positions(msa, seq, conservation, method="rainbow"):
+    """ colorize positions according to position
+    """
+    size = len(msa)
+    positions = dict()
+    if method == "rainbow":
+        norm = matplotlib.colors.Normalize(vmin=0, vmax=size)
+        palette = plt.get_cmap("viridis")
+        pos = 0
+        for i in range(len(msa)):
+            if msa[i] != "-":
+                #print( i, pos, conservation[pos])
+                if conservation[pos] > 0.8:
+                    rgb = palette(norm(i))[:3]
+                    c = matplotlib.colors.rgb2hex(rgb)
+                    positions[pos] = {"poly": (c, 0.5)}
+                else:
+                    positions[pos] = {"poly": ("black", 0.0)}
+                pos += 1
+    elif "identity":
+        for i in range(seq):
+            if conservation[i] >= 0.9:
+                positions[i] = {"poly": ("red", 0.5)}
+            elif conservation[i] >= 0.8:
+                positions[i] = {"poly": ("orange", 0.5)}
+            elif conservation[i] >= 0.5:
+                positions[i] = {"poly": ("yellow", 0.5)}
+            else:
+                positions[i] = {"poly": ("black", 0.0)}
+    else:
+        raise ValueError("Unknown colorization method")
+    return positions
+
 def get_params():
     """ get command line ArgumentParser
     """
@@ -1032,12 +983,34 @@ def main():
 
     # read fasta file
     dfasta = read_multifasta(params.fastafile)
+    # are we using an msa ?
+    dmsa = dict()
+    if is_msa(dfasta):
+        # if a msa is provided store sequence without gap character in a new dict
+        # store msa sequence to get conserved positions 
+        for rec in dfasta:
+            seq = dfasta[rec]
+            dmsa[rec] = seq
+            if isinstance(seq, Bio.SeqRecord.SeqRecord):
+                seq= str(seq.seq)
+            dfasta[rec] = transform_seq(seq)
+    
+    # get conserved position
+    msa_conserved = compute_conserved_positions(dfasta, dmsa)
     
     # compute hca annotation  
     annotation = {}
     if params.domain:
-        annotation = read_annotation(params.domain, params.domformat)
-        
+        domains = read_annotation(params.domain, params.domformat)
+        for prot in domains:
+            annotation.setdefault(prot, dict())
+            annotation[prot]["domains"] = domains[prot]
+            
+    # define msa color annotation
+    for prot in dfasta:
+        annotation.setdefault(prot, dict())
+        annotation[prot]["positions"] = colorize_positions(dmsa[prot], dfasta[prot], msa_conserved[prot], method="rainbow")
+    
     # draw
     drawing(dfasta, annotation, params.svgfile)
     

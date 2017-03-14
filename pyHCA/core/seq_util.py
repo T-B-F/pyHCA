@@ -4,6 +4,7 @@
 
 import os, sys, argparse, string
 from Bio import Seq
+from Bio.SubsMat import MatrixInfo
 
 __author__ = "Tristan Bitard-Feildel, Guillem Faure"
 __licence__= "MIT"
@@ -16,7 +17,33 @@ __institute__ = "Institute for Evolution and Biodiversity, Muenster Germany"
 __all__ = ["itercodon", "six_frames", "transform_seq"]
 
 def transform_seq(seq):
-    return seq.replace("*", "").replace("-", "").replace("?", "").replace("!","")
+    return seq.replace("*", "").replace("-", "").replace("?", "").replace("!","").replace(".", "")
+
+def check_seq_char(seq):
+    illegal_char = set(["*", "-", "?", "!", "."])
+    for c in seq:
+        if c in illegal_char:
+            return True
+    return False
+
+def is_msa(sequences):
+    if isinstance(sequences, dict):
+        for rec in sequences:
+            seq = sequences[rec]
+            if check_seq_char(seq):
+                return True
+    elif isinstance(sequences, list):
+        for seq in sequences:
+            if check_seq_char(seq):
+                return True
+    elif isinstance(sequences, str):
+        seq = sequences[:]
+        if check_seq_char(seq):
+            return True
+    else:
+        raise ValueError("Unknown argument type passed to is_msa(), {}").format(type(sequences))
+    return False
+    
 
 def itercodon(seq, frame, offset, table, reverse=False):
     stop = 0
@@ -90,4 +117,50 @@ def six_frames(seq, table=1):
                     subprot += aa
             if subprot:
                 yield strand, frame, start, subprot
-            
+    
+def compute_conserved_positions(dfasta, dmsa, score_type=0, matrix_name="blosum62"):
+    """ compute conservation of a column relative to a sequence position of a msa
+    score_type, 0: identity score, 1: binarized similarity (1 if sim > 0 else 0)
+    """ 
+    
+    matrix = getattr(MatrixInfo, matrix_name)
+    items = list(matrix.items())
+    matrix.update(((b,a),val) for (a,b),val in items)
+    
+    dconserv_per_prot = dict()
+    records = list()
+    seq_idx = dict()
+    for rec in dfasta:
+        records.append(rec)
+        seq_idx[rec] = 0
+        dconserv_per_prot[rec] = [0] * len(dfasta[rec])
+        
+    nb_seq =  len(records)
+    if nb_seq > 0:
+        nb_cols = len(dmsa[records[0]])
+        for c in range(nb_cols):
+            #dconserv[c] = 0.0
+            for k in range(len(records)-1):
+                i = seq_idx[records[k]]
+                seqk = dmsa[records[k]]
+                if seqk[c] != "-":
+                    # no gap in sequence k
+                    for l in range(k+1, len(records)):
+                        j = seq_idx[records[l]]
+                        seql = dmsa[records[l]]
+                        if seql[c] != "-":
+                            if score_type == 0:
+                                score = 1 if (seqk[c] == seql[c]) else 0
+                            else: # score_type == 1:
+                                score = 1 if matrix[(seqk[c], seql[c])] > 0 else 0
+                            dconserv_per_prot[records[k]][i] += score
+                            dconserv_per_prot[records[l]][j] += score
+            # update indexe position of each sequence
+            for rec in records:
+                if dmsa[rec][c] != "-":
+                    seq_idx[rec] += 1
+        # normalize score by number of sequence
+        for rec in records:
+            for i in range(len(dconserv_per_prot[rec])):
+                dconserv_per_prot[rec][i] /= (nb_seq-1)
+    return dconserv_per_prot
