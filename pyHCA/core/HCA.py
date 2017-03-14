@@ -214,7 +214,7 @@ class HCA(object):
                     outf.write("{}\n".format(str(clustannot)))
             
     ### DrAW-HCA
-    def draw(self, external_annotation=dict(), show_hca_dom=False, outputfile=None):
+    def draw(self, external_annotation=dict(), conservation=dict(), show_hca_dom=False, outputfile=None):
         """ draw a HCA plot in svg of each sequence
         """
         self.all_svg = dict()
@@ -235,7 +235,7 @@ class HCA(object):
                     stop = dom.stop
                     annotation.append((start, stop, "domain", "!", None))
             # make svg
-            cur_svg, nbaa = make_svg(prot, prev_seq, annotation, cnt)
+            cur_svg, nbaa = make_svg(prot, prev_seq, annotation, conservation.get(prot, []), cnt)
             self.all_svg[prot] = cur_svg
             if nbaa > max_aa:
                 max_aa = nbaa
