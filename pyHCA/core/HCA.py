@@ -376,12 +376,12 @@ class HCA(object):
             self.__tremolo_res[target] = {"hits": [], "domains": []}
             for hit in self.__tremolo_targets[0][target]:
                 hit_res = dict()
-                for key in ["Aligned_col", "E-value", "Identities", "Probab", 
+                for key in ["Aligned_cols", "E-value", "Identities", "Probab", 
                             "Qali", "Qsize", "Qstart", "Qstop", 
                             "Score", "Similarity", "Sum_probs",
                             "Tali", "Tsize", "Tstart", "Tstop", 
                             "descr"]:
-                    hit_res[key] = self.__tremolo_targets[0][target][hit][key]
+                    hit_res[key] = self.__tremolo_targets[0][target][hit].get(key, "")
                 self.__tremolo_res[target]["hits"].append(hit_res)
             self.__tremolo_res[target]["domains"] = self.__tremolo_annotation[target]
         return self.__tremolo_res
