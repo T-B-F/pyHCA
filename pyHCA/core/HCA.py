@@ -347,16 +347,16 @@ class HCA(object):
         sequence = self.sequences[prot_idx]
         start -= 1 # shift to 0 start
         if stop <= len(sequence) and start > -1:
-            domains = [(start, stop)]
+            self.__tremolo_domains = [(start, stop)]
         else:
             raise ValueError("Invalid domain boundaries for protein {}, ({}, {}), sequence length is {}".format(prot, start+1, stop, len(sequence)))
-        query = SeqHCA([prot], [""], [sequence], len(sequence))
+        self.__tremolo_query = SeqHCA([prot], [""], [sequence], len(sequence))
 
         # prepare workdir
-        self.tremolo_workdir = tempfile.mkdtemp()
+        self.__tremolo_workdir = tempfile.mkdtemp()
         
         # run hhblits
-        targets, alltargetids = search_domains(query, domains, hhblitsdb, evalue, hhblitsparams, self.tremolo_workdir )
+        self.__tremolo_targets, alltargetids = search_domains(self.__tremolo_query, self.__tremolo_domains, hhblitsdb, evalue, hhblitsparams, self.__tremolo_workdir )
         if alltargetids == []:
             msg = "Unable to find any targets with hhblits in database {}\n".format(hhblitsdb)
             msg+= "with parameters {}\n".format(hhblitsparams)
@@ -366,15 +366,35 @@ class HCA(object):
         # target annotations
         if annotation == "CDD":
             # get domain annotation from CDD
-            annotation = cdd_search(alltargetids, self.tremolo_workdir )
+            self.__tremolo_annotation = cdd_search(alltargetids, self.__tremolo_workdir )
         else:
             # get domain from Interpro
-            annotation = interpro_search(alltargetids, self.tremolo_workdir , annotation_path)
+            self.__tremolo_annotation = interpro_search(alltargetids, self.__tremolo_workdir , annotation_path)
 
-        # group by domain arrangement
-        groups = group_resda(targets, annotation)
-        return targets, annotation, groups
+        self.__tremolo_res = dict()
+        for target in self.__tremolo_targets[0]:
+            self.__tremolo_res[target] = {"hits": [], "domains": []}
+            for hit in self.__tremolo_targets[0][target]:
+                hit_res = dict()
+                for key in ["Aligned_col", "E-value", "Identities", "Probab", 
+                            "Qali", "Qsize", "Qstart", "Qstop", 
+                            "Score", "Similarity", "Sum_probs",
+                            "Tali", "Tsize", "Tstart", "Tstop", 
+                            "descr"]:
+                    hit_res[key] = self.__tremolo_targets[0][target][hit][key]
+                self.__tremolo_res[target]["hits"].append(hit_res)
+            self.__tremolo_res[target]["domains"] = self.__tremolo_annotation[target]
+        return self.__tremolo_res
     
+    def save_tremolo(self, outputfile):
+        """ save tremolo results to a text file
+        """
+        
+        groups = group_resda(self.__tremolo_targets, self.__tremolo_annotation)
+        write_tremolo_results(self.__tremolo_query, self.__tremolo_domains, 
+                              self.__tremolo_targets, self.__tremolo_annotation, 
+                              groups, outputfile)
+        
 def is_seq_none(seq):
     """ check if seq argument is None
     """
