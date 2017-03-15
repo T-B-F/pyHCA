@@ -13,35 +13,72 @@ import time, os
 import Bio
 from Bio import Seq 
 from Bio import SeqIO
+from Bio.Alphabet import IUPAC
 import numpy as np
 from .annotateHCA import _annotation_aminoacids
-from .drawHCA import make_svg, getSVGheader
+from .drawHCA import make_svg, getSVGheader, colorize_positions
+from .seq_util import compute_conserved_positions
 
 class HCA(object):
     """ HCA class provides an API interface to all the standalone programs
     """
-    def __init__(self, querynames=None, seq=None, seqtype=None, seqfile=None, file_format="fasta"):
+    def __init__(self, querynames=None, seq=None, seqfile=None, file_format="fasta"):
         """ create an HCA instance, accept only one sequence at a time
+        
+        Parameters:
+        -----------
+        seq: list of instances or instance
+            instance can either be a string, a Bio.Seq object or a Bio.SeqRecord object
+        querynames: list or string
+            if seq is instance of string or Bio.Seq, provide a name to the protein sequences, if not used "query_<num_idx>" is used
+        seqfile: string
+            path to the file containing protein sequences
+        file_format: string
+            BioPython supported file format for seqfile
+            
+            
+        Usage:
+        ------
+        >>> # instanciation of a single sequence
+        >>> seq_str = "ATGYHVVLIVQEAGFHILLV"
+        >>> hca = HCA(seq_str, querynames="my_query")
+        >>>        
+        >>> from Bio import Seq
+        >>> seq_bio = Seq.Seq("ATGYHVVLIVQEAGFHILLV")
+        >>> hca = HCA(seq_bio) # without specifying querynames, automatically set it up to query_1
+        >>>
+        >>> from Bio import SeqRecord
+        >>> seq_rec = SeqRecord.SeqRecord(id="protein_1", seq="ATGYHVVLIVQEAGFHILLV")
+        >>> hca = HCA(seq_rec) # SeqRecord's id attribute is used 
+        >>>
+
+        >>> # instanciation of a list of sequences
+        >>> seq_str_list = ["ATGYHVVLIVQEAGFHILLV", "AGVVLATGYHHILLVFHILLV"]
+        >>> hca = HCA(seq_str_lst, querynames=["my_query_1", "my_query_2"])
+        >>>
         """
         
-        if seq == None and seqfile == None:
+        if is_seq_none(seq) and seqfile == None:
             raise ValueError("Error, you need to provide a sequence (or a list of sequences), or a valid path to a file to instantiate a HCA object")
         
-        if seq != None and seqfile != None:
+        if not is_seq_none(seq) and seqfile != None:
             raise ValueError("Error, you need to provide either a sequence (or a list of sequences), or a valid path to a file to instantiate a HCA object")
         
         self.sequences = list()
+        self.msa_seq = list()
+        self.is_msa = False
         self.querynames = list()
         self.__domains = dict()
         self.__clusters = dict()
         self.__scores = dict()
-        
         self._number_of_sequences = 0
-        self._segments_done = False
-        self._tremolo_done = False
-        self._segments_done_with_t = -1
         
-        if seq != None:
+        # attributes to keep in memory if computation were previously done
+        self._segments_done = False
+        self._segments_done_with_t = -1
+        self._tremolo_done = False
+        
+        if not is_seq_none(seq):
             # list of sequences or single sequence
             qnames = list()
             if isinstance(seq, list):
@@ -110,6 +147,13 @@ class HCA(object):
                         self.__clusters[record.id ] = list()
                     else:
                         raise RuntimeError("Error, multiple proteins found with the same name {}".format(record.id ))
+                    
+        # check if sequence is a MSA sequence
+        is_msa, msa_seq, sequences = check_if_msa(self.querynames, self.sequences)
+        self.msa_seq = msa_seq[:]
+        self.is_msa = is_msa
+        if is_msa:
+            self.sequences = sequences[:]
         
     ### SEG-HCA
     @property
@@ -137,10 +181,12 @@ class HCA(object):
         self.__scores = scores
         
     def segments(self, t=0.1, verbose=False):
-        """ run the segmentation in domains, store domain and cluster positions
+        """ run the segmentation of protein sequences into HCA domains, store domain and cluster positions
         """
         t1 = time.time()
         if not self._segments_done or t != self._segments_done_with_t:
+            if t != self._segments_done_with_t and verbose:
+                print("Running segmentation with a different t value ({} -> {})".format(self._segments_done_with_t, t))
             for i in range(len(self.sequences)):
                 seq = self.sequences[i]
                 prot = self.querynames[i]
@@ -158,7 +204,10 @@ class HCA(object):
             print("Segmentation done in {}".format(t2-t1))
     
     def get_domains(self, prot=None):
-        """ get domain annotations
+        """ function wrapper to return HCA domain annotation.
+        If only one sequence was provided return a list of domains.
+        If multiple sequences were provided return a dictionary with
+        protein quernames as keys and the list of domains as values.
         """
         if not self._segments_done:
             self.segments()
@@ -172,7 +221,10 @@ class HCA(object):
             return [self.domains[prot] for prot in self.querynames]
     
     def get_clusters(self, prot=None):
-        """ get cluster positions
+        """ function wrapper to return HCA cluster positions. 
+        If only one sequence was provided return a list of clusters.
+        If multiple sequences were provided return a dictionary with
+        as protein querynames as keys and the list of clusters as values.
         """
         if not self._segments_done:
             self.segments()
@@ -187,7 +239,10 @@ class HCA(object):
         
     
     def get_scores(self, prot=None):
-        """ get scores positions
+        """ function wrapper to return HCA scores of each domains. 
+        If only one sequence was provided return a list of scores.
+        If multiple sequences were provided return a dictionary with
+        as protein querynames as keys and the list of scores as values.
         """
         if not self._segments_done:
             self.segments()
@@ -214,28 +269,34 @@ class HCA(object):
                     outf.write("{}\n".format(str(clustannot)))
             
     ### DrAW-HCA
-    def draw(self, external_annotation=dict(), conservation=dict(), show_hca_dom=False, outputfile=None):
+    def draw(self, external_annotation=dict(), show_hca_dom=False, outputfile=None):
         """ draw a HCA plot in svg of each sequence
         """
+        if self.is_msa:
+            msa_conserved = compute_conserved_positions(dict(zip(self.querynames, self.sequences)), dict(zip(self.querynames, self.msa_seq)))
+        
         self.all_svg = dict()
         max_aa = 0
         cnt = 0
         # create hca plot for each sequence
         for i in range(len(self.querynames)):
             prot = self.querynames[i]
-            prev_seq = self.sequences[i]
+            prot_seq = self.sequences[i]
             # read domain annotation if provided
-            annotation = list()
-            if prot in external_annotation:
+            annotation = {"domains": list()}
+            if prot in external_annotation and "domains" in external_annotation[prot]:
                 for start, stop, dom in external_annotation[prot]:
-                    annotation.append((start, stop, dom, "!", None))
+                    annotation["domains"].append((start, stop, dom, "!", None))
             if show_hca_dom:
                 for dom in self.domains[prot]:
                     start = dom.start
                     stop = dom.stop
-                    annotation.append((start, stop, "domain", "!", None))
+                    annotation["domains"].append((start, stop, "domain", "!", None))
             # make svg
-            cur_svg, nbaa = make_svg(prot, prev_seq, annotation, conservation.get(prot, []), cnt)
+            
+            if self.is_msa:
+                annotation["positions"] = colorize_positions(self.msa_seq[i], prot_seq, msa_conserved[prot], method="rainbow")
+            cur_svg, nbaa = make_svg(prot, prot_seq, annotation, cnt)
             self.all_svg[prot] = cur_svg
             if nbaa > max_aa:
                 max_aa = nbaa
@@ -252,6 +313,14 @@ class HCA(object):
         # return the svg dictionary
         return self.all_svg
     
+def is_seq_none(seq):
+    """ check if seq argument is None
+    """
+    # Bio.SeqRecord.SeqRecord does not support direct comparison
+    if isinstance(seq, Bio.SeqRecord.SeqRecord):
+        return False
+    return seq == None
+    
 def check_seq_type(seq):
     """ check that sequence is of correct type
     """
@@ -266,3 +335,32 @@ def check_seq_type(seq):
     else:
         raise TypeError("Error, the 'seq' argument must be either a string a Bio.Seq instance or a Bio.SeqRecord instance")
     return seq, queryname
+
+def check_if_msa(querynames, sequences):
+    """ check if provided sequences are from an MSA
+    if yes, transform msa sequences to ungapped sequences for HCA analysis
+    """
+    msa_length, msa_seq, new_sequences = list(), list(), list()
+    is_msa = False
+    prot_alphabet = set(IUPAC.protein.letters)
+    gaps = set(["-", "."])
+    for i, seq in enumerate(sequences):
+        new_seq = ""
+        for j, c in enumerate(seq):
+            if c in prot_alphabet:
+                new_seq += c
+            else:
+                if c in gaps:
+                    is_msa = True
+                else:
+                    print("Invalid amino acids ({}, {}) in protein {}, replaced by X".format(j, c, querynames[i]))
+        new_sequences.append(new_seq)
+        msa_seq.append(seq)
+        msa_length.append(len(seq))
+        
+    if is_msa:
+        # chec identical sequence lengths
+        if len(set(msa_length)) != 1:
+            raise ValueError("Error, MSA characters detected but sequences have different lengths")
+    
+    return is_msa, msa_seq, new_sequences
