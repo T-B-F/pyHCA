@@ -9,7 +9,7 @@ __version__ = 0.1
 __email__ = "tristan.bitard-feildel [you know what] impmc.upmc.fr"
 __institute__ = "IMPMC, UPMC"
 
-import time, os
+import time, os, tempfile
 import Bio
 from Bio import Seq 
 from Bio import SeqIO
@@ -318,7 +318,7 @@ class HCA(object):
     
     ## Tremolo-HCA 
     
-    def tremolo(self, prot, start, stop, hhblitsdb, hhblitsparams="", annotation_path="", annotation="Interpro", evalue=1e-3):
+    def tremolo(self, prot, start, stop, hhblitsdb="", hhblitsparams="", annotation_path="", annotation="Interpro", evalue=1e-3):
         """ run tremolo hca on a specific part of a protein sequence
         
         Parameters:
@@ -346,7 +346,7 @@ class HCA(object):
         prot_idx =self.querynames.index(prot)
         sequence = self.sequences[prot_idx]
         start -= 1 # shift to 0 start
-        if stop < len(sequence) and start > -1:
+        if stop <= len(sequence) and start > -1:
             domains = [(start, stop)]
         else:
             raise ValueError("Invalid domain boundaries for protein {}, ({}, {}), sequence length is {}".format(prot, start+1, stop, len(sequence)))
