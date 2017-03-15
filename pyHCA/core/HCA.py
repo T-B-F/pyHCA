@@ -15,9 +15,12 @@ from Bio import Seq
 from Bio import SeqIO
 from Bio.Alphabet import IUPAC
 import numpy as np
+from .classHCA import Seq as SeqHCA
 from .annotateHCA import _annotation_aminoacids
 from .drawHCA import make_svg, getSVGheader, colorize_positions
 from .seq_util import compute_conserved_positions
+from .tremoloHCA import search_domains, group_resda, write_tremolo_results
+from .external import cdd_search, interpro_search
 
 class HCA(object):
     """ HCA class provides an API interface to all the standalone programs
@@ -105,7 +108,7 @@ class HCA(object):
                             self.__domains[name] = list()
                             self.__clusters[name] = list()
                         else:
-                            raise RuntimeError("Error, multiple proteins found with the same name {}".format(name))
+                            raise ValueError("Error, multiple proteins found with the same name {}".format(name))
                             
                 else:
                     for name in qnames:
@@ -115,7 +118,7 @@ class HCA(object):
                             self.__domains[name] = list()
                             self.__clusters[name] = list()
                         else:
-                            raise RuntimeError("Error, multiple proteins found with the same name {}".format(name))
+                            raise ValueError("Error, multiple proteins found with the same name {}".format(name))
             elif isinstance(querynames, list):
                 if len(querynames) != len(self.sequences):
                     raise ValueError("Error, queryname argument must be a list of same size as seq argument (one name per seq")
@@ -127,7 +130,7 @@ class HCA(object):
                             self.__domains[name] = list()
                             self.__clusters[name] = list()
                         else:
-                            raise RuntimeError("Error, multiple proteins found with the same name {}".format(name))
+                            raise ValueError("Error, multiple proteins found with the same name {}".format(name))
             elif isinstance(querynames, str):
                 self.querynames.append(querynames)
             else:
@@ -146,7 +149,7 @@ class HCA(object):
                         self.__domains[record.id ] = list()
                         self.__clusters[record.id ] = list()
                     else:
-                        raise RuntimeError("Error, multiple proteins found with the same name {}".format(record.id ))
+                        raise ValueError("Error, multiple proteins found with the same name {}".format(record.id))
                     
         # check if sequence is a MSA sequence
         is_msa, msa_seq, sequences = check_if_msa(self.querynames, self.sequences)
@@ -312,6 +315,65 @@ class HCA(object):
                 fout.write("</svg>")
         # return the svg dictionary
         return self.all_svg
+    
+    ## Tremolo-HCA 
+    
+    def tremolo(self, prot, start, stop, hhblitsdb, hhblitsparams="", annotation_path="", annotation="Interpro", evalue=1e-3):
+        """ run tremolo hca on a specific part of a protein sequence
+        
+        Parameters:
+        -----------
+        prot: string
+            protein name, must be a part of input protein names
+        start: int 
+            domain start position to analysis, inclusive, positive
+        stop: int 
+            domain stop position to analysis, inclusive, lesser than sequence length
+        hhblitsdb: string
+            path to the HHblits database to use 
+        hhblitsparams: string
+            specific options to run HHblits with
+        evalue: float
+            evalue threshold to filter hhblits hits
+        annotation: string
+            hhblits target annotation to use: CDD (online annotation) or Interpro (local annotation)
+            CDD used the NCBI webserver to annotate hhblits targets
+            Interpro required a local file of protein annotations
+        """
+        # check query sequence and domain boundaries
+        if prot not in self.querynames:
+            raise ValueError("Protein {} not found in list of possible protein queries [{}]".format(prot, ", ".join(self.querynames)))
+        prot_idx =self.querynames.index(prot)
+        sequence = self.sequences[prot_idx]
+        start -= 1 # shift to 0 start
+        if stop < len(sequence) and start > -1:
+            domains = [(start, stop)]
+        else:
+            raise ValueError("Invalid domain boundaries for protein {}, ({}, {}), sequence length is {}".format(prot, start+1, stop, len(sequence)))
+        query = SeqHCA([prot], [""], [sequence], len(sequence))
+
+        # prepare workdir
+        self.tremolo_workdir = tempfile.mkdtemp()
+        
+        # run hhblits
+        targets, alltargetids = search_domains(query, domains, hhblitsdb, evalue, hhblitsparams, self.tremolo_workdir )
+        if alltargetids == []:
+            msg = "Unable to find any targets with hhblits in database {}\n".format(hhblitsdb)
+            msg+= "with parameters {}\n".format(hhblitsparams)
+            msg+ "Please try less stringent parameters or a different database"
+            raise RuntimeError(msg)
+        
+        # target annotations
+        if params.annotation == "CDD":
+            # get domain annotation from CDD
+            annotation = cdd_search(alltargetids, self.tremolo_workdir )
+        else:
+            # get domain from Interpro
+            annotation = interpro_search(alltargetids, self.tremolo_workdir , annotation_path)
+
+        # group by domain arrangement
+        groups = group_resda(targets, annotation)
+        return groups
     
 def is_seq_none(seq):
     """ check if seq argument is None
