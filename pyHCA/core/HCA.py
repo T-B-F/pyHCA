@@ -373,7 +373,7 @@ class HCA(object):
 
         # group by domain arrangement
         groups = group_resda(targets, annotation)
-        return groups
+        return targets, annotation, groups
     
 def is_seq_none(seq):
     """ check if seq argument is None
