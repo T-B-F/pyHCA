@@ -364,7 +364,7 @@ class HCA(object):
             raise RuntimeError(msg)
         
         # target annotations
-        if params.annotation == "CDD":
+        if annotation == "CDD":
             # get domain annotation from CDD
             annotation = cdd_search(alltargetids, self.tremolo_workdir )
         else:
