@@ -42,22 +42,23 @@ class HCA(object):
             
         Usage:
         ------
+        
         >>> # instanciation of a single sequence
         >>> seq_str = "ATGYHVVLIVQEAGFHILLV"
-        >>> hca = HCA(seq_str, querynames="my_query")
+        >>> hca = HCA(seq=seq_str, querynames="my_query")
         >>>        
         >>> from Bio import Seq
         >>> seq_bio = Seq.Seq("ATGYHVVLIVQEAGFHILLV")
-        >>> hca = HCA(seq_bio) # without specifying querynames, automatically set it up to query_1
+        >>> hca = HCA(seq=seq_bio) # without specifying querynames, automatically set it up to query_1
         >>>
         >>> from Bio import SeqRecord
         >>> seq_rec = SeqRecord.SeqRecord(id="protein_1", seq="ATGYHVVLIVQEAGFHILLV")
-        >>> hca = HCA(seq_rec) # SeqRecord's id attribute is used 
+        >>> hca = HCA(seq=seq_rec) # SeqRecord's id attribute is used 
         >>>
 
         >>> # instanciation of a list of sequences
-        >>> seq_str_list = ["ATGYHVVLIVQEAGFHILLV", "AGVVLATGYHHILLVFHILLV"]
-        >>> hca = HCA(seq_str_lst, querynames=["my_query_1", "my_query_2"])
+        >>> seq_str_lst = ["ATGYHVVLIVQEAGFHILLV", "AGVVLATGYHHILLVFHILLV"]
+        >>> hca = HCA(seq=seq_str_lst, querynames=["my_query_1", "my_query_2"])
         >>>
         """
         
@@ -185,6 +186,21 @@ class HCA(object):
         
     def segments(self, t=0.1, verbose=False):
         """ run the segmentation of protein sequences into HCA domains, store domain and cluster positions
+        
+        Parameters
+        ----------
+        t: float
+            cutoff value used to segment the protein, trained on SCOP protein sequences
+        verbose: bool
+            print information
+        
+        Usage:
+        ------
+        
+        >>> seq_str_lst = ["ATGYHVVLIVQEAGFHILLV", "AGVVLATGYHHILLVFHILLV"]
+        >>> hca = HCA(seq=seq_str_lst, querynames=["my_query_1", "my_query_2"])
+        >>> hca.segments()    
+        >>>
         """
         t1 = time.time()
         if not self._segments_done or t != self._segments_done_with_t:
@@ -211,6 +227,28 @@ class HCA(object):
         If only one sequence was provided return a list of domains.
         If multiple sequences were provided return a dictionary with
         protein quernames as keys and the list of domains as values.
+        
+        Parameters:
+        -----------
+        prot: None or string
+            If None get all domains results of every proteins in a dictionary.
+            If a string is provided and corresponds to an analysed proteins, 
+            only return the list of domain of the protein.
+            If only one sequence was analysed a list of domain is returned
+        
+        Usage:
+        ------
+        
+        >>> seq_str_lst = ["ATGYHVVLIVQEAGFHILLV", "AGVVLATGYHHILLVFHILLV"]
+        >>> hca = HCA(seq=seq_str_lst, querynames=["my_query_1", "my_query_2"])
+        >>> hca.segments()    
+        >>> domains = hca.get_domains("my_query_1")
+        >>> print(domains)
+        [<pyHCA.core.classHCA.DomHCA object at 0x7f604cab0b88>]
+        >>> print(domains[0])
+        domain  4       20      0.00025890542325190946  0.7058823529411765
+        >>>
+        
         """
         if not self._segments_done:
             self.segments()
@@ -221,13 +259,28 @@ class HCA(object):
         elif self._number_of_sequences == 1:
             return self.domains[self.querynames[0]]
         else:
-            return [self.domains[prot] for prot in self.querynames]
+            return dict([prot, self.domains[prot]) for prot in self.querynames])
     
     def get_clusters(self, prot=None):
         """ function wrapper to return HCA cluster positions. 
         If only one sequence was provided return a list of clusters.
         If multiple sequences were provided return a dictionary with
         as protein querynames as keys and the list of clusters as values.
+        
+        Usage:
+        ------
+        
+        >>> seq_str_lst = ["ATGYHVVLIVQEAGFHILLV", "AGVVLATGYHHILLVFHILLV"]
+        >>> hca = HCA(seq=seq_str_lst, querynames=["my_query_1", "my_query_2"])
+        >>> hca.segments()    
+        >>> clusters = hca.get_clusters("my_query_1")
+        >>> print(clusters)
+        [<pyHCA.core.classHCA.HydroCluster at 0x7f604cab18d0>,
+         <pyHCA.core.classHCA.HydroCluster at 0x7f604cab1940>]
+        >>> print(clusters[0])
+        cluster 4       10      1011111
+        >>>
+        
         """
         if not self._segments_done:
             self.segments()
@@ -238,14 +291,26 @@ class HCA(object):
         elif self._number_of_sequences == 1:
             return self.clusters[self.querynames[0]]
         else:
-            return [self.clusters[prot] for prot in self.querynames]
+            return dict([(prot, self.clusters[prot]) for prot in self.querynames])
         
-    
+    @depreciated
     def get_scores(self, prot=None):
         """ function wrapper to return HCA scores of each domains. 
         If only one sequence was provided return a list of scores.
         If multiple sequences were provided return a dictionary with
         as protein querynames as keys and the list of scores as values.
+        
+        Usage:
+        ------
+        
+        >>> seq_str_lst = ["ATGYHVVLIVQEAGFHILLV", "AGVVLATGYHHILLVFHILLV"]
+        >>> hca = HCA(seq=seq_str_lst, querynames=["my_query_1", "my_query_2"])
+        >>> hca.segments()    
+        >>> scores = hca.get_scores("my_query_1")
+        >>> print(scores[0])
+        []
+        >>>
+        
         """
         if not self._segments_done:
             self.segments()
@@ -256,10 +321,22 @@ class HCA(object):
         elif self._number_of_sequences == 1:
             return self.scores[self.querynames[0]]
         else:
-            return [self.scores[prot] for prot in self.querynames]
+            return dict([(prot, self.scores[prot]) for prot in self.querynames])
     
     def save_annotation(self, output):
         """ save the seg-HCA annotation to a file
+        
+        Parameter
+        ---------
+        output: string
+            the path to the output file
+            
+        Usage
+        -----
+        
+        >>> hca.save_tremolo("tremolo_results.txt")
+        >>>
+        
         """
         if not self._segments_done:
             raise RuntimeError("Error, no annotation to save, you must perform an HCA segmentation with the segments() method first")
@@ -274,6 +351,26 @@ class HCA(object):
     ### DrAW-HCA
     def draw(self, external_annotation=dict(), show_hca_dom=False, outputfile=None):
         """ draw a HCA plot in svg of each sequence
+        
+        Parameters:
+        -----------
+        external_annotation: dict
+            currently only support external domain annotation. 
+            Format: 
+            external_annotation[protein_A] = [(start_A1, stop_A1, ext_domain_A1), (start_A2, stop_A2, ext_domain_A2), ...]
+            external_annotation[protein_B] = [(start_B1, stop_B1, ext_domain_B1), ...]
+            ...
+        show_hca_dom: bool
+            if set to True display the computed hca domains on the hca plot
+        outputfile: None or string
+            if a path is provided save the plot in an svg format
+        
+        Usage:
+        ------
+        
+        >>> hca.draw()
+        >>>
+        
         """
         if self.is_msa:
             msa_conserved = compute_conserved_positions(dict(zip(self.querynames, self.sequences)), dict(zip(self.querynames, self.msa_seq)))
@@ -339,6 +436,14 @@ class HCA(object):
             hhblits target annotation to use: CDD (online annotation) or Interpro (local annotation)
             CDD used the NCBI webserver to annotate hhblits targets
             Interpro required a local file of protein annotations
+            
+        Usage:
+        ------
+        
+        >>> tremolo_res = hca.tremolo("my_query_1", 1, 10, hhblitsdb="HHSuite/uniprot20_2016_02", annotation_path="protein2ipr.dat")
+        >>> print(tremolo_res)
+        ...
+        
         """
         # check query sequence and domain boundaries
         if prot not in self.querynames:
@@ -358,9 +463,9 @@ class HCA(object):
         # run hhblits
         self.__tremolo_targets, alltargetids = search_domains(self.__tremolo_query, self.__tremolo_domains, hhblitsdb, evalue, hhblitsparams, self.__tremolo_workdir )
         if alltargetids == []:
-            msg = "Unable to find any targets with hhblits in database {}\n".format(hhblitsdb)
+            msg = "Unable to find any targets with hhblits in database {}".format(hhblitsdb)
             msg+= "with parameters {}\n".format(hhblitsparams)
-            msg+ "Please try less stringent parameters or a different database"
+            msg+= "Please try less stringent parameters or a different database"
             raise RuntimeError(msg)
         
         # target annotations
@@ -371,6 +476,7 @@ class HCA(object):
             # get domain from Interpro
             self.__tremolo_annotation = interpro_search(alltargetids, self.__tremolo_workdir , annotation_path)
 
+        # store results in an easier format
         self.__tremolo_res = dict()
         for target in self.__tremolo_targets[0]:
             self.__tremolo_res[target] = {"hits": [], "domains": []}
@@ -388,8 +494,18 @@ class HCA(object):
     
     def save_tremolo(self, outputfile):
         """ save tremolo results to a text file
-        """
         
+        Parameter
+        ---------
+        outputfile: string
+            the path to the output file
+            
+        Usage
+        -----
+        
+        >>> hca.save_tremolo("tremolo_results.txt")
+        >>>
+        """
         groups = group_resda(self.__tremolo_targets, self.__tremolo_annotation)
         write_tremolo_results(self.__tremolo_query, self.__tremolo_domains, 
                               self.__tremolo_targets, self.__tremolo_annotation, 
