@@ -192,7 +192,6 @@ def getsideborder(seq, hydrophobe, nbaa):
     
     # for all position
     for n in range(0, len(seq)):
-        
         if n >= 4 and n+1 < len(seq):       
             """ SIDE 0 """
             if seq[n] in hydrophobe:
@@ -215,7 +214,6 @@ def getsideborder(seq, hydrophobe, nbaa):
                             seqside[n][0] = True
                     else:
                         seqside[n][0] = False       
-                        
             """ SIDE 1 """
             if ( seq[ n] in hydrophobe):      
                 if ( seq[ n - 4] in hydrophobe):
@@ -232,13 +230,13 @@ def getsideborder(seq, hydrophobe, nbaa):
                     else:
                         seqside[ n][1] = True
             else:
-                if ( seq[ n - 4] in hydrophobe):
-                    if ( seq[ n - 3] in hydrophobe):
-                        seqside[ n][1] = True
+                if (seq[n - 4] in hydrophobe):
+                    if (seq[n - 3] in hydrophobe):
+                        seqside[n][1] = True
                     else:
-                        seqside[ n][1] = False
+                        seqside[n][1] = False
                 else:
-                    seqside[ n][1] = False
+                    seqside[n][1] = False
             
             """ SIDE 2"""
             if ( seq[ n] in hydrophobe):
@@ -253,16 +251,16 @@ def getsideborder(seq, hydrophobe, nbaa):
                     else:    
                         seqside[ n][2] = True
             else:
-                if ( seq[ n - 3] in hydrophobe):
-                    if ( seq[ n + 1] in hydrophobe):
-                        if (    seq[ n - 2] == 'P' or seq[ n - 1] == 'P'  or seq[ n]    == 'P'    ):
-                            seqside[ n][2] = False
+                if (seq[n - 3] in hydrophobe):
+                    if (seq[n + 1] in hydrophobe):
+                        if (seq[n - 2] == 'P' or seq[n - 1] == 'P'  or seq[n]    == 'P'    ):
+                            seqside[n][2] = False
                         else:
-                            seqside[ n][2] = True
+                            seqside[n][2] = True
                     else:
-                        seqside[ n][2] = False
+                        seqside[n][2] = False
                 else:
-                    seqside[ n][2] = False    
+                    seqside[n][2] = False    
 
     
         if n < (len(seq)-4):
@@ -279,17 +277,17 @@ def getsideborder(seq, hydrophobe, nbaa):
                     else:
                         seqside[ n][3] = True
             else:
-                if ( seq[ n - 1] in hydrophobe):
-                    if ( seq[ n + 3] in hydrophobe):
-                        if (    seq[ n]  == 'P' or seq[ n + 1]  == 'P' or  seq[ n + 2] == 'P'):
-                            seqside[ n][3] = False
+                if (seq[n - 1] in hydrophobe):
+                    if (seq[n + 3] in hydrophobe):
+                        if (seq[n]  == 'P' or seq[n + 1]  == 'P' or  seq[n + 2] == 'P'):
+                            seqside[n][3] = False
                         else:
-                            seqside[ n][3] = True
+                            seqside[n][3] = True
                     else:
-                        seqside[ n][3] = False
+                        seqside[n][3] = False
                 
                 else:
-                    seqside[ n][3] = False
+                    seqside[n][3] = False
 
             """ SIDE 4"""
             if ( seq[ n] in hydrophobe):
@@ -346,45 +344,45 @@ def getsideborder(seq, hydrophobe, nbaa):
                         seqside[n][5] = False
                 else:
                     seqside[n][5] = False
-    
-    """ I do not understand this part
-    around = [0,0,0,0,0,0,0,0, 0, 0]
-    for n in range(nbaa+4, nbaa+2*4):
+            
+    # I do not understand this part
+    #around = [False] * 9
+    #for n in range(nbaa+4, nbaa+2*4):
         
-        around[ 0] = (seq[ n] in hydrophobe) ^ (seq[ n - 4] in hydrophobe)
-        around[ 1] = (seq[ n]  in hydrophobe) ^ (seq[ n - 3]  in hydrophobe)
-        around[ 3] = (seq[ n]  in hydrophobe) ^ (seq[ n - 1]  in hydrophobe)
+        #around[0] = (seq[n] in hydrophobe) and  (seq[n - 4] in hydrophobe)
+        #around[1] = (seq[n]  in hydrophobe) and (seq[n - 3]  in hydrophobe)
+        #around[3] = (seq[n]  in hydrophobe) and (seq[n - 1]  in hydrophobe)
 
-        for i in range(2, 6):
-            seqside[ n][i] = False
+        #for i in range(2, 6):
+            #seqside[n][i] = False
         
-        if around[ 0]  and  around[ 3]:
-            seqside[ n][ 0] = True
-        else:
-            seqside[ n][ 0] = False
-        if around[ 0] and  around[ 3]:
-            seqside[ n][ 1] = True
-        else:
-            seqside[ n][ 1] = False
+        #if around[0]  and  around[3]:
+            #seqside[n][0] = True
+        #else:
+            #seqside[n][0] = False
+        #if around[0] and  around[3]:
+            #seqside[n][1] = True
+        #else:
+            #seqside[n][1] = False
 
-    for n in range(0, 4):
+    #for n in range(0, 4):
         
-        around[ 5] = (seq[ n] in hydrophobe) ^ (seq[ n + 4] in hydrophobe)
-        around[ 7] = (seq[ n]  in hydrophobe) ^ (seq[ n + 3]  in hydrophobe)
-        around[ 8] = (seq[ n]  in hydrophobe) ^ (seq[ n + 1]  in hydrophobe)
+        #around[5] = (seq[n] in hydrophobe) and (seq[n + 4] in hydrophobe)
+        #around[7] = (seq[n] in hydrophobe) and (seq[n + 3] in hydrophobe)
+        #around[8] = (seq[n] in hydrophobe) and (seq[n + 1] in hydrophobe)
 
-        for i in range(0, 4):
-            seqside[ n][i] = False
+        #for i in range(0, 4):
+            #seqside[n][i] = False
         
-        if around[ 7]  and  around[ 8]:
-            seqside[ n][ 4] = True
-        else:
-            seqside[ n][ 4] = False
-        if around[ 5] and  around[ 8]:
-            seqside[ n][ 5] = True
-        else:
-            seqside[ n][ 5] = False
-    """
+        #if around[7]  and  around[8]:
+            #seqside[n][ 4] = True
+        #else:
+            #seqside[n][ 4] = False
+        #if around[5] and  around[8]:
+            #seqside[n][ 5] = True
+        #else:
+            #seqside[n][ 5] = False
+
     return seqside
 
 
@@ -432,15 +430,11 @@ def deplace(i, seq, coord, side, hydrophobe, ):
     dyplus4 = 0.
     dymoins4 = 0.
     HEIGTH = 40
-    
-    if ( seq[i] not in hydrophobe):
-        #print len(coord), i, len(seq)
-        
-        # attention ici modifie avant 3 etait 4 et 2 etait 3
-        dymoins4= coord[i][1] - coord[ i - 3][1]
-        dyplus3 = coord[i][1] - coord[ i + 2][1] 
-        dymoins3= coord[i][1] - coord[ i - 2][1]
-        dyplus4 = coord[i][1] - coord[ i + 3][1]  
+    if (seq[i] not in hydrophobe):
+        dymoins4= coord[i][1] - coord[i - 4][1]
+        dyplus3 = coord[i][1] - coord[i + 3][1] 
+        dymoins3= coord[i][1] - coord[i - 3][1]
+        dyplus4 = coord[i][1] - coord[i + 4][1]  
     
     #for j in range(6):
         if dymoins3 < 0.:
@@ -452,24 +446,24 @@ def deplace(i, seq, coord, side, hydrophobe, ):
         if dyplus4  < 0.:
             dyplus4 = -dyplus4
     
-        if ( ( side == 0) and seq[ before] in hydrophobe and ( dymoins4 > 15.) ):
+        if ((side == 0) and seq[before] in hydrophobe and (dymoins4 > 15.)):
             dy = coord[i][1] - coord[before][1]
-            if ( dy > 15.):
+            if (dy > 15.):
                 answer = -HEIGTH
     
-        if ( ( side == 3) and seq[ before] in hydrophobe and ( dyplus3 > 15.) ):
-            dy = coord[i][1] - coord[ before][1]
-            if ( dy > 15.):
+        if ((side == 3) and seq[before] in hydrophobe and (dyplus3 > 15.)):
+            dy = coord[i][1] - coord[before][1]
+            if (dy > 15.):
                 answer = -HEIGTH
         
-        if ( ( side == 2) and seq[ after] in hydrophobe and ( dyplus4 > 15.)):
-            dy = coord[i][1] - coord[ after][1]
-            if ( dy < -15.):
+        if ((side == 2) and seq[after] in hydrophobe and (dyplus4 > 15.)):
+            dy = coord[i][1] - coord[after][1]
+            if (dy < -15.):
                 answer = HEIGTH
         
-        if ( ( side == 5) and seq[ after] in hydrophobe and ( dymoins3 > 15.)):
-            dy = coord[i][1] - coord[ after][1]
-            if ( dy < -15.):
+        if ((side == 5) and seq[after] in hydrophobe and (dymoins3 > 15.)):
+            dy = coord[i][1] - coord[after][1]
+            if (dy < -15.):
                 answer = HEIGTH
     
     return answer
@@ -763,7 +757,7 @@ def dosvg(seq, coord, seqside, hydrophobe, conservation, nbaa, b, F=1, yoffset=0
             if is_side == False:
                 continue
             
-            if n+3 >= len(seq):
+            if n+4 >= len(seq):
                 continue
             dybis = deplace(n, seq, coord, iteside, hydrophobe)
             dybis2 = deplace(n, seq, coordbis, iteside, hydrophobe)
@@ -1006,10 +1000,10 @@ def colorize_positions(msa, seq, conservation, method="rainbow"):
                     positions[pos] = {"poly": ("black", 0.0)}
                 pos += 1
     elif "identity":
-        for i in range(seq):
+        for i in range(len(seq)):
             if conservation[i] >= 0.9:
                 positions[i] = {"poly": ("red", 0.5)}
-            elif conservation[i] >= 0.8:
+            elif conservation[i] >= 0.7:
                 positions[i] = {"poly": ("orange", 0.5)}
             elif conservation[i] >= 0.5:
                 positions[i] = {"poly": ("yellow", 0.5)}
@@ -1037,6 +1031,7 @@ def get_params():
     parser.add_argument("-i", action="store", dest="fastafile", help="the fasta file", required=True)
     parser.add_argument("-d", action="store", dest="domain", help="[optionnal] provide domain annoation")
     parser.add_argument("-f", action="store", dest="domformat", help="the domain file format", choices=["pfam", "seghca"])
+    parser.add_argument("--color-msa", action="store", choices=["rainbow", "identity"], dest="msacolor", help="method to use to color a MSA", default="rainbow")
     parser.add_argument("-o", action="store", dest="svgfile", help="the svg file", required=True)
     params = parser.parse_args()
     return params
@@ -1078,7 +1073,7 @@ def main():
     for prot in dfasta:
         annotation.setdefault(prot, dict())
         if is_an_msa:
-            annotation[prot]["positions"] = colorize_positions(dmsa[prot], dfasta[prot], msa_conserved_per_prot[prot], method="rainbow")
+            annotation[prot]["positions"] = colorize_positions(dmsa[prot], dfasta[prot], msa_conserved_per_prot[prot], method=params.msacolor)
             annotation[prot]["columns"] = select_columns(msa_conserved_per_column, msa2seq.get(prot, dict()), threshold=0.8)
         
     # draw
