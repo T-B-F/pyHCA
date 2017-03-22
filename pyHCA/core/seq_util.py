@@ -26,7 +26,7 @@ def check_seq_char(seq):
             return True
     return False
 
-def is_msa(sequences):
+def check_if_msa(sequences):
     if isinstance(sequences, dict):
         for rec in sequences:
             seq = sequences[rec]
@@ -41,7 +41,7 @@ def is_msa(sequences):
         if check_seq_char(seq):
             return True
     else:
-        raise ValueError("Unknown argument type passed to is_msa(), {}").format(type(sequences))
+        raise ValueError("Unknown argument type passed to check_if_msa(), {}").format(type(sequences))
     return False
     
 
@@ -118,49 +118,87 @@ def six_frames(seq, table=1):
             if subprot:
                 yield strand, frame, start, subprot
     
+    
+def compute_offset_pos(msa_seq, seq):
+    """ from a sequence without gap position, computes the corresponding position in a MSA
+    
+    Parameters
+    ==========
+    msa_seq : string
+        the sequence from the MSA 
+    seq : string
+        the protein sequence
+        
+    Return
+    ======
+    offset_msa2seq : int
+        the position from the MSA to the sequence
+    offset_seq2msa : int
+        the position from the sequence to the MSA
+    """
+    msa_characters = set(["-", "?", "!", "*", "."])
+    offset_msa2seq = dict()
+    offset_seq2msa = dict()
+    k = 0
+    pos = 0
+    for k in range(len(msa_seq)):
+        isgap = True
+        if msa_seq[k] not in msa_characters:
+            isgap = False
+            offset_seq2msa[pos] = k
+            pos += 1    
+        offset_msa2seq[k] = (pos - 1, isgap)
+    return offset_msa2seq, offset_seq2msa
+
+
 def compute_conserved_positions(dfasta, dmsa, score_type=0, matrix_name="blosum62"):
     """ compute conservation of a column relative to a sequence position of a msa
     score_type, 0: identity score, 1: binarized similarity (1 if sim > 0 else 0)
     """ 
+    dconserv_per_prot = dict()
+    dconserv_per_col = dict()
+    positions_msa2prot = dict()
     
     matrix = getattr(MatrixInfo, matrix_name)
     items = list(matrix.items())
     matrix.update(((b,a),val) for (a,b),val in items)
     
-    dconserv_per_prot = dict()
     records = list()
     seq_idx = dict()
     for rec in dfasta:
         records.append(rec)
-        seq_idx[rec] = 0
+        msa2seq, seq2msa = compute_offset_pos(dmsa.get(rec, dfasta[rec]), dfasta[rec])
+        seq_idx[rec] = msa2seq
         dconserv_per_prot[rec] = [0] * len(dfasta[rec])
+        positions_msa2prot[rec] = dict()
         
     nb_seq =  len(records)
     if nb_seq > 0:
         nb_cols = len(dmsa[records[0]])
+        tot = (nb_seq * (nb_seq - 1)) / 2
         for c in range(nb_cols):
-            #dconserv[c] = 0.0
+            dconserv_per_col[c] = 0
             for k in range(len(records)-1):
-                i = seq_idx[records[k]]
-                seqk = dmsa[records[k]]
+                record_k = records[k]
+                i, isgapi = seq_idx[record_k][c]
+                seqk = dmsa[record_k]
                 if seqk[c] != "-":
                     # no gap in sequence k
                     for l in range(k+1, len(records)):
-                        j = seq_idx[records[l]]
-                        seql = dmsa[records[l]]
+                        record_l = records[l]
+                        j, isgapj = seq_idx[record_l][c]
+                        seql = dmsa[record_l]
                         if seql[c] != "-":
                             if score_type == 0:
                                 score = 1 if (seqk[c] == seql[c]) else 0
                             else: # score_type == 1:
                                 score = 1 if matrix[(seqk[c], seql[c])] > 0 else 0
-                            dconserv_per_prot[records[k]][i] += score
-                            dconserv_per_prot[records[l]][j] += score
-            # update indexe position of each sequence
-            for rec in records:
-                if dmsa[rec][c] != "-":
-                    seq_idx[rec] += 1
+                            dconserv_per_prot[record_k][i] += score
+                            dconserv_per_prot[record_l][j] += score
+                            dconserv_per_col[c] += score
+            dconserv_per_col[c] /= tot
         # normalize score by number of sequence
         for rec in records:
             for i in range(len(dconserv_per_prot[rec])):
                 dconserv_per_prot[rec][i] /= (nb_seq-1)
-    return dconserv_per_prot
+    return dconserv_per_prot, dconserv_per_col, seq_idx

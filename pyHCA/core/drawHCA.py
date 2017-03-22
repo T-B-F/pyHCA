@@ -8,7 +8,7 @@ import Bio
 import Bio.SeqIO
 import matplotlib
 import matplotlib.pyplot as plt
-from pyHCA.core.seq_util import transform_seq, is_msa, compute_conserved_positions
+from pyHCA.core.seq_util import transform_seq, check_if_msa, compute_conserved_positions
 from pyHCA.core.ioHCA import read_annotation
 
 __author__ = "Tristan Bitard-Feildel"
@@ -474,6 +474,26 @@ def deplace(i, seq, coord, side, hydrophobe, ):
     
     return answer
 
+def getCoord_pos(pos):
+    """
+    brief get coordinate of the plan helix for each position of the sequence 
+    param seq is the sequence with 4 spaces at the end and at the begining
+    return coord is a list with coordinate [x, y]
+    """
+    
+    F = 1 # factor zoom
+    FX = 12
+    FY = 40
+    NTOUR = 3.6
+    BULGARIANCONSTANT = 11
+    dx = FX / NTOUR
+    dy = FY / NTOUR
+        
+    x = dx * (pos)                           # +80
+    y = -dy * ((pos+BULGARIANCONSTANT)%NTOUR)  #    +80
+        
+    return x, y
+
 def getCoord(seq):
     """
     brief get coordinate of the plan helix for each position of the sequence 
@@ -905,13 +925,45 @@ def make_svg(prot, prev_seq, annot, cnt):
     return svg, nbaa
 
 
+def draw_columns_lines(columns_prot, columns_prev_prot, cnt):
+    """ draw lines between selected columns of the two proteins
+    """
+    y_offset_prev = cnt*230
+    y_offset_middle = y_offset_prev + (115)
+    y_offset = y_offset_prev + 230
+    F = 1
+    svg = ""
+    for col in columns_prot:
+        idx_prot = columns_prot[col]
+        idx_prev_prot = columns_prev_prot[col]
+        if idx_prot > -1 and idx_prev_prot > -1:
+            x_prev, y_prev = getCoord_pos(idx_prev_prot)
+            x_prev += 80 + 0.5 # 0.5 correspond to letter centering
+            y_prev_middle = (y_offset_middle+110)*F
+            x_prev, y_prev = x_prev*F, (y_offset_prev+170)*F
+            
+            x, y = getCoord_pos(idx_prot)
+            x += 80 + 0.5 # 0.5 correspond to letter centering
+            x, y = x*F, (y_offset+50)*F
+            if x < x_prev:
+                # curved
+                svg += """<line x1="%f" y1="%f" x2="%f" y2="%f" style="fill:black;stroke:black;stroke-width:0.7;" />"""%(x_prev, y_prev, x, y_prev_middle)
+                # straight
+                svg += """<line x1="%f" y1="%f" x2="%f" y2="%f" style="fill:black;stroke:black;stroke-width:0.7;" />"""%(x, y_prev_middle, x, y)
+            else:
+                # straight
+                svg += """<line x1="%f" y1="%f" x2="%f" y2="%f" style="fill:black;stroke:black;stroke-width:0.7;" />"""%(x_prev, y_prev, x_prev, y_prev_middle)
+                # curved
+                svg += """<line x1="%f" y1="%f" x2="%f" y2="%f" style="fill:black;stroke:black;stroke-width:0.7;" />"""%(x_prev, y_prev_middle, x, y)
+    return svg
+    
 def drawing(dfasta, annotation, pathout):
     """ draw multiple fasta sequences
     """
     svg = ""
     max_aa = 0
     cnt = 0
-    
+    prev_prot = None
     for prot, prot_seq in dfasta.items():
         if isinstance(prot_seq, Bio.SeqRecord.SeqRecord):
             prot_seq= str(prot_seq.seq)
@@ -921,6 +973,9 @@ def drawing(dfasta, annotation, pathout):
         svg += cur_svg
         if nbaa > max_aa:
             max_aa = nbaa
+        if prev_prot != None and "columns" in annotation[prot]:
+            svg += draw_columns_lines(annotation[prot]["columns"], annotation[prev_prot]["columns"], cnt-1)
+        prev_prot = prot
         cnt += 1
     
     # analys the new annotated domain, selective pressure from PAML
@@ -964,6 +1019,17 @@ def colorize_positions(msa, seq, conservation, method="rainbow"):
         raise ValueError("Unknown colorization method")
     return positions
 
+def select_columns(column_scores, msa2seq, threshold=0.8):
+    segments = dict()
+    for col in column_scores:
+        if column_scores[col] >= threshold:
+            idx, isgap = msa2seq[col]
+            if not isgap:
+                segments[col] = idx
+            else:
+                segments[col] = -1
+    return segments
+
 def get_params():
     """ get command line ArgumentParser
     """
@@ -985,7 +1051,8 @@ def main():
     dfasta = read_multifasta(params.fastafile)
     # are we using an msa ?
     dmsa = dict()
-    if is_msa(dfasta):
+    is_an_msa = check_if_msa(dfasta)
+    if is_an_msa:
         # if a msa is provided store sequence without gap character in a new dict
         # store msa sequence to get conserved positions 
         for rec in dfasta:
@@ -996,7 +1063,8 @@ def main():
             dfasta[rec] = transform_seq(seq)
     
     # get conserved position
-    msa_conserved = compute_conserved_positions(dfasta, dmsa)
+    if is_an_msa:
+        msa_conserved_per_prot, msa_conserved_per_column, msa2seq = compute_conserved_positions(dfasta, dmsa)
     
     # compute hca annotation  
     annotation = {}
@@ -1009,8 +1077,10 @@ def main():
     # define msa color annotation
     for prot in dfasta:
         annotation.setdefault(prot, dict())
-        annotation[prot]["positions"] = colorize_positions(dmsa[prot], dfasta[prot], msa_conserved[prot], method="rainbow")
-    
+        if is_an_msa:
+            annotation[prot]["positions"] = colorize_positions(dmsa[prot], dfasta[prot], msa_conserved_per_prot[prot], method="rainbow")
+            annotation[prot]["columns"] = select_columns(msa_conserved_per_column, msa2seq.get(prot, dict()), threshold=0.8)
+        
     # draw
     drawing(dfasta, annotation, params.svgfile)
     

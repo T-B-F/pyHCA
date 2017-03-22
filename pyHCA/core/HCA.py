@@ -15,12 +15,29 @@ from Bio import Seq
 from Bio import SeqIO
 from Bio.Alphabet import IUPAC
 import numpy as np
+import warnings
+import functools
+
 from .classHCA import Seq as SeqHCA
 from .annotateHCA import _annotation_aminoacids
 from .drawHCA import make_svg, getSVGheader, colorize_positions
 from .seq_util import compute_conserved_positions
 from .tremoloHCA import search_domains, group_resda, write_tremolo_results
 from .external import cdd_search, interpro_search
+
+def deprecated(func):
+    """This is a decorator which can be used to mark functions
+    as deprecated. It will result in a warning being emmitted
+    when the function is used."""
+
+    @functools.wraps(func)
+    def new_func(*args, **kwargs):
+        warnings.simplefilter('always', DeprecationWarning) #turn off filter 
+        warnings.warn("Call to deprecated function {}.".format(func.__name__), category=DeprecationWarning, stacklevel=2)
+        warnings.simplefilter('default', DeprecationWarning) #reset filter
+        return func(*args, **kwargs)
+
+    return new_func
 
 class HCA(object):
     """ HCA class provides an API interface to all the standalone programs
@@ -259,7 +276,7 @@ class HCA(object):
         elif self._number_of_sequences == 1:
             return self.domains[self.querynames[0]]
         else:
-            return dict([prot, self.domains[prot]) for prot in self.querynames])
+            return dict([(prot, self.domains[prot]) for prot in self.querynames])
     
     def get_clusters(self, prot=None):
         """ function wrapper to return HCA cluster positions. 
@@ -293,7 +310,7 @@ class HCA(object):
         else:
             return dict([(prot, self.clusters[prot]) for prot in self.querynames])
         
-    @depreciated
+    @deprecated
     def get_scores(self, prot=None):
         """ function wrapper to return HCA scores of each domains. 
         If only one sequence was provided return a list of scores.
