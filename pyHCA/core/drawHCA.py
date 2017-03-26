@@ -907,17 +907,17 @@ def createHCAsvg(seq, nbaa, domains, conservation, yoffset=0, idx_offset=0):
     return svg
     
 
-def make_svg(prot, prev_seq, annot, cnt, idx_offset=0):
+def make_svg(prot, prev_seq, annot, yoffset=0, idx_offset=0):
     """ create svg for a given sequence
     """
     seq = transform_seq(prev_seq)
     nbaa = len(seq)
     svg = ""
     if prot != "":
-        yoffset = cnt*230
+        #yoffset = cnt*230
         svg += draw_protnames(prot, yoffset=yoffset)
-    else:
-        yoffset = cnt * 120
+    #else:
+        #yoffset = cnt*120
     svg += createHCAsvg(seq, nbaa, annot.get("domains", list()), annot.get("positions", dict()), yoffset=yoffset, idx_offset=idx_offset)
     return svg, nbaa
 
@@ -961,6 +961,7 @@ def drawing(dfasta, annotation, pathout, window=-1):
     max_aa = 0
     cnt = 0
     prev_prot = None
+    yoffset = 0
     for prot, prot_seq in dfasta.items():
         if isinstance(prot_seq, Bio.SeqRecord.SeqRecord):
             prot_seq= str(prot_seq.seq)
@@ -974,7 +975,8 @@ def drawing(dfasta, annotation, pathout, window=-1):
                 offset = s
                 if s != 0:
                     prot = ""
-                cur_svg, nbaa = make_svg(prot, subseq, annotation.get(cur_prot, dict()), cnt, offset)
+                    yoffset += 120
+                cur_svg, nbaa = make_svg(prot, subseq, annotation.get(cur_prot, dict()), yoffset, offset)
                 svg += cur_svg
                 if nbaa > max_aa:
                     max_aa = nbaa
@@ -983,9 +985,9 @@ def drawing(dfasta, annotation, pathout, window=-1):
                         print("warning cannot draw line conservation between protein if window is different of -1")
                     #svg += draw_columns_lines(annotation[prot]["columns"], annotation[prev_prot]["columns"], cnt-1)
                     prev_prot = prot
-                cnt += 1
+            yoffset += 230
         else:
-            cur_svg, nbaa = make_svg(prot, prot_seq, annotation.get(prot, dict()), cnt)
+            cur_svg, nbaa = make_svg(prot, prot_seq, annotation.get(prot, dict()), yoffset)
             svg += cur_svg
             if nbaa > max_aa:
                 max_aa = nbaa
@@ -993,10 +995,11 @@ def drawing(dfasta, annotation, pathout, window=-1):
                 svg += draw_columns_lines(annotation[prot]["columns"], annotation[prev_prot]["columns"], cnt-1)
             prev_prot = prot
             cnt += 1
+            yoffset += 230
     
     # analys the new annotated domain, selective pressure from PAML
     #evolution_rate(pathnt, params.pathtree)
-    svgheader = getSVGheader(max_aa, (cnt+1)*230)
+    svgheader = getSVGheader(max_aa, yoffset)
     with open(pathout, "w") as fout:
         fout.write(svgheader)
         fout.write(svg)
