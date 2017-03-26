@@ -664,14 +664,14 @@ def linkCluster(seq, coords, n, dx, dy, yoffset=0):
     return svg
         
 
-def dosvg(seq, coord, seqside, hydrophobe, conservation, nbaa, b, F=1, yoffset=0):
+def dosvg(seq, coord, seqside, hydrophobe, conservation, nbaa, F=1, yoffset=0, idx_offset=0):
     """
     brief draw a svg hca plot
     param seq is a list containing sequence and 4 spaces at the begining and at the end
     param coord is a list  [x, y] amino acid coordinate for each position
     param seqside is a boolean list containing 6 cases by case. 6 faces True or False to draw line cluster
     param nbaa is the number of residue
-    param b if the begining if we use cutting option
+    param idx_offset if the begining if we use cutting option
     """
 
     F = 1 # factor zoom
@@ -735,7 +735,7 @@ def dosvg(seq, coord, seqside, hydrophobe, conservation, nbaa, b, F=1, yoffset=0
             
             x =  coord[n][0] + 80 + 3.5#+80+dx
             dy1 = dy + coord[4][1] + 60 
-            position = n - AROUND + 1 + b
+            position = n - AROUND + 1 + idx_offset
             
             #print "AAAA",coord[n][0], dx
             #print "DIST", x-xp, x
@@ -877,13 +877,13 @@ def getSeqFromGi(gi):
     os.close(temp_fd)
     return temp_filename
 
-def createHCAsvg(seq, nbaa, domains, conservation, b, yoffset=0):
+def createHCAsvg(seq, nbaa, domains, conservation, yoffset=0, idx_offset=0):
     """
     brief draw the svg of hca
     param seq is the sequence with 4 spaces at both begining and end
     param nbaa is the true number of aa
     param output is the address of output file
-    param b is the position to begin (for the ruler)
+    param idx_offset is the position to begin (for the ruler)
     """
     hydrophobe  = "YIMLFVW"
     seq = "    "+seq+"    "
@@ -901,21 +901,24 @@ def createHCAsvg(seq, nbaa, domains, conservation, b, yoffset=0):
     #plt.savefig(pathfig)
     #plt.close()
     # draw the svg
-    svg = dosvg(seq, coord, seqside, hydrophobe, conservation, nbaa, b, yoffset=yoffset)
+    svg = dosvg(seq, coord, seqside, hydrophobe, conservation, nbaa, yoffset=yoffset, idx_offset=idx_offset)
     if domains:
         svg += drawDomains(domains, coord, yoffset)
     return svg
     
 
-def make_svg(prot, prev_seq, annot, cnt):
+def make_svg(prot, prev_seq, annot, cnt, idx_offset=0):
     """ create svg for a given sequence
     """
     seq = transform_seq(prev_seq)
     nbaa = len(seq)
-    
-    b = 0
-    svg = draw_protnames(prot, yoffset=cnt*230)
-    svg += createHCAsvg(seq, nbaa, annot.get("domains", list()), annot.get("positions", dict()), b, yoffset=cnt*230)
+    svg = ""
+    if prot != "":
+        yoffset = cnt*230
+        svg += draw_protnames(prot, yoffset=yoffset)
+    else:
+        yoffset = cnt * 120
+    svg += createHCAsvg(seq, nbaa, annot.get("domains", list()), annot.get("positions", dict()), yoffset=yoffset, idx_offset=idx_offset)
     return svg, nbaa
 
 
@@ -951,7 +954,7 @@ def draw_columns_lines(columns_prot, columns_prev_prot, cnt):
                 svg += """<line x1="%f" y1="%f" x2="%f" y2="%f" style="fill:black;stroke:black;stroke-width:0.7;" />"""%(x_prev, y_prev_middle, x, y)
     return svg
     
-def drawing(dfasta, annotation, pathout):
+def drawing(dfasta, annotation, pathout, window=-1):
     """ draw multiple fasta sequences
     """
     svg = ""
@@ -963,14 +966,33 @@ def drawing(dfasta, annotation, pathout):
             prot_seq= str(prot_seq.seq)
         elif not isinstance(prot_seq, str):
             raise ValueError("Unknown amino acid sequence format {} for prot {} ".format(type(prot_seq), prot))
-        cur_svg, nbaa = make_svg(prot, prot_seq, annotation.get(prot, dict()), cnt)
-        svg += cur_svg
-        if nbaa > max_aa:
-            max_aa = nbaa
-        if prev_prot != None and "columns" in annotation[prot]:
-            svg += draw_columns_lines(annotation[prot]["columns"], annotation[prev_prot]["columns"], cnt-1)
-        prev_prot = prot
-        cnt += 1
+        if window != -1:
+            # modulo sequence length
+            cur_prot = prot
+            for s in range(0, len(prot_seq), window):
+                subseq = prot_seq[s:s+window+4] # +4 correspond to hca offset
+                offset = s
+                if s != 0:
+                    prot = ""
+                cur_svg, nbaa = make_svg(prot, subseq, annotation.get(cur_prot, dict()), cnt, offset)
+                svg += cur_svg
+                if nbaa > max_aa:
+                    max_aa = nbaa
+                if s == 0:
+                    if prev_prot != None and "columns" in annotation[cur_prot]:
+                        print("warning cannot draw line conservation between protein if window is different of -1")
+                    #svg += draw_columns_lines(annotation[prot]["columns"], annotation[prev_prot]["columns"], cnt-1)
+                    prev_prot = prot
+                cnt += 1
+        else:
+            cur_svg, nbaa = make_svg(prot, prot_seq, annotation.get(prot, dict()), cnt)
+            svg += cur_svg
+            if nbaa > max_aa:
+                max_aa = nbaa
+            if prev_prot != None and "columns" in annotation[prot]:
+                svg += draw_columns_lines(annotation[prot]["columns"], annotation[prev_prot]["columns"], cnt-1)
+            prev_prot = prot
+            cnt += 1
     
     # analys the new annotated domain, selective pressure from PAML
     #evolution_rate(pathnt, params.pathtree)
@@ -1029,11 +1051,16 @@ def get_params():
     """
     parser = argparse.ArgumentParser(prog="{} {}".format(os.path.basename(sys.argv[0]), "draw"))
     parser.add_argument("-i", action="store", dest="fastafile", help="the fasta file", required=True)
+    parser.add_argument("-w", action="store", dest="window", type=int, help="sequence len before breaking the sequence to the next plot "
+                        "(-1 the whole sequence are used, minimum size is 80)", default=-1)
     parser.add_argument("-d", action="store", dest="domain", help="[optionnal] provide domain annoation")
     parser.add_argument("-f", action="store", dest="domformat", help="the domain file format", choices=["pfam", "seghca"])
     parser.add_argument("--color-msa", action="store", choices=["rainbow", "identity"], dest="msacolor", help="method to use to color a MSA", default="rainbow")
     parser.add_argument("-o", action="store", dest="svgfile", help="the svg file", required=True)
     params = parser.parse_args()
+    
+    if params.window > -1 and params.window < 80:
+        print("window parameter (-w) must either be superior to 80 or -1 to use draw the full sequence on one plot")
     return params
 
 def main():
@@ -1077,7 +1104,7 @@ def main():
             annotation[prot]["columns"] = select_columns(msa_conserved_per_column, msa2seq.get(prot, dict()), threshold=0.8)
         
     # draw
-    drawing(dfasta, annotation, params.svgfile)
+    drawing(dfasta, annotation, params.svgfile, params.window)
     
     sys.exit(0)
     
