@@ -8,7 +8,7 @@ import Bio
 import Bio.SeqIO
 import matplotlib
 import matplotlib.pyplot as plt
-from pyHCA.core.seq_util import transform_seq, is_msa, compute_conserved_positions
+from pyHCA.core.seq_util import transform_seq, check_if_msa, compute_conserved_positions
 from pyHCA.core.ioHCA import read_annotation
 
 __author__ = "Tristan Bitard-Feildel"
@@ -192,7 +192,6 @@ def getsideborder(seq, hydrophobe, nbaa):
     
     # for all position
     for n in range(0, len(seq)):
-        
         if n >= 4 and n+1 < len(seq):       
             """ SIDE 0 """
             if seq[n] in hydrophobe:
@@ -215,7 +214,6 @@ def getsideborder(seq, hydrophobe, nbaa):
                             seqside[n][0] = True
                     else:
                         seqside[n][0] = False       
-                        
             """ SIDE 1 """
             if ( seq[ n] in hydrophobe):      
                 if ( seq[ n - 4] in hydrophobe):
@@ -232,13 +230,13 @@ def getsideborder(seq, hydrophobe, nbaa):
                     else:
                         seqside[ n][1] = True
             else:
-                if ( seq[ n - 4] in hydrophobe):
-                    if ( seq[ n - 3] in hydrophobe):
-                        seqside[ n][1] = True
+                if (seq[n - 4] in hydrophobe):
+                    if (seq[n - 3] in hydrophobe):
+                        seqside[n][1] = True
                     else:
-                        seqside[ n][1] = False
+                        seqside[n][1] = False
                 else:
-                    seqside[ n][1] = False
+                    seqside[n][1] = False
             
             """ SIDE 2"""
             if ( seq[ n] in hydrophobe):
@@ -253,16 +251,16 @@ def getsideborder(seq, hydrophobe, nbaa):
                     else:    
                         seqside[ n][2] = True
             else:
-                if ( seq[ n - 3] in hydrophobe):
-                    if ( seq[ n + 1] in hydrophobe):
-                        if (    seq[ n - 2] == 'P' or seq[ n - 1] == 'P'  or seq[ n]    == 'P'    ):
-                            seqside[ n][2] = False
+                if (seq[n - 3] in hydrophobe):
+                    if (seq[n + 1] in hydrophobe):
+                        if (seq[n - 2] == 'P' or seq[n - 1] == 'P'  or seq[n]    == 'P'    ):
+                            seqside[n][2] = False
                         else:
-                            seqside[ n][2] = True
+                            seqside[n][2] = True
                     else:
-                        seqside[ n][2] = False
+                        seqside[n][2] = False
                 else:
-                    seqside[ n][2] = False    
+                    seqside[n][2] = False    
 
     
         if n < (len(seq)-4):
@@ -279,17 +277,17 @@ def getsideborder(seq, hydrophobe, nbaa):
                     else:
                         seqside[ n][3] = True
             else:
-                if ( seq[ n - 1] in hydrophobe):
-                    if ( seq[ n + 3] in hydrophobe):
-                        if (    seq[ n]  == 'P' or seq[ n + 1]  == 'P' or  seq[ n + 2] == 'P'):
-                            seqside[ n][3] = False
+                if (seq[n - 1] in hydrophobe):
+                    if (seq[n + 3] in hydrophobe):
+                        if (seq[n]  == 'P' or seq[n + 1]  == 'P' or  seq[n + 2] == 'P'):
+                            seqside[n][3] = False
                         else:
-                            seqside[ n][3] = True
+                            seqside[n][3] = True
                     else:
-                        seqside[ n][3] = False
+                        seqside[n][3] = False
                 
                 else:
-                    seqside[ n][3] = False
+                    seqside[n][3] = False
 
             """ SIDE 4"""
             if ( seq[ n] in hydrophobe):
@@ -346,45 +344,45 @@ def getsideborder(seq, hydrophobe, nbaa):
                         seqside[n][5] = False
                 else:
                     seqside[n][5] = False
-    
-    """ I do not understand this part
-    around = [0,0,0,0,0,0,0,0, 0, 0]
-    for n in range(nbaa+4, nbaa+2*4):
+            
+    # I do not understand this part
+    #around = [False] * 9
+    #for n in range(nbaa+4, nbaa+2*4):
         
-        around[ 0] = (seq[ n] in hydrophobe) ^ (seq[ n - 4] in hydrophobe)
-        around[ 1] = (seq[ n]  in hydrophobe) ^ (seq[ n - 3]  in hydrophobe)
-        around[ 3] = (seq[ n]  in hydrophobe) ^ (seq[ n - 1]  in hydrophobe)
+        #around[0] = (seq[n] in hydrophobe) and  (seq[n - 4] in hydrophobe)
+        #around[1] = (seq[n]  in hydrophobe) and (seq[n - 3]  in hydrophobe)
+        #around[3] = (seq[n]  in hydrophobe) and (seq[n - 1]  in hydrophobe)
 
-        for i in range(2, 6):
-            seqside[ n][i] = False
+        #for i in range(2, 6):
+            #seqside[n][i] = False
         
-        if around[ 0]  and  around[ 3]:
-            seqside[ n][ 0] = True
-        else:
-            seqside[ n][ 0] = False
-        if around[ 0] and  around[ 3]:
-            seqside[ n][ 1] = True
-        else:
-            seqside[ n][ 1] = False
+        #if around[0]  and  around[3]:
+            #seqside[n][0] = True
+        #else:
+            #seqside[n][0] = False
+        #if around[0] and  around[3]:
+            #seqside[n][1] = True
+        #else:
+            #seqside[n][1] = False
 
-    for n in range(0, 4):
+    #for n in range(0, 4):
         
-        around[ 5] = (seq[ n] in hydrophobe) ^ (seq[ n + 4] in hydrophobe)
-        around[ 7] = (seq[ n]  in hydrophobe) ^ (seq[ n + 3]  in hydrophobe)
-        around[ 8] = (seq[ n]  in hydrophobe) ^ (seq[ n + 1]  in hydrophobe)
+        #around[5] = (seq[n] in hydrophobe) and (seq[n + 4] in hydrophobe)
+        #around[7] = (seq[n] in hydrophobe) and (seq[n + 3] in hydrophobe)
+        #around[8] = (seq[n] in hydrophobe) and (seq[n + 1] in hydrophobe)
 
-        for i in range(0, 4):
-            seqside[ n][i] = False
+        #for i in range(0, 4):
+            #seqside[n][i] = False
         
-        if around[ 7]  and  around[ 8]:
-            seqside[ n][ 4] = True
-        else:
-            seqside[ n][ 4] = False
-        if around[ 5] and  around[ 8]:
-            seqside[ n][ 5] = True
-        else:
-            seqside[ n][ 5] = False
-    """
+        #if around[7]  and  around[8]:
+            #seqside[n][ 4] = True
+        #else:
+            #seqside[n][ 4] = False
+        #if around[5] and  around[8]:
+            #seqside[n][ 5] = True
+        #else:
+            #seqside[n][ 5] = False
+
     return seqside
 
 
@@ -432,15 +430,11 @@ def deplace(i, seq, coord, side, hydrophobe, ):
     dyplus4 = 0.
     dymoins4 = 0.
     HEIGTH = 40
-    
-    if ( seq[i] not in hydrophobe):
-        #print len(coord), i, len(seq)
-        
-        # attention ici modifie avant 3 etait 4 et 2 etait 3
-        dymoins4= coord[i][1] - coord[ i - 3][1]
-        dyplus3 = coord[i][1] - coord[ i + 2][1] 
-        dymoins3= coord[i][1] - coord[ i - 2][1]
-        dyplus4 = coord[i][1] - coord[ i + 3][1]  
+    if (seq[i] not in hydrophobe):
+        dymoins4= coord[i][1] - coord[i - 4][1]
+        dyplus3 = coord[i][1] - coord[i + 3][1] 
+        dymoins3= coord[i][1] - coord[i - 3][1]
+        dyplus4 = coord[i][1] - coord[i + 4][1]  
     
     #for j in range(6):
         if dymoins3 < 0.:
@@ -452,27 +446,47 @@ def deplace(i, seq, coord, side, hydrophobe, ):
         if dyplus4  < 0.:
             dyplus4 = -dyplus4
     
-        if ( ( side == 0) and seq[ before] in hydrophobe and ( dymoins4 > 15.) ):
+        if ((side == 0) and seq[before] in hydrophobe and (dymoins4 > 15.)):
             dy = coord[i][1] - coord[before][1]
-            if ( dy > 15.):
+            if (dy > 15.):
                 answer = -HEIGTH
     
-        if ( ( side == 3) and seq[ before] in hydrophobe and ( dyplus3 > 15.) ):
-            dy = coord[i][1] - coord[ before][1]
-            if ( dy > 15.):
+        if ((side == 3) and seq[before] in hydrophobe and (dyplus3 > 15.)):
+            dy = coord[i][1] - coord[before][1]
+            if (dy > 15.):
                 answer = -HEIGTH
         
-        if ( ( side == 2) and seq[ after] in hydrophobe and ( dyplus4 > 15.)):
-            dy = coord[i][1] - coord[ after][1]
-            if ( dy < -15.):
+        if ((side == 2) and seq[after] in hydrophobe and (dyplus4 > 15.)):
+            dy = coord[i][1] - coord[after][1]
+            if (dy < -15.):
                 answer = HEIGTH
         
-        if ( ( side == 5) and seq[ after] in hydrophobe and ( dymoins3 > 15.)):
-            dy = coord[i][1] - coord[ after][1]
-            if ( dy < -15.):
+        if ((side == 5) and seq[after] in hydrophobe and (dymoins3 > 15.)):
+            dy = coord[i][1] - coord[after][1]
+            if (dy < -15.):
                 answer = HEIGTH
     
     return answer
+
+def getCoord_pos(pos):
+    """
+    brief get coordinate of the plan helix for each position of the sequence 
+    param seq is the sequence with 4 spaces at the end and at the begining
+    return coord is a list with coordinate [x, y]
+    """
+    
+    F = 1 # factor zoom
+    FX = 12
+    FY = 40
+    NTOUR = 3.6
+    BULGARIANCONSTANT = 11
+    dx = FX / NTOUR
+    dy = FY / NTOUR
+        
+    x = dx * (pos)                           # +80
+    y = -dy * ((pos+BULGARIANCONSTANT)%NTOUR)  #    +80
+        
+    return x, y
 
 def getCoord(seq):
     """
@@ -650,14 +664,14 @@ def linkCluster(seq, coords, n, dx, dy, yoffset=0):
     return svg
         
 
-def dosvg(seq, coord, seqside, hydrophobe, conservation, nbaa, b, F=1, yoffset=0):
+def dosvg(seq, coord, seqside, hydrophobe, conservation, nbaa, F=1, yoffset=0, idx_offset=0):
     """
     brief draw a svg hca plot
     param seq is a list containing sequence and 4 spaces at the begining and at the end
     param coord is a list  [x, y] amino acid coordinate for each position
     param seqside is a boolean list containing 6 cases by case. 6 faces True or False to draw line cluster
     param nbaa is the number of residue
-    param b if the begining if we use cutting option
+    param idx_offset if the begining if we use cutting option
     """
 
     F = 1 # factor zoom
@@ -721,7 +735,7 @@ def dosvg(seq, coord, seqside, hydrophobe, conservation, nbaa, b, F=1, yoffset=0
             
             x =  coord[n][0] + 80 + 3.5#+80+dx
             dy1 = dy + coord[4][1] + 60 
-            position = n - AROUND + 1 + b
+            position = n - AROUND + 1 + idx_offset
             
             #print "AAAA",coord[n][0], dx
             #print "DIST", x-xp, x
@@ -743,7 +757,7 @@ def dosvg(seq, coord, seqside, hydrophobe, conservation, nbaa, b, F=1, yoffset=0
             if is_side == False:
                 continue
             
-            if n+3 >= len(seq):
+            if n+4 >= len(seq):
                 continue
             dybis = deplace(n, seq, coord, iteside, hydrophobe)
             dybis2 = deplace(n, seq, coordbis, iteside, hydrophobe)
@@ -863,13 +877,13 @@ def getSeqFromGi(gi):
     os.close(temp_fd)
     return temp_filename
 
-def createHCAsvg(seq, nbaa, domains, conservation, b, yoffset=0):
+def createHCAsvg(seq, nbaa, domains, conservation, yoffset=0, idx_offset=0):
     """
     brief draw the svg of hca
     param seq is the sequence with 4 spaces at both begining and end
     param nbaa is the true number of aa
     param output is the address of output file
-    param b is the position to begin (for the ruler)
+    param idx_offset is the position to begin (for the ruler)
     """
     hydrophobe  = "YIMLFVW"
     seq = "    "+seq+"    "
@@ -887,45 +901,105 @@ def createHCAsvg(seq, nbaa, domains, conservation, b, yoffset=0):
     #plt.savefig(pathfig)
     #plt.close()
     # draw the svg
-    svg = dosvg(seq, coord, seqside, hydrophobe, conservation, nbaa, b, yoffset=yoffset)
+    svg = dosvg(seq, coord, seqside, hydrophobe, conservation, nbaa, yoffset=yoffset, idx_offset=idx_offset)
     if domains:
         svg += drawDomains(domains, coord, yoffset)
     return svg
     
 
-def make_svg(prot, prev_seq, annot, cnt):
+def make_svg(prot, prev_seq, annot, yoffset=0, idx_offset=0):
     """ create svg for a given sequence
     """
     seq = transform_seq(prev_seq)
     nbaa = len(seq)
-    
-    b = 0
-    svg = draw_protnames(prot, yoffset=cnt*230)
-    svg += createHCAsvg(seq, nbaa, annot.get("domains", list()), annot.get("positions", dict()), b, yoffset=cnt*230)
+    svg = ""
+    if prot != "":
+        #yoffset = cnt*230
+        svg += draw_protnames(prot, yoffset=yoffset)
+    #else:
+        #yoffset = cnt*120
+    svg += createHCAsvg(seq, nbaa, annot.get("domains", list()), annot.get("positions", dict()), yoffset=yoffset, idx_offset=idx_offset)
     return svg, nbaa
 
 
-def drawing(dfasta, annotation, pathout):
+def draw_columns_lines(columns_prot, columns_prev_prot, cnt):
+    """ draw lines between selected columns of the two proteins
+    """
+    y_offset_prev = cnt*230
+    y_offset_middle = y_offset_prev + (115)
+    y_offset = y_offset_prev + 230
+    F = 1
+    svg = ""
+    for col in columns_prot:
+        idx_prot = columns_prot[col]
+        idx_prev_prot = columns_prev_prot[col]
+        if idx_prot > -1 and idx_prev_prot > -1:
+            x_prev, y_prev = getCoord_pos(idx_prev_prot)
+            x_prev += 80 + 0.5 # 0.5 correspond to letter centering
+            y_prev_middle = (y_offset_middle+110)*F
+            x_prev, y_prev = x_prev*F, (y_offset_prev+170)*F
+            
+            x, y = getCoord_pos(idx_prot)
+            x += 80 + 0.5 # 0.5 correspond to letter centering
+            x, y = x*F, (y_offset+50)*F
+            if x < x_prev:
+                # curved
+                svg += """<line x1="%f" y1="%f" x2="%f" y2="%f" style="fill:black;stroke:black;stroke-width:0.7;" />"""%(x_prev, y_prev, x, y_prev_middle)
+                # straight
+                svg += """<line x1="%f" y1="%f" x2="%f" y2="%f" style="fill:black;stroke:black;stroke-width:0.7;" />"""%(x, y_prev_middle, x, y)
+            else:
+                # straight
+                svg += """<line x1="%f" y1="%f" x2="%f" y2="%f" style="fill:black;stroke:black;stroke-width:0.7;" />"""%(x_prev, y_prev, x_prev, y_prev_middle)
+                # curved
+                svg += """<line x1="%f" y1="%f" x2="%f" y2="%f" style="fill:black;stroke:black;stroke-width:0.7;" />"""%(x_prev, y_prev_middle, x, y)
+    return svg
+    
+def drawing(dfasta, annotation, pathout, window=-1):
     """ draw multiple fasta sequences
     """
     svg = ""
     max_aa = 0
     cnt = 0
-    
+    prev_prot = None
+    yoffset = 0
     for prot, prot_seq in dfasta.items():
         if isinstance(prot_seq, Bio.SeqRecord.SeqRecord):
             prot_seq= str(prot_seq.seq)
         elif not isinstance(prot_seq, str):
             raise ValueError("Unknown amino acid sequence format {} for prot {} ".format(type(prot_seq), prot))
-        cur_svg, nbaa = make_svg(prot, prot_seq, annotation.get(prot, dict()), cnt)
-        svg += cur_svg
-        if nbaa > max_aa:
-            max_aa = nbaa
-        cnt += 1
+        if window != -1:
+            # modulo sequence length
+            cur_prot = prot
+            for s in range(0, len(prot_seq), window):
+                subseq = prot_seq[s:s+window+4] # +4 correspond to hca offset
+                offset = s
+                if s != 0:
+                    prot = ""
+                    yoffset += 120
+                cur_svg, nbaa = make_svg(prot, subseq, annotation.get(cur_prot, dict()), yoffset, offset)
+                svg += cur_svg
+                if nbaa > max_aa:
+                    max_aa = nbaa
+                if s == 0:
+                    if prev_prot != None and "columns" in annotation[cur_prot]:
+                        print("warning cannot draw line conservation between protein if window is different of -1")
+                    #svg += draw_columns_lines(annotation[prot]["columns"], annotation[prev_prot]["columns"], cnt-1)
+                    prev_prot = prot
+            yoffset += 230
+        else:
+            cur_svg, nbaa = make_svg(prot, prot_seq, annotation.get(prot, dict()), yoffset)
+            svg += cur_svg
+            if nbaa > max_aa:
+                max_aa = nbaa
+            if prev_prot != None and "columns" in annotation[prot]:
+                svg += draw_columns_lines(annotation[prot]["columns"], annotation[prev_prot]["columns"], cnt-1)
+            prev_prot = prot
+            cnt += 1
+            yoffset += 230
     
     # analys the new annotated domain, selective pressure from PAML
     #evolution_rate(pathnt, params.pathtree)
-    svgheader = getSVGheader(max_aa, (cnt+1)*230)
+    svgheader = getSVGheader(max_aa, yoffset)
     with open(pathout, "w") as fout:
         fout.write(svgheader)
         fout.write(svg)
@@ -951,10 +1025,10 @@ def colorize_positions(msa, seq, conservation, method="rainbow"):
                     positions[pos] = {"poly": ("black", 0.0)}
                 pos += 1
     elif "identity":
-        for i in range(seq):
+        for i in range(len(seq)):
             if conservation[i] >= 0.9:
                 positions[i] = {"poly": ("red", 0.5)}
-            elif conservation[i] >= 0.8:
+            elif conservation[i] >= 0.7:
                 positions[i] = {"poly": ("orange", 0.5)}
             elif conservation[i] >= 0.5:
                 positions[i] = {"poly": ("yellow", 0.5)}
@@ -964,15 +1038,32 @@ def colorize_positions(msa, seq, conservation, method="rainbow"):
         raise ValueError("Unknown colorization method")
     return positions
 
+def select_columns(column_scores, msa2seq, threshold=0.8):
+    segments = dict()
+    for col in column_scores:
+        if column_scores[col] >= threshold:
+            idx, isgap = msa2seq[col]
+            if not isgap:
+                segments[col] = idx
+            else:
+                segments[col] = -1
+    return segments
+
 def get_params():
     """ get command line ArgumentParser
     """
     parser = argparse.ArgumentParser(prog="{} {}".format(os.path.basename(sys.argv[0]), "draw"))
     parser.add_argument("-i", action="store", dest="fastafile", help="the fasta file", required=True)
+    parser.add_argument("-w", action="store", dest="window", type=int, help="sequence len before breaking the sequence to the next plot "
+                        "(-1 the whole sequence are used, minimum size is 80)", default=-1)
     parser.add_argument("-d", action="store", dest="domain", help="[optionnal] provide domain annoation")
     parser.add_argument("-f", action="store", dest="domformat", help="the domain file format", choices=["pfam", "seghca"])
+    parser.add_argument("--color-msa", action="store", choices=["rainbow", "identity"], dest="msacolor", help="method to use to color a MSA", default="rainbow")
     parser.add_argument("-o", action="store", dest="svgfile", help="the svg file", required=True)
     params = parser.parse_args()
+    
+    if params.window > -1 and params.window < 80:
+        print("window parameter (-w) must either be superior to 80 or -1 to use draw the full sequence on one plot")
     return params
 
 def main():
@@ -985,7 +1076,8 @@ def main():
     dfasta = read_multifasta(params.fastafile)
     # are we using an msa ?
     dmsa = dict()
-    if is_msa(dfasta):
+    is_an_msa = check_if_msa(dfasta)
+    if is_an_msa:
         # if a msa is provided store sequence without gap character in a new dict
         # store msa sequence to get conserved positions 
         for rec in dfasta:
@@ -996,7 +1088,8 @@ def main():
             dfasta[rec] = transform_seq(seq)
     
     # get conserved position
-    msa_conserved = compute_conserved_positions(dfasta, dmsa)
+    if is_an_msa:
+        msa_conserved_per_prot, msa_conserved_per_column, msa2seq = compute_conserved_positions(dfasta, dmsa)
     
     # compute hca annotation  
     annotation = {}
@@ -1009,10 +1102,12 @@ def main():
     # define msa color annotation
     for prot in dfasta:
         annotation.setdefault(prot, dict())
-        annotation[prot]["positions"] = colorize_positions(dmsa[prot], dfasta[prot], msa_conserved[prot], method="rainbow")
-    
+        if is_an_msa:
+            annotation[prot]["positions"] = colorize_positions(dmsa[prot], dfasta[prot], msa_conserved_per_prot[prot], method=params.msacolor)
+            annotation[prot]["columns"] = select_columns(msa_conserved_per_column, msa2seq.get(prot, dict()), threshold=0.8)
+        
     # draw
-    drawing(dfasta, annotation, params.svgfile)
+    drawing(dfasta, annotation, params.svgfile, params.window)
     
     sys.exit(0)
     
