@@ -43,7 +43,6 @@ def check_if_msa(sequences):
     else:
         raise ValueError("Unknown argument type passed to check_if_msa(), {}").format(type(sequences))
     return False
-    
 
 def itercodon(seq, frame, offset, table, reverse=False):
     stop = 0

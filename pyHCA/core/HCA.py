@@ -9,7 +9,7 @@ __version__ = 0.1
 __email__ = "tristan.bitard-feildel [you know what] impmc.upmc.fr"
 __institute__ = "IMPMC, UPMC"
 
-import time, os, tempfile
+import time, os, tempfile, sys
 import Bio
 from Bio import Seq 
 from Bio import SeqIO
@@ -568,7 +568,7 @@ def check_if_msa(querynames, sequences):
                 if c in gaps:
                     is_msa = True
                 else:
-                    print("Invalid amino acids ({}, {}) in protein {}, replaced by X".format(j, c, querynames[i]))
+                    print("Invalid amino acids ({}, {}) in protein {}, replaced by X".format(j, c, querynames[i]), file=sys.stderr)
         new_sequences.append(new_seq)
         msa_seq.append(seq)
         msa_length.append(len(seq))
