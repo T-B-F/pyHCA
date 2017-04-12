@@ -29,14 +29,18 @@ __year__    = 2016
 __licence__ = "MIT"
 __version__ = 0.1
 
+import sys
+
+if sys.version_info < (3, 0):
+    print("Error, python3 required")
+    sys.exit(1)
+
+import pyHCA
 from pyHCA import annotate_main
 from pyHCA import score_main
 from pyHCA import draw_main
 from pyHCA import tremolo_main
 from pyHCA import dom_ontree_main
-
-import pyHCA,  sys
-import sys
 
 def usage():
     """ print usage
