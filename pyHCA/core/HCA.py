@@ -17,10 +17,11 @@ from Bio.Alphabet import IUPAC
 import numpy as np
 import warnings
 import functools
+import matplotlib.pyplot as plt
 
 from .classHCA import Seq as SeqHCA
 from .annotateHCA import _annotation_aminoacids
-from .drawHCA import make_svg, getSVGheader, colorize_positions
+from .drawHCA import make_plot, make_svg, getSVGheader, colorize_positions
 from .seq_util import compute_conserved_positions
 from .tremoloHCA import search_domains, group_resda, write_tremolo_results
 from .external import cdd_search, interpro_search
@@ -79,10 +80,13 @@ class HCA(object):
         >>>
         """
         
-        if is_seq_none(seq) and seqfile == None:
+        if isinstance(seq, str) and seqfile is None and os.path.isfile(seq):
+            raise ValueError("Error, please use seqfile= argument to pass a file as an argument")
+        
+        if seq is None and seqfile is None:
             raise ValueError("Error, you need to provide a sequence (or a list of sequences), or a valid path to a file to instantiate a HCA object")
         
-        if not is_seq_none(seq) and seqfile != None:
+        if seq is not None and seqfile is not None:
             raise ValueError("Error, you need to provide either a sequence (or a list of sequences), or a valid path to a file to instantiate a HCA object")
         
         self.sequences = list()
@@ -99,7 +103,7 @@ class HCA(object):
         self._segments_done_with_t = -1
         self._tremolo_done = False
         
-        if not is_seq_none(seq):
+        if seqfile is None and seq is not None:
             # list of sequences or single sequence
             qnames = list()
             if isinstance(seq, list):
@@ -115,7 +119,7 @@ class HCA(object):
                 self._number_of_sequences += 1
             
             # adapt queryname to list type
-            if querynames == None:
+            if querynames is None:
                 all_qnames = list(set(qnames))
                 if len(all_qnames) == 1 and all_qnames[0] == "query":
                     for idx in range(len(self.sequences)):
@@ -154,21 +158,21 @@ class HCA(object):
             else:
                 raise ValueError("Error, querynames should be a list of names or a string")
         else:
-            # it's a file
             if not os.path.isfile(seqfile):
-                raise ValueErro("Error unable to find file {}".format(seqfile))
+                raise ValueError("Error, argument path ({}) of seqfile must be a file".format(seqfile))
             with open(seqfile) as inf:
-                for record in SeqIO.parse(inf, file_format):
+                for record in SeqIO.parse(seqfile, file_format):
+                    name = record.id
+                    self.querynames.append(name)
                     self.sequences.append(str(record.seq))
-                    self.querynames.append(record.id)
+                    self.__domains[name] = list()
+                    self.__clusters[name] = list()
                     self._number_of_sequences += 1
-                    # initialize containers for domains and clusters
-                    if record.id not in self.__domains:
-                        self.__domains[record.id ] = list()
-                        self.__clusters[record.id ] = list()
-                    else:
-                        raise ValueError("Error, multiple proteins found with the same name {}".format(record.id))
                     
+        # no sequences?
+        if self._number_of_sequences == 0:
+            raise ValueError("No sequences found")
+        
         # check if sequence is a MSA sequence
         is_msa, msa_seq, sequences = check_if_msa(self.querynames, self.sequences)
         self.msa_seq = msa_seq[:]
@@ -366,7 +370,7 @@ class HCA(object):
                     outf.write("{}\n".format(str(clustannot)))
             
     ### DrAW-HCA
-    def draw(self, external_annotation=dict(), show_hca_dom=False, outputfile=None):
+    def draw_hca2svg(self, external_annotation=dict(), show_hca_dom=False, outputfile=None):
         """ draw a HCA plot in svg of each sequence
         
         Parameters:
@@ -385,7 +389,7 @@ class HCA(object):
         Usage:
         ------
         
-        >>> hca.draw()
+        >>> svg = hca.draw_hca2svg()
         >>>
         
         """
@@ -429,6 +433,73 @@ class HCA(object):
                 fout.write("</svg>")
         # return the svg dictionary
         return self.all_svg
+
+    def draw_hca2plot(self, external_annotation=dict(), ax=None, show_hca_dom=False, outputfile=None, show=False, **kwargs):
+        """ draw a HCA plot in svg of each sequence
+        
+        Parameters:
+        -----------
+        external_annotation: dict
+            currently only support external domain annotation. 
+            Format: 
+            external_annotation[protein_A] = [(start_A1, stop_A1, ext_domain_A1), (start_A2, stop_A2, ext_domain_A2), ...]
+            external_annotation[protein_B] = [(start_B1, stop_B1, ext_domain_B1), ...]
+            ...
+        show_hca_dom: bool
+            if set to True display the computed hca domains on the hca plot
+        outputfile: None or string
+            if a path is provided save the plot in an svg format
+        
+        Usage:
+        ------
+        
+        >>> hca.draw_hca2plot(show=False, outputfile="hca.pdf", dpi=600)
+        >>> 
+        >>> fig, ax = plt.subplots()
+        >>> hca.draw_hca2plot(ax=ax)
+        >>> plt.show()
+        
+        """
+        print("Warning, HCA drawing with matplotlib module is experimental and can take some time")
+        if ax is None:
+            fig, ax = plt.subplots()
+            
+        if self.is_msa:
+            msa_conserved = compute_conserved_positions(dict(zip(self.querynames, self.sequences)), dict(zip(self.querynames, self.msa_seq)))
+        
+        cnt = 0
+        max_aa = 0
+        # create hca plot for each sequence
+        for i in range(len(self.querynames)):
+            prot = self.querynames[i]
+            prot_seq = self.sequences[i]
+            nb_aa = len(prot_seq)
+            if nb_aa > max_aa:
+                max_aa = nb_aa
+            # read domain annotation if provided
+            annotation = {"domains": list()}
+            if prot in external_annotation and "domains" in external_annotation[prot]:
+                for start, stop, dom in external_annotation[prot]:
+                    annotation["domains"].append((start, stop, dom, "!", None))
+            if show_hca_dom:
+                for dom in self.domains[prot]:
+                    start = dom.start
+                    stop = dom.stop
+                    annotation["domains"].append((start, stop, "domain", "!", None))
+            # make svg
+            
+            if self.is_msa:
+                annotation["positions"] = colorize_positions(self.msa_seq[i], prot_seq, msa_conserved[prot], method="rainbow")
+            make_plot(ax, prot, prot_seq, annotation, cnt)
+            cnt += 1
+        # write in outputfile if provided
+        if not outputfile is None:
+            plt.savefig(outputfile, **kwargs)
+        #ax.set_xlim(0, max_aa)
+        #ax.set_ylim(0, -cnt*230)
+        if show == True:
+            plt.show()
+        return ax
     
     ## Tremolo-HCA 
     
@@ -527,14 +598,6 @@ class HCA(object):
         write_tremolo_results(self.__tremolo_query, self.__tremolo_domains, 
                               self.__tremolo_targets, self.__tremolo_annotation, 
                               groups, outputfile)
-        
-def is_seq_none(seq):
-    """ check if seq argument is None
-    """
-    # Bio.SeqRecord.SeqRecord does not support direct comparison
-    if isinstance(seq, Bio.SeqRecord.SeqRecord):
-        return False
-    return seq == None
     
 def check_seq_type(seq):
     """ check that sequence is of correct type
@@ -545,8 +608,8 @@ def check_seq_type(seq):
     elif isinstance(seq, Seq.Seq):
         seq = str(seq)
     elif isinstance(seq, Bio.SeqRecord.SeqRecord):
-        seq = str(seq.seq)
         queryname = seq.id
+        seq = str(seq.seq)
     else:
         raise TypeError("Error, the 'seq' argument must be either a string a Bio.Seq instance or a Bio.SeqRecord instance")
     return seq, queryname
