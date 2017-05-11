@@ -1,9 +1,22 @@
 #!/usr/bin/env python3
 
-import os
+import os, sys
 from setuptools import setup, find_packages
 
 __version__ = "0.1"
+
+
+if sys.version_info < (3,4):
+    print("python version must be at least 3.4")
+    sys.exit(1)
+
+
+# check if PyQt4 is here
+try:
+    import PyQt4
+except ImportError:
+    print("You must first install PyQt4 for ete3 to drawing functionnalities")
+    sys.exit(1)
 
 def readme():
     with open("README.md") as inf:
@@ -36,6 +49,8 @@ setup(name='pyHCA',
     include_package_data=True,
     install_requires=['biopython>=1.68',
                       'requests',
+                      'six',
+                      '
                       'ete3',
                       #'scikit-learn>=0.18.1',
                       #'numpy>=1.11.2'n
