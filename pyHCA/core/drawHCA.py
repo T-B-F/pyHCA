@@ -698,7 +698,7 @@ def dohcaplot(ax, seq, coord, seqside, hydrophobe, conservation, nbaa, F=1, yoff
         ys = ys+80
         
         #print x, x2, y, ys
-        print(x, y, seq[n])
+        #print(x, y, seq[n])
         if seq[n] in hydrophobe:
             ax.scatter(x, y, color="r", s=8, alpha=0.5)
             ax.text(x, y, seq[n], fontsize=8)
@@ -1073,9 +1073,9 @@ def getCoord(seq, F=1, FX=12, FY=40):
     AROUND = 4
     NTOUR = 3.6
     BULGARIANCONSTANT = 11
-    dx = FX / NTOUR + 100
+    dx = FX / NTOUR
     dy = FY / NTOUR
-    print(FX, FX/NTOUR,  12/NTOUR)
+    #print(FX, FX/NTOUR,  12/NTOUR)
     coord = []
     #int_coord = []
     for n in range(len(seq)):
