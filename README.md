@@ -55,23 +55,29 @@ Optionnaly, can display the domain annotation of a sequence if provied.
 
     $ hcatk draw -h
 
-    usage: hcatk draw [-h] -i FASTAFILE [-d DOMAIN] [-f {pfam,seghca}] -o SVGFILE
-
+    
+    usage: hcatk draw [-h] -i FASTAFILE [-w WINDOW] [-d DOMAIN] [-f {pfam,seghca}]
+                  [--color-msa {rainbow,identity}] -o OUTPUTFILE
 
 Arguments:
 **********
 
-    -h, --help        show this help message and exit
-
+    -h, --help            show this help message and exit
+    
 required arguments:
-
-    -i FASTAFILE      the fasta file
-    -o SVGFILE        the svg file
+    
+    -i FASTAFILE          the fasta file
+    -o OUTPUTFILE         svg file
 
 optional arguments:
 
-    -d DOMAIN         the domain file
-    -f {pfam,seghca}  the domain file format
+    -w WINDOW             sequence len before breaking the sequence to the next
+                          plot (-1 the whole sequence are used, minimum size is
+                          80)
+    -d DOMAIN             [optionnal] provide domain annoation
+    -f {pfam,seghca}      the domain file format
+    --color-msa {rainbow,identity}
+                          method to use to color a MSA
 
 
 tremolo
@@ -119,3 +125,4 @@ optional arguments:
 
 The interpo domain annoation can be downloaded at:
 wget ftp://ftp.ebi.ac.uk/pub/databases/interpro/protein2ipr.dat.gz
+
