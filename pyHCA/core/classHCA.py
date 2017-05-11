@@ -97,7 +97,10 @@ class DomHCA(object):
         self.__start = start
         self.__stop = stop
         self.__score = -np.inf 
-        self.__pvalue = self._compute_pvalue(clusters)
+        if stop - start >= 30:
+            self.__pvalue = self._compute_pvalue(clusters)
+        else:
+            self.__pvalue = -1.0
         
         #self.__clusters = list_of_hcclusters[:]
     @property
