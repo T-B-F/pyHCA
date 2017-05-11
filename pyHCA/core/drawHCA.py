@@ -1172,9 +1172,9 @@ def make_plot(ax, prot, prev_seq, annot, yoffset=0, idx_offset=0):
 def draw_columns_lines(columns_prot, columns_prev_prot, cnt):
     """ draw lines between selected columns of the two proteins
     """
-    y_offset_prev = cnt*230
-    y_offset_middle = y_offset_prev + (115)
-    y_offset = y_offset_prev + 230
+    y_offset_prev = cnt*180
+    y_offset_middle = y_offset_prev + (90)
+    y_offset = y_offset_prev + 180
     F = 1
     svg = ""
     for col in columns_prot:
@@ -1182,12 +1182,16 @@ def draw_columns_lines(columns_prot, columns_prev_prot, cnt):
         idx_prev_prot = columns_prev_prot[col]
         if idx_prot > -1 and idx_prev_prot > -1:
             x_prev, y_prev = getCoord_pos(idx_prev_prot)
-            x_prev += 80 + 0.5 # 0.5 correspond to letter centering
-            y_prev_middle = (y_offset_middle+110)*F
-            x_prev, y_prev = x_prev*F, (y_offset_prev+170)*F
+            x_prev += 80 + 0.5 # corresponds to left padding and letter centering 
             
+            # middle position
+            y_prev_middle = (y_offset_middle+110)*F
+            
+            # starting positions below first hca drawing
+            x_prev, y_prev = x_prev*F, (y_offset_prev+170)*F 
+            # position above current hca drawing
             x, y = getCoord_pos(idx_prot)
-            x += 80 + 0.5 # 0.5 correspond to letter centering
+            x += 80 + 0.5 # corresponds to left padding and letter centering 
             x, y = x*F, (y_offset+50)*F
             if x < x_prev:
                 # curved
@@ -1242,7 +1246,7 @@ def drawing_svg(dfasta, annotation, pathout, window=-1):
                         print("warning cannot draw line conservation between protein if window is different of -1")
                     #svg += draw_columns_lines(annotation[prot]["columns"], annotation[prev_prot]["columns"], cnt-1)
                     prev_prot = prot
-            yoffset += 230
+            yoffset += 180
         else:
             cur_svg, nbaa = make_svg(prot, prot_seq, annotation.get(prot, dict()), yoffset)
             svg += cur_svg
@@ -1252,7 +1256,7 @@ def drawing_svg(dfasta, annotation, pathout, window=-1):
                 svg += draw_columns_lines(annotation[prot]["columns"], annotation[prev_prot]["columns"], cnt-1)
             prev_prot = prot
             cnt += 1
-            yoffset += 230
+            yoffset += 180
     
     # analys the new annotated domain, selective pressure from PAML
     #evolution_rate(pathnt, params.pathtree)
