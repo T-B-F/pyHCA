@@ -36,7 +36,10 @@ setup(name='pyHCA',
     include_package_data=True,
     install_requires=['biopython>=1.68',
                       'requests',
+                      'numpy', # for ete3, as it is not properly installed without
+                      'scipy', # idem 
                       'ete3',
+                      
                       #'scikit-learn>=0.18.1',
                       #'numpy>=1.11.2'n
                       ],

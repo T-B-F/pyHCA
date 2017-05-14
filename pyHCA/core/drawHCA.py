@@ -1323,10 +1323,11 @@ def colorize_positions(msa, seq, conservation, method="rainbow"):
                     positions[pos] = {"poly": ("black", 0.0)}
                 pos += 1
     elif "identity":
+        #print(conservation)
         for i in range(len(seq)):
             if conservation[i] >= 0.9:
                 positions[i] = {"poly": ("red", 0.5)}
-            elif conservation[i] >= 0.7:
+            elif conservation[i] >= 0.66:
                 positions[i] = {"poly": ("orange", 0.5)}
             elif conservation[i] >= 0.5:
                 positions[i] = {"poly": ("yellow", 0.5)}
