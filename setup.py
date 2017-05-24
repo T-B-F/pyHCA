@@ -15,7 +15,8 @@ if sys.version_info < (3,4):
 try:
     import PyQt4
 except ImportError:
-    print("You must first install PyQt4 for ete3 to drawing functionnalities")
+    print("Error, PyQt4 test import failled", file=sys.stderr)
+    print("Error, You must first install PyQt4 for ete3 to drawing functionnalities", file=sys.stderr)
     sys.exit(1)
 
 def readme():
@@ -50,10 +51,9 @@ setup(name='pyHCA',
     install_requires=['biopython>=1.68',
                       'requests',
                       'six',
-                      '
                       'ete3',
                       #'scikit-learn>=0.18.1',
-                      #'numpy>=1.11.2'n
+                      'numpy>=1.11.2',
                       ],
     provides=['pyHCA({0:s})'.format(__version__)],
     zip_safe=False,

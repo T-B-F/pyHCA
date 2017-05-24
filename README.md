@@ -4,13 +4,40 @@ hcatk provides off the hands set of program to perform hydrophobic cluster analy
 
 Requires
 ========
+
 - Biopython >= 1.65
+- ete3
 - python3   >= 3.4
 
 Installation
 ============
 
+A quick install can be perform using:
+
     pip3 install .
+ 
+However, the ete3 can be difficult to install as some features requires PyQt4 and sip.
+Please refer to the official ete3 insallation guidelines [http://etetoolkit.org/download/] (http://etetoolkit.org/download/) for any support.
+On Mac OS X, you will also need to install XQuartz to use ete3, please refer to [XQuartz documentation] (http://www.xquartz.org/).
+
+We recommend you to work on a conda virtual environment to properly build the non Python extention of the ete3 package and afterward install pyHCA in this new environment.
+
+Example
+-------
+
+    pip install conda
+
+    conda create -n test_pyHCA python=3.5 pip
+    
+    conda install -n test_pyHCA pyqt=4.11.4
+    
+    source activate test_pyHCA
+    
+    cd <path to pyHCA directory>
+    
+    pip install .
+    
+
 
 Usage
 =====
