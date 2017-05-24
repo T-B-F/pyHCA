@@ -6,10 +6,15 @@ from pyHCA.core.ioHCA import read_tremolo
 import os, sys, argparse, ete3, json, gzip
 import numpy as np
 import random
+import requests
 from Bio import SeqIO
 from ete3 import NCBITaxa
-from ete3 import SeqMotifFace, TreeStyle, NodeStyle, add_face_to_node
-import requests
+try:
+    from ete3 import SeqMotifFace, TreeStyle, NodeStyle, add_face_to_node
+except ImportError:
+    print('An error occured while importing ete3, please check that ete3 is correctly installed allong PyQt4 (run python -c "from ete3 import SeqMotifFace"', file=sys.stderr)
+    sys.exit(1)
+    
 
 def get_cmd():
     parser = argparse.ArgumentParser()
