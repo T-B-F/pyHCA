@@ -9,8 +9,8 @@ from Bio.SubsMat import MatrixInfo
 __author__ = "Tristan Bitard-Feildel, Guillem Faure"
 __licence__= "MIT"
 __version__ = 0.1
-__email__ = "t.bitard.feildel [you know what] uni-muenster.de"
-__institute__ = "Institute for Evolution and Biodiversity, Muenster Germany"
+__email__ = "t.bitard-feildel [you know what] upmc.fr.de"
+__institute__ = "UPMC"
 
 # problem of the SeqIO module: not memory efficient
 
@@ -192,6 +192,62 @@ def compute_conserved_positions(dfasta, dmsa, score_type=0, matrix_name="blosum6
                                 score = 1 if (seqk[c] == seql[c]) else 0
                             else: # score_type == 1:
                                 score = 1 if matrix[(seqk[c], seql[c])] > 0 else 0
+                            dconserv_per_prot[record_k][i] += score
+                            dconserv_per_prot[record_l][j] += score
+                            dconserv_per_col[c] += score
+            dconserv_per_col[c] /= tot
+        # normalize score by number of sequence
+        for rec in records:
+            for i in range(len(dconserv_per_prot[rec])):
+                dconserv_per_prot[rec][i] /= (nb_seq-1)
+    return dconserv_per_prot, dconserv_per_col, seq_idx
+
+def compute_hca_conserved_positions(dfasta, dmsa):
+    """ compute conservation of a column relative to a hydrophobic cluster position
+    """ 
+    from .HCA import HCA
+    dconserv_per_prot = dict()
+    dconserv_per_col = dict()
+    positions_msa2prot = dict()
+    
+    # hca transformation
+    seq_bin = dict()
+    for prot in dfasta:
+        hca = HCA(seq=dfasta[prot])
+        clusters = hca.get_clusters()
+        binseq = [0] * len(dfasta[prot])
+        for clust in clusters:
+            for i in range(clust.start, clust.stop):
+                binseq[i] = 1
+        seq_bin[prot] = binseq
+    
+    records = list()
+    seq_idx = dict()
+    for rec in dfasta:
+        records.append(rec)
+        msa2seq, seq2msa = compute_offset_pos(dmsa.get(rec, dfasta[rec]), dfasta[rec])
+        seq_idx[rec] = msa2seq
+        dconserv_per_prot[rec] = [0] * len(dfasta[rec])
+        positions_msa2prot[rec] = dict()
+        
+    nb_seq =  len(records)
+    if nb_seq > 0:
+        nb_cols = len(dmsa[records[0]])
+        tot = (nb_seq * (nb_seq - 1)) / 2
+        for c in range(nb_cols):
+            dconserv_per_col[c] = 0
+            for k in range(len(records)-1):
+                record_k = records[k]
+                i, isgapi = seq_idx[record_k][c]
+                seqk = dmsa[record_k]
+                if seqk[c] != "-":
+                    # no gap in sequence k
+                    for l in range(k+1, len(records)):
+                        record_l = records[l]
+                        j, isgapj = seq_idx[record_l][c]
+                        seql = dmsa[record_l]
+                        if seql[c] != "-":
+                            score = 1 if (seq_bin[record_k][i] == seq_bin[record_l][j] == 1) else 0
                             dconserv_per_prot[record_k][i] += score
                             dconserv_per_prot[record_l][j] += score
                             dconserv_per_col[c] += score

@@ -6,8 +6,8 @@ domain created through hydrophobic clusters.
 __author__ = "Tristan Bitard-Feildel"
 __licence__= "MIT"
 __version__ = 0.1
-__email__ = "tristan.bitard-feildel [you know what] impmc.upmc.fr"
-__institute__ = "IMPMC, UPMC"
+__email__ = "tristan.bitard-feildel [you know what] upmc.fr"
+__institute__ = "UPMC"
 
 import time, os, tempfile, sys
 import Bio
@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 
 from .classHCA import Seq as SeqHCA
 from .annotateHCA import _annotation_aminoacids
-from .drawHCA import make_plot, make_svg, getSVGheader, colorize_positions
+from .drawHCA import make_svg, getSVGheader, colorize_positions
 from .seq_util import compute_conserved_positions
 from .tremoloHCA import search_domains, group_resda, write_tremolo_results
 from .external import cdd_search, interpro_search
@@ -460,46 +460,7 @@ class HCA(object):
         >>> plt.show()
         
         """
-        print("Warning, HCA drawing with matplotlib module is experimental and can take some time")
-        if ax is None:
-            fig, ax = plt.subplots()
-            
-        if self.is_msa:
-            msa_conserved = compute_conserved_positions(dict(zip(self.querynames, self.sequences)), dict(zip(self.querynames, self.msa_seq)))
-        
-        cnt = 0
-        max_aa = 0
-        # create hca plot for each sequence
-        for i in range(len(self.querynames)):
-            prot = self.querynames[i]
-            prot_seq = self.sequences[i]
-            nb_aa = len(prot_seq)
-            if nb_aa > max_aa:
-                max_aa = nb_aa
-            # read domain annotation if provided
-            annotation = {"domains": list()}
-            if prot in external_annotation and "domains" in external_annotation[prot]:
-                for start, stop, dom in external_annotation[prot]:
-                    annotation["domains"].append((start, stop, dom, "!", None))
-            if show_hca_dom:
-                for dom in self.domains[prot]:
-                    start = dom.start
-                    stop = dom.stop
-                    annotation["domains"].append((start, stop, "domain", "!", None))
-            # make svg
-            
-            if self.is_msa:
-                annotation["positions"] = colorize_positions(self.msa_seq[i], prot_seq, msa_conserved[prot], method="rainbow")
-            make_plot(ax, prot, prot_seq, annotation, cnt)
-            cnt += 1
-        # write in outputfile if provided
-        if not outputfile is None:
-            plt.savefig(outputfile, **kwargs)
-        #ax.set_xlim(0, max_aa)
-        #ax.set_ylim(0, -cnt*230)
-        if show == True:
-            plt.show()
-        return ax
+        print("Error, not yet implemented")
     
     ## Tremolo-HCA 
     
@@ -640,5 +601,5 @@ def check_if_msa(querynames, sequences):
         # chec identical sequence lengths
         if len(set(msa_length)) != 1:
             raise ValueError("Error, MSA characters detected but sequences have different lengths")
-    
     return is_msa, msa_seq, new_sequences
+
