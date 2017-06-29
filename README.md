@@ -25,7 +25,7 @@ On Mac OS X, you will also need to install XQuartz to use ete3, please refer to 
 We recommend you to work on a conda virtual environment to properly build the non Python extention of the ete3 package and afterward install pyHCA in this new environment.
 
 Example
--------
+*******
 
 download and install conda from miniconda website using the correct installer (64 bits / 32 bits, MacOSC / Linux):
 
@@ -55,21 +55,21 @@ and install pyqt4 before running pyHCA installer
 Usage
 =====
 
-annotate
---------
+segment
+-------
 
 Use the composition in hydrophobic cluster of a sequence to detect domains.
 
-    $ hcatk annotate -h
+    $ hcatk segment -h
 
-    usage: hcatk annotate [-h] -i INPUTF -o OUTPUTF [-v]
+    usage: hcatk segment [-h] -i INPUTF -o OUTPUTF [-v]
                           [-m {cluster,domain}]
                           [-t {aminoacid,nucleotide}]
 
 Arguments:
 **********
 
-    -h, --help            show this help message and exit
+    -h, --help            show help message and exit
     
 required arguments:
 
@@ -87,6 +87,34 @@ optional arguments:
                           the type of the biological sequences passed in the
                           input file
 
+Example:
+********
+
+    $ hcatk segment -i data/orc1.fasta -o data/orc1.hca -m domain
+
+
+Format:
+*******
+
+The output is formated in a fasta like style, with an header storing the protein name and size:
+
+    >protein_name protein_size
+    
+followed by four columns:
+
+    domain  524     527     nan
+    domain  552     923     0.0032921164246364487
+    cluster 1       2       11
+    cluster 10      17      10001011
+    cluster 23      23      1
+    
+The first column correspond to the hca element identified, either a domain or a cluster.
+The second and third columns correspond to the start and stop (indexed from 1 to the sequence length) of the hca element.
+The fourth column either corresponds to a p-value if the element is a hca domain or to the hydrophobic cluster in binary mode if the element is a cluster.
+The p-value of the domain is computed against a reference distribution made of intrinsically disordered proteins and describe the "degree of foldability associated to the hca domain element.
+A nan value is returned if the domain has less than 30 residues
+
+    
 draw
 ----
 
@@ -102,12 +130,12 @@ Optionnaly, can display the domain annotation of a sequence if provied.
 Arguments:
 **********
 
-    -h, --help            show this help message and exit
+    -h, --help            show help message and exit
     
 required arguments:
     
     -i FASTAFILE          the fasta file
-    -o OUTPUTFILE         svg file
+    -o OUTPUTFILE         output file in svg format
 
 optional arguments:
 
@@ -116,14 +144,19 @@ optional arguments:
                           80)
     -d DOMAIN             [optionnal] provide domain annoation
     -f {pfam,seghca}      the domain file format
-    --color-msa {rainbow,identity}
-                          method to use to color a MSA
+    --cons-msa {aa,hca}   method to use to compare sequences (aa, hca)
+
+Example:
+********
+    
+    $ hcatk draw -i data/PF00533_sub.txt -o data/PF00533_sub.svg --cons-msa aa
+    $ inkscape data/PF00533_sub.svg # external svg viewer
 
 
 tremolo
 -------
 
-Use TremoloHCA to find remote homologous proteins with domain context.
+Use Tremolo-HCA to find remote homologous proteins with domain context.
 
 
     $ hcatk tremolo -h
@@ -136,11 +169,11 @@ Use TremoloHCA to find remote homologous proteins with domain context.
 Arguments:
 **********
 
-    -h, --help            show this help message and exit
+    -h, --help            show help message and exit
 
 required arguments:
 
-    -f INPUTFASTA         input fasta file
+    -i INPUTFASTA         input fasta file
     -o OUTPUT             output file
     -w WORKDIR            working directory
 
@@ -151,18 +184,65 @@ optional arguments:
                              If not provided the search will be performed on 
                              each domain found after segmentation of the input 
                              sequence. To use the whole protein use -d all.
-    -a {CDD,Interpro}        defined annotation method to use (default=Interpro)
-    --p2ipr P2IPR            path to the Interpro annotation of UniproKBt 
-                             proteins. If the argument is not specified and 
-                             '-a Interpro' is set, the annotation will be 
-                             retrieve using web queries of Biomart service
-                             which will be slower.
+    --p2ipr P2IPR            path to the Interpro annotation of UniproKBt proteins,
+                             gzip format supported.
     -E EVALUE                filter hhblits results by evalue
     --hhblits-params HHBLITSPARAMS 
                             parameters to pass to hhblits, between quotes
     --hhblits-db HHBLITSDB  path to the database to use with hhblits
 
+Example:
+********
+
+    $ hcatk tremolo -i data/orc1.fasta --p2ipr data/protein2ipr.dat.gz -E 0.001 --hhblits-db hhsuite/uniprot20_2016_02/uniprot20_2016_02 -o data/orc1_tremolo.txt -w tremolo_tmp
+
+
+domOnTree
+---------
+
+Vizualise Tremolo-HCA results on a taxonomic tree with protein domain arrangement information
+
+
+    $ hcatk domOnTree -h
+
+    usage: hcatk [-h] [-i TREMOLORES] [-t TREEFILE] [-s PROT2SPECIES]
+                 [-n NCBITAXID [NCBITAXID ...]] [-o OUTPUT]
+
+
+Arguments:
+**********
+
+    -h, --help            show help message and exit
+    
+required arguments:
+
+    -i TREMOLORES         tremolo results with domain matchs
+    -o OUTPUT             phylogenetic tree with tremolo hits
+    
+optional arguments:
+
+
+    -t TREEFILE           phylogenetic tree with node as ncbi taxonomic ids
+    -s PROT2SPECIES       file with prot to species informations
+    -n NCBITAXID [NCBITAXID ...]
+                          list of node for which leaves will be merged (internal
+                          node need to be in tree)
+
+
+Example:
+********
+
+    $ hcatk domOnTree -i data/orc1_tremolo.txt -o data/orc1_tremolo.pdf
+                          
+
+Additional ressources
+---------------------
 
 The interpo domain annoation can be downloaded at:
 wget ftp://ftp.ebi.ac.uk/pub/databases/interpro/protein2ipr.dat.gz
 
+HHblits of the HH-suite package can be downlad at (v3 or higher):
+git clone git@github.com:soedinglab/hh-suite.git
+
+And the uniprot hhblits compatible database at:
+http://wwwuser.gwdg.de/~compbiol/data/hhsuite/databases/hhsuite_dbs/

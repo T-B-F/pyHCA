@@ -91,24 +91,25 @@ def get_cmd():
     """ get command line arguments
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument("-f", action="store", dest="inputfasta", 
+    parser.add_argument("-i", action="store", dest="inputfasta", 
             help="input fasta file", required=True)
     parser.add_argument("-d", action="store", dest="domains", nargs="+", 
             help="list of domain positions (start and stop inclusive and "
             "separated by comma : -d 1,10 20,30 60,100. If not provided "
             "the search will be performed on each domain found after "
             "segmentation of the input sequence. "
-            "To use the whole protein use -d whole.")
+            "To use the whole protein use -d whole.", required=True)
     parser.add_argument("-w", action="store", dest="workdir",
-            help="working directory")
-    parser.add_argument("-a", action="store", dest="annotation", 
-            choices=["CDD", "Interpro"], default="Interpro",
-            help="defined annotation method to use (default=%(default)s)")
+            help="working directory", required=True)
+    #parser.add_argument("-a", action="store", dest="annotation", 
+            #choices=["CDD", "Interpro"], default="Interpro",
+            #help="defined annotation method to use (default=%(default)s)")    
     parser.add_argument("--p2ipr", action="store", dest="p2ipr",
-            help="path to the Interpro annotation of UniproKBt proteins. "
-                "If the argument is not specified and '-a Interpro' is set, "
-                "the annotation will be retrieve using web queries of Biomart"
-                " service which will be slower.")
+            help="path to the Interpro annotation of UniproKBt proteins, "
+                 "gzip format supported.")
+                #"If the argument is not specified and '-a Interpro' is set, "
+                #"the annotation will be retrieve using web queries of Biomart"
+                #" service which will be slower.")
     parser.add_argument("-E", action="store", dest="evalue", 
             help="filter hhblits results by evalue (default=%(default)f)", 
             type=float, default=0.001)
@@ -155,12 +156,12 @@ def main():
 
         sys.exit(0)
 
-    if params.annotation == "CDD":
+    #if params.annotation == "CDD":
         # get domain annotation from CDD
-        annotation = cdd_search(alltargetids, params.workdir)
-    else:
+        #annotation = cdd_search(alltargetids, params.workdir)
+    #else:
         # get domain from Interpro
-        annotation = interpro_search(alltargetids, params.workdir, params.p2ipr)
+    annotation = interpro_search(alltargetids, params.workdir, params.p2ipr)
 
     # group by domain arrangement
     groups = group_resda(targets, annotation)

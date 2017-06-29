@@ -7,7 +7,7 @@ stop positions) on sequence databases.
 
 import os, sys, time, re
 import subprocess, shlex
-import sqlite3 
+import sqlite3, gzip
 debug = True
 
 ### CDD
@@ -124,15 +124,26 @@ def read_annotation(uniprotids, path_p2ipr):
     """
     annotation = dict()
     t1 = time.time()
-    with open(path_p2ipr, "r") as inf:
-        for line in inf:
-            tmp = line.strip().split("\t")
-            if tmp[0] in uniprotids:
-                start, stop = int(tmp[4])-1, int(tmp[5])
-                prot = uniprotids[tmp[0]]
-                annotation.setdefault(prot, list()).append((start, stop, tmp[1]+"/"+tmp[3], -1, -1, -1))
-            elif len(annotation) == len(uniprotids):
-                return annotation
+    if path_p2ipr[-2:] == "gz":
+        with gzip.open(path_p2ipr, "rt") as inf:
+            for line in inf:
+                tmp = line.strip().split("\t")
+                if tmp[0] in uniprotids:
+                    start, stop = int(tmp[4])-1, int(tmp[5])
+                    prot = uniprotids[tmp[0]]
+                    annotation.setdefault(prot, list()).append((start, stop, tmp[1]+"/"+tmp[3], -1, -1, -1))
+                elif len(annotation) == len(uniprotids):
+                    return annotation
+    else:
+        with open(path_p2ipr, "r") as inf:
+            for line in inf:
+                tmp = line.strip().split("\t")
+                if tmp[0] in uniprotids:
+                    start, stop = int(tmp[4])-1, int(tmp[5])
+                    prot = uniprotids[tmp[0]]
+                    annotation.setdefault(prot, list()).append((start, stop, tmp[1]+"/"+tmp[3], -1, -1, -1))
+                elif len(annotation) == len(uniprotids):
+                    return annotation
     t2 = time.time()
     print("Done in {}".format(t2-t1))
     return annotation

@@ -841,7 +841,7 @@ def compute_loc_score(seq, clusters, dist=16):
         #smooth_scores.append(sum(sub_scores)/len(sub_scores))
     return np.array(scores)
 
-def _annotation_aminoacids(seq, t=0.1, method="domain", verbose=False, dist=16):
+def _annotation_aminoacids(seq, t=0.1, method="domain", verbose=False):
     """ The amino acids annotation function. Two methods are avaliable: 'domain'
     and 'cluster' 
     
@@ -909,11 +909,10 @@ def _annotation_aminoacids(seq, t=0.1, method="domain", verbose=False, dist=16):
     else:
         list_amas, seqamas = _getAmas(seqtrans2)
         annotat["cluster"] = list_amas[:]
-    #annotat["scores"] = compute_loc_score(seq, annotat["cluster"], dist)
     return annotat
 
 
-def _annotation(output, dseq, seq_type="aminoacid", t=0.1, method="domain", verbose=False, dist=16):
+def _annotation(output, dseq, seq_type="aminoacid", t=0.1, method="domain", verbose=False):
     """ The main annotation function. Two methods are avaliable: 'domain' and 
     'cluster' 
     
@@ -943,8 +942,7 @@ def _annotation(output, dseq, seq_type="aminoacid", t=0.1, method="domain", verb
         if seq_type == "aminoacid":
             for prot in dseq:
                 sequence = str(dseq[prot].seq)
-                annotations = _annotation_aminoacids(sequence, t=t, method=method, 
-                                                    verbose=verbose, dist=dist)
+                annotations = _annotation_aminoacids(sequence, t=t, method=method, verbose=verbose)
                 outf.write(">{} {}\n".format(prot, len(sequence)))
                 for domannot in annotations["domain"]:
                     outf.write("{}\n".format(str(domannot)))
@@ -969,7 +967,7 @@ def _annotation(output, dseq, seq_type="aminoacid", t=0.1, method="domain", verb
                         new_name = "{}_3'5'_Frame_{}_start_{}".format(name, frame+1, start+1)
                     
                     annotations = {"cluster": [], "domain": []}
-                    cur_annotation = _annotation_aminoacids(protseq, t=t, method=method, verbose=verbose, dist=dist)
+                    cur_annotation = _annotation_aminoacids(protseq, t=t, method=method, verbose=verbose)
                     for domannot in cur_annotation["domain"]:
                         annotations["domain"].append(domannot)
                     for clustannot in cur_annotation["cluster"]:
@@ -1059,7 +1057,6 @@ def _scores(output, dseq, seq_type="aminoacid", t=0.1, method="domain", verbose=
                                 outf.write("{:.5f}\tNaN\n".format(annotations["scores"][i]))
             sys.stdout.write("\n")
 
-
 def _process_params():
     """ Process parameters when the script annotateHCA is directly called
     """
@@ -1078,8 +1075,6 @@ def _process_params():
     parser.add_argument("-t", action="store", dest="seqtype", 
         default="aminoacid", choices=["aminoacid","nucleotide"], help=("the "
         "type of the biological sequences passed in the input file"))
-    parser.add_argument("-d", action="store", dest="wdist", 
-        default=8, type=int, help="the windows ditance size [i-d,i, i+d]")
     params = parser.parse_args()
     return params
 
@@ -1093,25 +1088,10 @@ def main_segment():
     
     # annotation
     _annotation(params.outputf, dseq, seq_type=params.seqtype, t=0.1, 
-                              method=params.method, verbose=params.verbose,
-                              dist=params.wdist)
+                              method=params.method, verbose=params.verbose)
         
     sys.exit(0)
     
-
-def main_score():
-    """ the main function is called after direct invocation of the software
-    """
-    params = _process_params()
-    # read sequence
-    dseq = read_multifasta(params.inputf, verbose=params.verbose)
-    
-    # annotation
-    dannotation = _scores(params.outputf, dseq, seq_type=params.seqtype, t=0.1, 
-                             method=params.method, verbose=params.verbose,
-                             dist=params.wdist)
-        
-    sys.exit(0)
 if __name__ == "__main__":
     main_segment()
     

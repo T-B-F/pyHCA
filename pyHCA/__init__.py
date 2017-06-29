@@ -3,7 +3,7 @@ __release__ = __version__  + '-dev' # comment out '-dev' before a release
 
 
 from .core.annotateHCA import main_segment as annotate_main
-from .core.annotateHCA import main_score as score_main
+#from .core.annotateHCA import main_score as score_main
 from .core.drawHCA import main as draw_main
 from .core.tremoloHCA  import main as tremolo_main
 from .core.domains_on_tree  import main as dom_ontree_main

@@ -863,12 +863,12 @@ def draw_columns_lines(columns_prot, columns_prev_prot, cnt):
 def drawing(dfasta, annotation, pathout, window=-1):
     """ draw multiple fasta sequences
     """
-    ext = os.path.splitext(pathout)[1]
-    if ext == ".svg":
-        drawing_svg(dfasta, annotation, pathout, window)
-    else:
-        print("Warning, HCA drawing with matplotlib module is experimental and can take some time")
-        pass
+    #ext = os.path.splitext(pathout)[1]
+    #if ext == ".svg":
+    drawing_svg(dfasta, annotation, pathout, window)
+    #else:
+        #print("Warning, HCA drawing with matplotlib module is experimental and can take some time")
+        #pass
         #drawing_plot(dfasta, annotation, pathout, window)
 
 def drawing_svg(dfasta, annotation, pathout, window=-1):
@@ -978,7 +978,7 @@ def get_params():
     parser.add_argument("-f", action="store", dest="domformat", help="the domain file format", choices=["pfam", "seghca"])
     #parser.add_argument("--color-msa", action="store", choices=["rainbow", "identity"], dest="msacolor", help="method to use to color a MSA", default="rainbow")
     parser.add_argument("--cons-msa", action="store", choices=["aa", "hca"], dest="msacons", help="method to use to compare sequences (aa, hca)", default="aa")
-    parser.add_argument("-o", action="store", dest="outputfile", help="a matplotlib supported output {pdf, png ...} or a svg file", required=True)
+    parser.add_argument("-o", action="store", dest="outputfile", help="output file in svg format", required=True)
     params = parser.parse_args()
     
     if params.window > -1 and params.window < 80:
