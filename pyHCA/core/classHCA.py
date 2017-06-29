@@ -100,7 +100,7 @@ class DomHCA(object):
         if stop - start >= 30:
             self.__pvalue = self._compute_pvalue(clusters)
         else:
-            self.__pvalue = -1.0
+            self.__pvalue = np.nan
         
         #self.__clusters = list_of_hcclusters[:]
     @property
@@ -136,7 +136,7 @@ class DomHCA(object):
         #return iter(self.__clusters)
             
     def __str__(self):
-        domain = "domain\t{}\t{}\t{}\t{}".format(self.__start+1, self.__stop, self.__pvalue, self.__score)
+        domain = "domain\t{}\t{}\t{}".format(self.__start+1, self.__stop, self.__pvalue) #, self.__score)
         #clusters = "\n".join(domain+"\t"+str(clust) for clust in self.__clusters)
         #if clusters:
             #return clusters

@@ -1,4 +1,4 @@
-![Python 3.6](https://img.shields.io/badge/Python-3.6-blue.svg)
+![Python 3.5](https://img.shields.io/badge/Python-3.5-blue.svg)
 
 pyHCA and hcatk (HCA toolkit) are a python library and executable for the Hydrophobic Cluster Analysis of protein sequences.
 pyHCA implements various class and function for handling sequences and analyses them
@@ -9,7 +9,7 @@ Requires
 
 - Biopython >= 1.65
 - ete3
-- python3   >= 3.4
+- python3   >= 3.5
 
 Installation
 ============
@@ -27,16 +27,27 @@ We recommend you to work on a conda virtual environment to properly build the no
 Example
 -------
 
-    pip install conda
+download and install conda from miniconda website using the correct installer (64 bits / 32 bits, MacOSC / Linux):
+
+on MacOSX
+
+    wget https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh
+    bash Miniconda3-latest-MacOSX-x86_64.sh
+
+on Linux (64 bits installer)
+
+    https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+    bash Miniconda3-latest-Linux-x86_64.sh
+
+create a virtual environment and switch to the environment
 
     conda create -n test_pyHCA python=3.5 pip
-    
-    conda install -n test_pyHCA pyqt=4.11.4
-    
     source activate test_pyHCA
     
+and install pyqt4 before running pyHCA installer
+
+    conda install -n test_pyHCA pyqt=4.11.4
     cd <path to pyHCA directory>
-    
     pip install .
     
 

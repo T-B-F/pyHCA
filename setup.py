@@ -6,8 +6,8 @@ from setuptools import setup, find_packages
 __version__ = "0.1"
 
 
-if sys.version_info < (3,4):
-    print("python version must be at least 3.4")
+if sys.version_info < (3,5):
+    print("python version must be at least 3.5")
     sys.exit(1)
 
 
@@ -48,14 +48,12 @@ setup(name='pyHCA',
     scripts=all_scripts,
     packages=find_packages(exclude=[script_dir,]),
     include_package_data=True,
-    install_requires=['biopython>=1.68',
+    install_requires=['numpy', 
+                      'scipy', 
+                      'biopython>=1.68',
                       'requests',
-                      'numpy', # for ete3, as it is not properly installed without
-                      'scipy', # idem 
                       'six',
                       'ete3',
-                      #'scikit-learn>=0.18.1',
-                      'numpy>=1.11.2',
                       ],
     provides=['pyHCA({0:s})'.format(__version__)],
     zip_safe=False,

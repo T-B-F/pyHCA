@@ -6,9 +6,6 @@ sequences (with or without domain annotation
 import os, sys, argparse, string
 import Bio
 import Bio.SeqIO
-import matplotlib
-from matplotlib.patches import Polygon, Rectangle
-import matplotlib.pyplot as plt
 import numpy as np
 
 from pyHCA.core.seq_util import transform_seq, check_if_msa
@@ -925,63 +922,26 @@ def drawing_svg(dfasta, annotation, pathout, window=-1):
         fout.write(svg)
         fout.write("</svg>")
             
-def drawing_plot(dfasta, annotation, pathout, window=-1):
-    """ draw hca plot on plt.figure object and save it to pathout
-    """
-    max_aa = 0
-    cnt = 0
-    prev_prot = None
-    yoffset = 0
-    fig, ax = plt.subplots()
-    for prot, prot_seq in dfasta.items():
-        if isinstance(prot_seq, Bio.SeqRecord.SeqRecord):
-            prot_seq= str(prot_seq.seq)
-        elif not isinstance(prot_seq, str):
-            raise ValueError("Unknown amino acid sequence format {} for prot {} ".format(type(prot_seq), prot))
-        if window != -1:
-            # modulo sequence length
-            cur_prot = prot
-            for s in range(0, len(prot_seq), window):
-                subseq = prot_seq[s:s+window+4] # +4 correspond to hca offset
-                offset = s
-                if s != 0:
-                    prot = ""
-                    yoffset += 120
-                make_plot(ax, prot, subseq, annotation.get(cur_prot, dict()), yoffset, offset)
-                if s == 0:
-                    if prev_prot != None and "columns" in annotation[cur_prot]:
-                        print("Warning cannot draw line conservation between protein if window is different of -1")
-                    prev_prot = prot
-            yoffset += 230
-        else:
-            make_plot(ax, prot, prot_seq, annotation.get(prot, dict()), yoffset)
-            if prev_prot != None and "columns" in annotation[prot]:
-                plot_columns_lines(ax, annotation[prot]["columns"], annotation[prev_prot]["columns"], cnt-1)
-            prev_prot = prot
-            cnt += 1
-            yoffset += 230
-    fig.savefig(pathout)
-
 def colorize_positions(msa, seq, conservation, method="identity"):
     """ colorize positions according to position
     """
     size = len(msa)
     positions = dict()
-    if method == "rainbow":
-        norm = matplotlib.colors.Normalize(vmin=0, vmax=size)
-        palette = plt.get_cmap("viridis")
-        pos = 0
-        for i in range(len(msa)):
-            if msa[i] != "-":
-                #print( i, pos, conservation[pos])
-                if conservation[pos] > 0.8:
-                    rgb = palette(norm(i))[:3]
-                    c = matplotlib.colors.rgb2hex(rgb)
-                    positions[pos] = {"poly": (c, 0.5)}
-                else:
-                    positions[pos] = {"poly": ("black", 0.0)}
-                pos += 1
-    elif "identity":
+    #if method == "rainbow":
+        #norm = matplotlib.colors.Normalize(vmin=0, vmax=size)
+        #palette = plt.get_cmap("viridis")
+        #pos = 0
+        #for i in range(len(msa)):
+            #if msa[i] != "-":
+                ##print( i, pos, conservation[pos])
+                #if conservation[pos] > 0.8:
+                    #rgb = palette(norm(i))[:3]
+                    #c = matplotlib.colors.rgb2hex(rgb)
+                    #positions[pos] = {"poly": (c, 0.5)}
+                #else:
+                    #positions[pos] = {"poly": ("black", 0.0)}
+                #pos += 1
+    if "identity":
         #print(conservation)
         for i in range(len(seq)):
             if conservation[i] >= 0.9:
@@ -1016,7 +976,7 @@ def get_params():
                         "(-1 the whole sequence are used, minimum size is 80)", default=-1)
     parser.add_argument("-d", action="store", dest="domain", help="[optionnal] provide domain annoation")
     parser.add_argument("-f", action="store", dest="domformat", help="the domain file format", choices=["pfam", "seghca"])
-    parser.add_argument("--color-msa", action="store", choices=["rainbow", "identity"], dest="msacolor", help="method to use to color a MSA", default="rainbow")
+    #parser.add_argument("--color-msa", action="store", choices=["rainbow", "identity"], dest="msacolor", help="method to use to color a MSA", default="rainbow")
     parser.add_argument("--cons-msa", action="store", choices=["aa", "hca"], dest="msacons", help="method to use to compare sequences (aa, hca)", default="aa")
     parser.add_argument("-o", action="store", dest="outputfile", help="a matplotlib supported output {pdf, png ...} or a svg file", required=True)
     params = parser.parse_args()
@@ -1064,7 +1024,7 @@ def main():
     for prot in dfasta:
         annotation.setdefault(prot, dict())
         if is_an_msa:
-            annotation[prot]["positions"] = colorize_positions(dmsa[prot], dfasta[prot], msa_conserved_per_prot[prot], method=params.msacolor)
+            annotation[prot]["positions"] = colorize_positions(dmsa[prot], dfasta[prot], msa_conserved_per_prot[prot]) #, method=params.msacolor)
             annotation[prot]["columns"] = select_columns(msa_conserved_per_column, msa2seq.get(prot, dict()), threshold=1.0)
         
     # draw

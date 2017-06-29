@@ -17,7 +17,6 @@ from Bio.Alphabet import IUPAC
 import numpy as np
 import warnings
 import functools
-import matplotlib.pyplot as plt
 
 from .classHCA import Seq as SeqHCA
 from .annotateHCA import _annotation_aminoacids
