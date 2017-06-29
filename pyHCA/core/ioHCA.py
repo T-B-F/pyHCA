@@ -387,7 +387,7 @@ def write_tremolo_results(query, positions, targets, cddres, groups, output, xbe
             # write all domain arrangement at the beginning an the number of proteins
             outf.write("# Domain Domain_arrangement number_of_protein\n")
             for da in orderedda:
-                outf.write("INFO\t{}\t{}\t{}\n".format(querydom, da, len(groups[querydom][da])))
+                outf.write("INFO\t{}\t{}\t{}\n".format(querydom+1, da, len(groups[querydom][da])))
             outf.write("\n")
             for da in orderedda:
                 # sort prot by evalues
@@ -398,7 +398,7 @@ def write_tremolo_results(query, positions, targets, cddres, groups, output, xbe
                     outf.write(">{} {}\n".format(prot, size))
                     if prot in cddres:
                         for start, stop, dom, d_e_val, bitscore, types in cddres[prot]:
-                            outf.write("Qdom\t{}\t{}\t{}\t{}\t{}\t{}\n".format(querydom+1, dom, start+1, stop, d_e_val, bitscore))
+                            outf.write("Qdom\t{}\t{}\t{}\n".format(querydom+1, dom, start+1, stop))
                     else:
                         outf.write("Qdom\t{}\t{}\n".format(querydom+1, "None"))
                     for hit in flat[prot]:

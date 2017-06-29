@@ -93,8 +93,8 @@ Example:
     $ hcatk segment -i data/orc1.fasta -o data/orc1.hca -m domain
 
 
-Format:
-*******
+Output Format:
+**************
 
 The output is formated in a fasta like style, with an header storing the protein name and size:
 
@@ -150,8 +150,12 @@ Example:
 ********
     
     $ hcatk draw -i data/PF00533_sub.txt -o data/PF00533_sub.svg --cons-msa aa
-    $ inkscape data/PF00533_sub.svg # external svg viewer
 
+Output Format:
+**************    
+
+The output is a svg text file and can be vizualised using any svg viewer (inkscape, modern web browser ...).
+    
 
 tremolo
 -------
@@ -197,6 +201,70 @@ Example:
     $ hcatk tremolo -i data/orc1.fasta --p2ipr data/protein2ipr.dat.gz -E 0.001 --hhblits-db hhsuite/uniprot20_2016_02/uniprot20_2016_02 -o data/orc1_tremolo.txt -w tremolo_tmp
 
 
+Output Format:
+**************    
+
+Tremolo output format is made of multiple parts.
+
+A header part storing the protein sequence information used as query:
+
+    Qname   protein_sequence_name
+    Qdesc   protein_description
+    Qseq    protein_sequence
+
+    Qdom    domain_index       domain_start      domain_stop
+
+If multiple domains were given as query (through the -d option), multiple Qdom fields will be present:
+
+    Qdom    1       10      50
+    Qdom    2       60      80
+    
+The header is followed by a two summaries of the results.
+The first summary give for each hit of each query domain, the name of the protein target, the id of the hit (in case of multiple hits per target) , the domain arrangement of the protein target (with interpro ID and domain specific ID spearated by a "/"), the e-value and the bit-score of the hit.
+The second summary give some information on the protein domain arrangement diversity associated with the domain query.
+The second summary fields start with "INFO" and look like:
+
+    INFO    1       IPR001025/PF01426;IPR001025/SM00439;IPR001025/PS51038   11
+    
+After the header and the summary, a detailled description of the results are provided per domain query sorted by domain arrangement and protein target:
+
+    ## <- start of a domain arrangement results
+    >protein_target protein_size
+    Qdom    1       IPR001025/PS51038       167     286      <- Qdom <query domain index> <interpro domain/db specific name> <start> <stop>
+    Qdom    1       IPR001025/SM00439       167     286      <- Qdom <query domain index> <interpro domain/db specific name> <start> <stop>
+    Qdom    1       IPR001025/PF01426       168     261      <- ...
+    Qdom    1       IPR008395/PF05641       386     459     
+    Qdom    1       IPR014002/SM00743       466     524     
+    Hit     1       0       7e-06   97.16   79.55   17.0    0.195 <- Hit <query domain index> <hit index, starts from 0 and increase if multiple hits> <HHblits e-value> <HHblits proba score> <HHblits bit-score> <identity> <similarity>
+    HitQali 1       0       22      134     HKNVYFYQKCIYGPLTLSVGDFILVSNADAAE ... <- HitQali <query domain index> <hit index> <hit start> <hit stop> <sequence>
+    HitQcon 1       0       22      134     ~k~~~fy~kc~~~~~~i~vGdfVLIen~D~ae ...
+    HitTcon 1       0       154     248     gKqLkHYpsFcRNGtTI~VqSFVfVMake--- ...
+    HitTali 1       0       154     248     GKQLKHYPSFCRNGTTISVQSFVFVMSKE--- ...
+    
+    //  <---- End of a hit
+    ## <---- End / beginning of domain arrangement
+    
+    >tr|V5HB40|V5HB40_IXORI 420
+    Qdom    1       IPR001025/PS51038       1       103
+    Hit     1       0       7.9e-06 97.21   74.04   22.0    0.412
+    HitQali 1       0       77      134     REPCRAIVQWYSWPKAIPHNKYDDDEVAIDF ...
+    HitQcon 1       0       77      134     ~~~krA~VQWfsR~~eiP~~kr~ll~r~~~~ ...
+    HitTcon 1       0       7       63      kdhrfvtvqwylrvtelpptqqgrlghcdyf ...
+    HitTali 1       0       7       63      KDHRFVTVQWYLRVTELPPTQQGRLGHCDYF ...
+    
+    // <---- End of a hit but next target hit is a different protein but with the same domain arrangement so no double # symbol
+    
+    >tr|H2ZNF4|H2ZNF4_CIOSA 222
+    Qdom    1       IPR001025/PS51038       53      176
+    Hit     1       0       3.7e-05 96.89   65.49   21.0    0.288
+    HitQali 1       0       36      133     LTLSVGDFILVSNADAAEPDTVSGCDVARIL ...
+    HitQcon 1       0       36      133     ~~i~vGdfVLIen~D~aepd~~d~~~VAki~ ...
+    HitTcon 1       0       54      139     nlisigdgvviacges-----kqdfylaqvs ...
+    HitTali 1       0       54      139     NLISIGDGVVIACGES-----KQDFYLAQVS ...
+    //
+    ...
+
+
 domOnTree
 ---------
 
@@ -234,6 +302,12 @@ Example:
 
     $ hcatk domOnTree -i data/orc1_tremolo.txt -o data/orc1_tremolo.pdf
                           
+Output Format:
+**************    
+
+The output is a pdf file representing the domain arrangement of each sequence associated with the protein domain query used in tremolo. 
+Each sequence is positioned on a taxonomic tree according to the species to which the sequence belongs to.
+
 
 Additional ressources
 ---------------------
