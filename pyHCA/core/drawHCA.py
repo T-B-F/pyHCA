@@ -979,9 +979,10 @@ def get_params():
     #parser.add_argument("--color-msa", action="store", choices=["rainbow", "identity"], dest="msacolor", help="method to use to color a MSA", default="rainbow")
     parser.add_argument("--cons-msa", action="store", choices=["aa", "hca"], dest="msacons", help="method to use to compare sequences (aa, hca)", default="aa")
     parser.add_argument("-o", action="store", dest="outputfile", help="output file in svg format", required=True)
+    parser.add_argument("--verbose", action="store_true", dest="verbose", help="print information")
     params = parser.parse_args()
     
-    if params.window > -1 and params.window < 80:
+    if params.window > -1 and params.window < 80 and params.verbose:
         print("window parameter (-w) must either be superior to 80 or -1 to have the full sequence on one line")
     return params
 
@@ -1005,7 +1006,14 @@ def main():
             if isinstance(seq, Bio.SeqRecord.SeqRecord):
                 seq= str(seq.seq)
             dfasta[rec] = transform_seq(seq)
-    
+    if params.verbose:
+        if is_an_msa :
+            print("Reading {} as a MSA".format(params.fastafile))
+        else:
+            print("Reading {} as a list of fasta sequences".format(params.fastafile))
+    if not is_an_msa and params.msacons :
+        print("Warning, the input sequence is not a MSA, the --cons-msa will be ignored", file=sys.stderr)
+        
     # get conserved position
     if is_an_msa and params.msacons == "aa":
         msa_conserved_per_prot, msa_conserved_per_column, msa2seq = compute_conserved_positions(dfasta, dmsa)
@@ -1015,18 +1023,26 @@ def main():
     # compute hca annotation  
     annotation = {}
     if params.domain:
+        if params.verbose:
+            print("Reading provided annotation")
         domains = read_annotation(params.domain, params.domformat)
         for prot in domains:
             annotation.setdefault(prot, dict())
             annotation[prot]["domains"] = domains[prot]
             
     # define msa color annotation
-    for prot in dfasta:
-        annotation.setdefault(prot, dict())
-        if is_an_msa:
+    if is_an_msa:
+        if params.verbose:
+            print("Getting colors for each positions")
+        for prot in dfasta:
+            annotation.setdefault(prot, dict())
             annotation[prot]["positions"] = colorize_positions(dmsa[prot], dfasta[prot], msa_conserved_per_prot[prot]) #, method=params.msacolor)
             annotation[prot]["columns"] = select_columns(msa_conserved_per_column, msa2seq.get(prot, dict()), threshold=1.0)
-        
+    else:
+        # fil a dummy dictionary
+        for prot in dfasta:
+            annotation.setdefault(prot, dict())
+            
     # draw
     ext = os.path.splitext(params.outputfile)[1]
     

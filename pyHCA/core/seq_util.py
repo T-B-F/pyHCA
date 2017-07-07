@@ -19,30 +19,48 @@ __all__ = ["itercodon", "six_frames", "transform_seq"]
 def transform_seq(seq):
     return seq.replace("*", "").replace("-", "").replace("?", "").replace("!","").replace(".", "")
 
-def check_seq_char(seq):
+def has_illegal_char(seq):
     illegal_char = set(["*", "-", "?", "!", "."])
     for c in seq:
         if c in illegal_char:
             return True
     return False
 
+def has_gap_char(seq):
+    illegal_char = set(["-", "."])
+    for c in seq:
+        if c in illegal_char:
+            return True
+    return False
+
 def check_if_msa(sequences):
+    sizes = set()
+    illegal_char = False
     if isinstance(sequences, dict):
         for rec in sequences:
             seq = sequences[rec]
-            if check_seq_char(seq):
-                return True
+            sizes.add(len(seq))
+            if has_gap_char(seq):
+                illegal_char = True
     elif isinstance(sequences, list):
         for seq in sequences:
-            if check_seq_char(seq):
-                return True
+            sizes.add(len(seq))
+            if has_gap_char(seq):
+                illegal_char = True
     elif isinstance(sequences, str):
-        seq = sequences[:]
-        if check_seq_char(seq):
-            return True
+        # only one sequence
+        illegal_char = False
     else:
         raise ValueError("Unknown argument type passed to check_if_msa(), {}").format(type(sequences))
-    return False
+    is_msa = False
+    if sizes != set():
+        ofsame_size = len(sizes) == 1 
+        if illegal_char and not ofsame_size:
+            print("Warning, multiple sequences of different lengths found with MSA symbols. Sequences of MSA must be of the same length", file=sys.stderr)
+            sys.exit(1)
+        elif illegal_char and ofsame_size:
+            is_msa = True
+    return is_msa
 
 def itercodon(seq, frame, offset, table, reverse=False):
     stop = 0

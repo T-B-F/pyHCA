@@ -198,7 +198,7 @@ optional arguments:
 Example:
 ********
 
-    $ hcatk tremolo -i data/orc1.fasta --p2ipr data/protein2ipr.dat.gz -E 0.001 --hhblits-db hhsuite/uniprot20_2016_02/uniprot20_2016_02 -o data/orc1_tremolo.txt -w tremolo_tmp
+    $ hcatk tremolo -i data/orc1.fasta -d 10,143 --p2ipr data/protein2ipr.dat.gz -E 0.001 --hhblits-db hhsuite/uniprot20_2016_02/uniprot20_2016_02 -o data/orc1_tremolo.txt -w tremolo_tmp
 
 
 Output Format:

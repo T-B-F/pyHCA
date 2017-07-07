@@ -37,26 +37,45 @@ def retrieve_sp(proteins):
     prot2taxid = dict()
     taxid2sp = dict()
     to_remove = list()
-    cmd = "http://www.uniprot.org/uniprot/?query=id:{}&sort=score&columns=id,entry%20name,length,reviewed,organism-id,organism&format=json"
+    #cmd = "http://www.uniprot.org/uniprot/?query=id:{}&sort=score&columns=id,entry%20name,length,reviewed,organism-id,organism&format=json"
+    cmd = "http://www.uniprot.org/uniprot/?query=id:{}&sort=score&columns=id,entry%20name,length,reviewed,organism-id,organism&format=tab"
+    #Entry	Entry name	Length	Status	Organism ID	Organism
+    #H0H275	H0H275_SACCK	245	unreviewed	1095631	Saccharomyces cerevisiae x Saccharomyces kudriavzevii (strain VIN7) (Yeast)
     for fullprot in proteins:
         prot = fullprot.split("|")[1]
         query = cmd.format(prot).strip()
         r = requests.get(query)
         if r.status_code == 200:
-            prot_data = r.json()[0]
-            taxid = prot_data["organism-id"]
-            sp = prot_data["organism"]
-            if taxid == "" or sp == "":
-                print("Unable to retrieve species information for protein {}".format(prot), file=sys.stderr)
-                to_remove.append(fullprot)
+            #prot_data = r.json()[0]
+            lines = r.content.decode().split("\n")
+            if len(lines) >= 2:
+                tmp = lines[1].strip().split("\t")
+                if len(tmp) >= 4:
+                    #print(tmp)
+                    taxid = tmp[4]
+                    sp = tmp[5]
+                    #taxid = prot_data["organism-id"]
+                    #sp = prot_data["organism"]
+                    if taxid == "" or sp == "":
+                        print("Unable to retrieve species information for protein {}".format(prot), file=sys.stderr)
+                        to_remove.append(fullprot)
+                    else:
+                        if "(" in sp:
+                            start_parenthesis = sp.index("(")
+                            sp = sp[:start_parenthesis].strip()
+                        prot2taxid[fullprot] = taxid
+                        taxid2sp[taxid] = sp
+                else:
+                    print("Unable to retrieve uniprot data for protein {}".format(prot), file=sys.stderr)
+                    to_remove.append(fullprot)
             else:
-                if "(" in sp:
-                    start_parenthesis = sp.index("(")
-                    sp = sp[:start_parenthesis].strip()
-                prot2taxid[fullprot] = taxid
-                taxid2sp[taxid] = sp
+                print("Unable to retrieve uniprot data for protein {}".format(prot), file=sys.stderr)
+                to_remove.append(fullprot)
         else:
             print("Unable to retrieve uniprot data for protein {}".format(prot), file=sys.stderr)
+    if len(taxid2sp) == 0:
+        print("Error, unable to retrieve the species of any of the protein provided, no tree can be constructed", file=sys.stderr)
+        sys.exit(1)
     return prot2taxid, taxid2sp, to_remove
 
 def read_taxid_uniprot(path):

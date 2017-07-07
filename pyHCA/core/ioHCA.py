@@ -126,6 +126,7 @@ def read_tremolo_domains(path):
     domains = dict()
     dsizes = dict()
     Tname = None
+    protein_hit = False
     with open(path) as inf :
         for line in inf:
             #print(line)
@@ -133,15 +134,16 @@ def read_tremolo_domains(path):
                 Tname = None
                 continue
             tmp = line.strip().split("\t")
-            if line.startswith("Qdom") and len(tmp) == 4:
+            if line.startswith("Qdom") and len(tmp) == 4 and not protein_hit:
                 domain = tmp[1]
                 start, stop = int(tmp[2])-1, int(tmp[3])
                 domains.setdefault(domain, dict())
                 domains[domain]["QPos"] = (start, stop)
             elif line.startswith(">"):
+                protein_hit = True
                 Tname, Tsize = line[1:].strip().split()
                 dsizes[Tname] = int(Tsize)
-            elif line.startswith("Qdom") and Tname != None:
+            elif line.startswith("Qdom") and Tname != None and protein_hit:
                 domain = tmp[1]
                 Tdomain = tmp[2]
                 if Tdomain.startswith("IPR"):
@@ -166,6 +168,8 @@ def read_tremolo_domains(path):
                 hitnb = tmp[2]
                 start, stop = int(tmp[3])-1, int(tmp[4])
                 domains[domain][Tname]["Hit"][hitnb]["Tali"] = (start, stop)
+            elif tmp[0] == "/":
+                protein_hit = False
     return domains, dsizes
 
 def read_annotation(inputfile, formatf):
@@ -398,7 +402,7 @@ def write_tremolo_results(query, positions, targets, cddres, groups, output, xbe
                     outf.write(">{} {}\n".format(prot, size))
                     if prot in cddres:
                         for start, stop, dom, d_e_val, bitscore, types in cddres[prot]:
-                            outf.write("Qdom\t{}\t{}\t{}\n".format(querydom+1, dom, start+1, stop))
+                            outf.write("Qdom\t{}\t{}\t{}\t{}\n".format(querydom+1, dom, start+1, stop))
                     else:
                         outf.write("Qdom\t{}\t{}\n".format(querydom+1, "None"))
                     for hit in flat[prot]:

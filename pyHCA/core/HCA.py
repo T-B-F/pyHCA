@@ -599,6 +599,6 @@ def check_if_msa(querynames, sequences):
     if is_msa:
         # chec identical sequence lengths
         if len(set(msa_length)) != 1:
-            raise ValueError("Error, MSA characters detected but sequences have different lengths")
+            raise ValueError("Error, MSA symbols detected but sequences have different lengths")
     return is_msa, msa_seq, new_sequences
 

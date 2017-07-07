@@ -261,17 +261,17 @@ def run_hhblits(pathquery, workdir, pathdb, parameters):
     """
     res = dict()
     pathout = os.path.join(workdir, "query_hhblits.hhr")
-    if not  os.path.isfile(pathout):
-        pathsco = os.path.join(workdir, "query_hhblits.scores")
-        pathlog = os.path.join(workdir, "query_hhblits.log")
-        command = "hhblits -i {} -d {} -scores {} -o {} {}".format(pathquery, pathdb, pathsco, pathout, parameters)
-        with open(pathlog, "w") as logf:
-           try:
-               #print("Should no have gone here, hhblits")
-               a = subprocess.check_call(shlex.split(command), stdout=logf, stderr=subprocess.STDOUT)
-           except:
-               print("Unable to run command:", file=sys.stderr)
-               print(command, file=sys.stderr)
-               sys.exit(1)
+    #if not  os.path.isfile(pathout):
+    pathsco = os.path.join(workdir, "query_hhblits.scores")
+    pathlog = os.path.join(workdir, "query_hhblits.log")
+    command = "hhblits -i {} -d {} -scores {} -o {} {}".format(pathquery, pathdb, pathsco, pathout, parameters)
+    print(command)
+    with open(pathlog, "w") as logf:
+        try:
+            #print("Should no have gone here, hhblits")
+            a = subprocess.check_call(shlex.split(command), stdout=logf, stderr=subprocess.STDOUT)
+        except:
+            print("Unable to run command: {}".format(command), file=sys.stderr)
+            sys.exit(1)
     return pathout
 

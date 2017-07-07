@@ -158,5 +158,8 @@ class DomHCA(object):
         self.__score = score
 
         # inverse gaussian parameters fitted from disprot v7 sequence scores
-        return st.recipinvgauss.sf(score, *[0.2971416368851072, -3.1233023222495855, 0.19934082502134615])
+        # PDB fitted paramters (0.0028441615833769331, -36.33441401336944, 0.10425345380333628)
+        # DisProt fitted paramters (0.14091823798877751, -11.362093616044803, 0.54142167247756956)
+
+        return st.recipinvgauss.sf(score, *(0.14091823798877751, -11.362093616044803, 0.54142167247756956))
         
