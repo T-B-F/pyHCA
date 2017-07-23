@@ -10,9 +10,10 @@ NEW features:
 """
 
 import os, sys, argparse
+from configparser import Config
 from pyHCA.core.annotateHCA import _annotation_aminoacids as segmentation
 from pyHCA.core.ioHCA import read_multifasta, write_tremolo_results
-from pyHCA.core.external import targets_hhblits, cdd_search, interpro_search
+from pyHCA.core.external import targets_hhblits, targets_jackhmmer_like, interpro_search
 from pyHCA.core.classHCA import Seq
 
 ## domains
@@ -44,9 +45,8 @@ def read_domainpos(query, positions):
             domains.append((start, stop))
     return domains
 
-## targets
-def search_domains(query, domains, database, hhblits_evalue, parameters, workdir):
-    """ look for targets
+def hhblits_search(query, domains, database, parameters, workdir):
+    """ run hhblits
     """
     targets = dict()
     alltargetids = set()
@@ -64,9 +64,41 @@ def search_domains(query, domains, database, hhblits_evalue, parameters, workdir
                 # a regular expression is set on "Q query_" to catch input name
                 outf.write(">query_{} {} {}-{}\n{}\n".format(i, name, start+1, stop, subseq))
         # perform hhblits
-        subtargets = targets_hhblits(pathquery, pathdom, database, hhblits_evalue, parameters)
+        subtargets = targets_hhblits(pathquery, pathdom, database, parameters)
         alltargetids = alltargetids.union(set(subtargets.keys()))
         targets[i] = subtargets
+    return targets, alltargetids
+
+def jackhmmer_like_search(query, domains, database, parameters, workdir):
+    """ run hhblits
+    """
+    targets = dict()
+    alltargetids = set()
+    for i, (start, stop) in enumerate(domains):
+        #print("domain {}".format(i))
+        pathdom = os.path.join(workdir, "dom_{}".format(i))
+        if not os.path.isdir(pathdom):
+            os.makedirs(pathdom)
+        # use sub part of sequence to search for targets
+        pathquery = os.path.join(pathdom, "query_{}.fasta".format(i))
+        with open(pathquery, "w") as outf:
+            for j, name in enumerate(query.name):
+                subseq = str(query.seq[j])[start: stop]
+                # IMPORTANT: the name of the sequence will be used as input for hhblits
+                # a regular expression is set on "Q query_" to catch input name
+                outf.write(">query_{} {} {}-{}\n{}\n".format(i, name, start+1, stop, subseq))
+        # perform hhblits
+        subtargets = targets_jackhmmer_like(pathquery, pathdom, database, parameters)
+        alltargetids = alltargetids.union(set(subtargets.keys()))
+        targets[i] = subtargets
+    return targets, alltargetids
+
+## targets
+def search_domains(query, domains, database, method, parameters, workdir):
+    """ look for targets
+    """
+    if method == "hhblits":
+        targets, list(alltargetids) = hhblits_search(query, domains, database, parameters, workdir)
     return targets, list(alltargetids)
 
 
@@ -101,24 +133,18 @@ def get_cmd():
             "To use the whole protein use -d whole.", required=True)
     parser.add_argument("-w", action="store", dest="workdir",
             help="working directory", required=True)
-    #parser.add_argument("-a", action="store", dest="annotation", 
-            #choices=["CDD", "Interpro"], default="Interpro",
-            #help="defined annotation method to use (default=%(default)s)")    
+    parser.add_argument("-m", action="store", dest="method", 
+            choices=["hhblist", "jackhmmer_like"], default="hhblits",
+            help="define sequence search method to use (default=%(default)s)")    
     parser.add_argument("--p2ipr", action="store", dest="p2ipr",
             help="path to the Interpro annotation of UniproKBt proteins, "
                  "gzip format supported.")
-                #"If the argument is not specified and '-a Interpro' is set, "
-                #"the annotation will be retrieve using web queries of Biomart"
-                #" service which will be slower.")
-    parser.add_argument("-E", action="store", dest="evalue", 
-            help="filter hhblits results by evalue (default=%(default)f)", 
-            type=float, default=0.001)
+    parser.add_argument("--config", action="store", dest="configfile", 
+            help="path to the configuration file for optional arguments")
     parser.add_argument("-o", action="store", dest="output", 
             help="output file")
-    parser.add_argument("--hhblits-params", action="store", dest="hhblitsparams",
-            help="parameters to pass to hhblits, between quotes", default="")
-    parser.add_argument("--hhblits-db", action="store", dest="hhblitsdb", 
-            help="path to the database to use with hhblits", required=True)
+    parser.add_argument("--target-db", action="store", dest="targetdb", 
+            help="path to the target sequences database (fasta file for jackhmmer_like, hhm for hhblits", required=True)
     params = parser.parse_args()
         
     return params
@@ -144,7 +170,7 @@ def main():
     domains = read_domainpos(query, params.domains)
 
     # perform search method on each selected parts
-    targets, alltargetids = search_domains(query, domains, params.hhblitsdb, params.evalue, params.hhblitsparams, params.workdir)
+    targets, alltargetids = search_domains(query, domains, params.targetdb, params.method, configuratiob, params.workdir)
     if alltargetids == []:
         print("Unable to find any targets with hhblits in database {}".format(params.hhblitsdb), file=sys.stderr)
         print("with parameters {}".format(params.hhblitsparams), file=sys.stderr)
@@ -156,11 +182,7 @@ def main():
 
         sys.exit(0)
 
-    #if params.annotation == "CDD":
-        # get domain annotation from CDD
-        #annotation = cdd_search(alltargetids, params.workdir)
-    #else:
-        # get domain from Interpro
+    # get domain from Interpro
     annotation = interpro_search(alltargetids, params.workdir, params.p2ipr)
 
     # group by domain arrangement
