@@ -977,7 +977,7 @@ def get_params():
     parser.add_argument("-d", action="store", dest="domain", help="[optionnal] provide domain annoation")
     parser.add_argument("-f", action="store", dest="domformat", help="the domain file format", choices=["pfam", "seghca"])
     #parser.add_argument("--color-msa", action="store", choices=["rainbow", "identity"], dest="msacolor", help="method to use to color a MSA", default="rainbow")
-    parser.add_argument("--cons-msa", action="store", choices=["aa", "hca"], dest="msacons", help="method to use to compare sequences (aa, hca)", default="aa")
+    parser.add_argument("--cons-msa", action="store", choices=["aa", "hca"], dest="msacons", help="method to use to compare sequences (aa, hca)")
     parser.add_argument("-o", action="store", dest="outputfile", help="output file in svg format", required=True)
     parser.add_argument("--verbose", action="store_true", dest="verbose", help="print information")
     params = parser.parse_args()
@@ -1011,7 +1011,8 @@ def main():
             print("Reading {} as a MSA".format(params.fastafile))
         else:
             print("Reading {} as a list of fasta sequences".format(params.fastafile))
-    if not is_an_msa and params.msacons :
+    if not is_an_msa and params.msacons is not None:
+        print(params.msacons)
         print("Warning, the input sequence is not a MSA, the --cons-msa will be ignored", file=sys.stderr)
         
     # get conserved position
