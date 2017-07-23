@@ -209,8 +209,8 @@ def read_hhblits(pathin):
                 hitnumber[name] = hitnum
                 alltargets.add(name)
                 targets[name][hitnum] = {"descr": descr, "Tstart":1e10, "Tstop":-1, "Tcons":"", "Tali":"", "Tsize": 0,
-                                                 "Qstart":1e10, "Qstop":-1, "Qcons":"", "Qali":"", "Qsize": 0,
-                                 "Probab":-1, "E-value":-1, "Score":-1, "Identities":-1, "Similarity":-1, "Sum_probs":-1,
+                                                "Qstart":1e10, "Qstop":-1, "Qcons":"", "Qali":"", "Qsize": 0,
+                                "Probab":-1, "E-value":-1, "Score":-1, "Identities":-1, "Similarity":-1, "Sum_probs":-1,
                                 }
             elif line.startswith("Probab="):
                 #Probab=100.00  E-value=6.2e-40  Score=297.36  Aligned_cols=130  Identities=100%  Similarity=1.267  Sum_probs=129.4
@@ -254,6 +254,19 @@ def read_hhblits(pathin):
                     targets[name][hitnum]["Tsize"] = size
                 elif debug:
                     print("FAILED", line, pathin)
+    # check all hits have an entry, sometimes hhblits return empty matchs
+    target_names = list(targets.keys())
+    for name in target_names:
+        hits_to_remove = list()
+        for hitnum in targets[name]:
+            if (targets[name][hitnum]["Tstart"] == 1e10 or targets[name][hitnum]["Qstart"] == 1e10 or
+                targets[name][hitnum]["Tstop"] == -1 or targets[name][hitnum]["Qstop"] == -2 or
+                targets[name][hitnum]["Tcons"] == "" or targets[name][hitnum]["Qcons"] == ""):
+                hits_to_remove.append(hitnum)
+        for hitnum in hits_to_remove:
+            del targets[name][hitnum]
+        if len(targets[name]) == 0:
+            del targets[name]
     return targets
 
 def run_hhblits(pathquery, workdir, pathdb, parameters):
