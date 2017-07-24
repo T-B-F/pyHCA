@@ -10,7 +10,7 @@ NEW features:
 """
 
 import os, sys, argparse
-from configparser import Config
+import configparser 
 from pyHCA.core.annotateHCA import _annotation_aminoacids as segmentation
 from pyHCA.core.ioHCA import read_multifasta, write_tremolo_results
 from pyHCA.core.external import targets_hhblits, targets_jackhmmer_like, interpro_search
@@ -98,7 +98,7 @@ def search_domains(query, domains, database, method, parameters, workdir):
     """ look for targets
     """
     if method == "hhblits":
-        targets, list(alltargetids) = hhblits_search(query, domains, database, parameters, workdir)
+        targets, alltargetids = hhblits_search(query, domains, database, parameters, workdir)
     return targets, list(alltargetids)
 
 

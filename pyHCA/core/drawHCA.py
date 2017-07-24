@@ -860,18 +860,18 @@ def draw_columns_lines(columns_prot, columns_prev_prot, cnt):
                 svg += """<line x1="%f" y1="%f" x2="%f" y2="%f" style="fill:black;stroke:black;stroke-width:0.7;" />"""%(x_prev, y_prev_middle, x, y)
     return svg
     
-def drawing(dfasta, annotation, pathout, window=-1):
+def drawing(dfasta, annotation, pathout, window=-1, offset=list()):
     """ draw multiple fasta sequences
     """
     #ext = os.path.splitext(pathout)[1]
     #if ext == ".svg":
-    drawing_svg(dfasta, annotation, pathout, window)
+    drawing_svg(dfasta, annotation, pathout, window, offset)
     #else:
         #print("Warning, HCA drawing with matplotlib module is experimental and can take some time")
         #pass
         #drawing_plot(dfasta, annotation, pathout, window)
 
-def drawing_svg(dfasta, annotation, pathout, window=-1):
+def drawing_svg(dfasta, annotation, pathout, window=-1, idx_offset=()):
     """ draw hca plot on a svg file
     """
     svg = ""
@@ -879,7 +879,7 @@ def drawing_svg(dfasta, annotation, pathout, window=-1):
     cnt = 0
     prev_prot = None
     yoffset = 0
-    for prot, prot_seq in dfasta.items():
+    for i, (prot, prot_seq) in enumerate(dfasta.items()):
         if isinstance(prot_seq, Bio.SeqRecord.SeqRecord):
             prot_seq= str(prot_seq.seq)
         elif not isinstance(prot_seq, str):
@@ -889,7 +889,7 @@ def drawing_svg(dfasta, annotation, pathout, window=-1):
             cur_prot = prot
             for s in range(0, len(prot_seq), window):
                 subseq = prot_seq[s:s+window+4] # +4 correspond to hca offset
-                offset = s
+                offset = s + idx_offset[i] - 1
                 if s != 0:
                     prot = ""
                     yoffset += 120
@@ -904,7 +904,7 @@ def drawing_svg(dfasta, annotation, pathout, window=-1):
                     prev_prot = prot
             yoffset += 180
         else:
-            cur_svg, nbaa = make_svg(prot, prot_seq, annotation.get(prot, dict()), yoffset)
+            cur_svg, nbaa = make_svg(prot, prot_seq, annotation.get(prot, dict()), yoffset, idx_offset[i] - 1)
             svg += cur_svg
             if nbaa > max_aa:
                 max_aa = nbaa
@@ -974,6 +974,7 @@ def get_params():
     parser.add_argument("-i", action="store", dest="fastafile", help="the fasta file", required=True)
     parser.add_argument("-w", action="store", dest="window", type=int, help="sequence len before breaking the sequence to the next plot "
                         "(-1 the whole sequence are used, minimum size is 80)", default=-1)
+    parser.add_argument("--offsets", action="store", dest="offsets", help="add seq index offsets to plot amino acid index", nargs="+", type=int, default=[-1])
     parser.add_argument("-d", action="store", dest="domain", help="[optionnal] provide domain annoation")
     parser.add_argument("-f", action="store", dest="domformat", help="the domain file format", choices=["pfam", "seghca"])
     #parser.add_argument("--color-msa", action="store", choices=["rainbow", "identity"], dest="msacolor", help="method to use to color a MSA", default="rainbow")
@@ -994,6 +995,11 @@ def main():
     from pyHCA.core.ioHCA import read_multifasta
     # read fasta file
     dfasta = read_multifasta(params.fastafile)
+    if len(params.offsets) == 1 and params.offsets[0] == -1:
+        offsets = [0] * len(dfasta)
+        params.offsets = offsets[:]
+        
+    assert len(dfasta) == len(params.offsets), "different number of offsets {} found for {} sequences".format(len(dfasta), len(params.offsets))
     # are we using an msa ?
     dmsa = dict()
     is_an_msa = check_if_msa(dfasta)
@@ -1047,7 +1053,7 @@ def main():
     # draw
     ext = os.path.splitext(params.outputfile)[1]
     
-    drawing(dfasta, annotation, params.outputfile, params.window)
+    drawing(dfasta, annotation, params.outputfile, params.window, params.offsets)
     
     sys.exit(0)
     

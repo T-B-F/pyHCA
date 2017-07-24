@@ -4,6 +4,7 @@
 from __future__ import print_function
 import os, sys, gzip
 from Bio import SeqIO
+from collections import OrderedDict
 
 __author__ = "Tristan Bitard-Feildel"
 __licence__= "MIT"
@@ -27,12 +28,17 @@ def read_multifasta(path, verbose=False):
     """
     if verbose:
         print("Read fasta inputfile ..")
+    record_dict  = OrderedDict()
     if os.path.splitext(path)[1] in [".gz", ".gzip"]:
         with gzip.open(path, 'rt', encoding='utf-8') as handle: #Python3 fix
-            record_dict = SeqIO.to_dict(SeqIO.parse(handle, "fasta"))
+            for rec in SeqIO.parse(handle, "fasta"):
+                record_dict[rec.id] = rec
+            #record_dict = SeqIO.to_dict(SeqIO.parse(handle, "fasta"))
     else:
         with open(path, "rU") as handle:
-            record_dict = SeqIO.to_dict(SeqIO.parse(handle, "fasta"))
+            for rec in SeqIO.parse(handle, "fasta"):
+                record_dict[rec.id] = rec
+            #record_dict = SeqIO.to_dict(SeqIO.parse(handle, "fasta"))
     return record_dict
     
     

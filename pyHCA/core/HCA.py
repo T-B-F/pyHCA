@@ -23,7 +23,7 @@ from .annotateHCA import _annotation_aminoacids
 from .drawHCA import make_svg, getSVGheader, colorize_positions
 from .seq_util import compute_conserved_positions
 from .tremoloHCA import search_domains, group_resda, write_tremolo_results
-from .external import cdd_search, interpro_search
+from .external import interpro_search
 
 def deprecated(func):
     """This is a decorator which can be used to mark functions
@@ -516,13 +516,9 @@ class HCA(object):
             msg+= "Please try less stringent parameters or a different database"
             raise RuntimeError(msg)
         
-        # target annotations
-        if annotation == "CDD":
-            # get domain annotation from CDD
-            self.__tremolo_annotation = cdd_search(alltargetids, self.__tremolo_workdir )
-        else:
-            # get domain from Interpro
-            self.__tremolo_annotation = interpro_search(alltargetids, self.__tremolo_workdir , annotation_path)
+        
+        # get domain from Interpro
+        self.__tremolo_annotation = interpro_search(alltargetids, self.__tremolo_workdir , annotation_path)
 
         # store results in an easier format
         self.__tremolo_res = dict()
