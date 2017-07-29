@@ -162,12 +162,11 @@ tremolo
 
 Use Tremolo-HCA to find remote homologous proteins with domain context.
 
-
     $ hcatk tremolo -h
 
-    usage: hcatk [-h] -f INPUTFASTA [-d DOMAINS [DOMAINS ...]] 
-                 [-w WORKDIR] [-E EVALUE] [-o OUTPUT] 
-                 [--hhblits-params HHBLITSPARAMS] [--hhblits-db HHBLITSDB]
+    usage: hcatk [-h] -i INPUTFASTA [-d DOMAINS [DOMAINS ...]] 
+                 [-w WORKDIR] [--pp2ipr P2IPR] [--cpnfig CONFIGFILE] 
+                 [-o OUTPUT] --target-db
 
 
 Arguments:
@@ -188,17 +187,16 @@ optional arguments:
                              If not provided the search will be performed on 
                              each domain found after segmentation of the input 
                              sequence. To use the whole protein use -d all.
-    --p2ipr P2IPR            path to the Interpro annotation of UniproKBt proteins,
+    --p2ipr P2IPR            path to the Interpro annotation of UniproKB proteins,
                              gzip format supported.
-    -E EVALUE                filter hhblits results by evalue
-    --hhblits-params HHBLITSPARAMS 
-                            parameters to pass to hhblits, between quotes
-    --hhblits-db HHBLITSDB  path to the database to use with hhblits
+    -config CONFIGFILE       path to the configuration file for optional arguments
+    --target-db HTARGETDB    path to the target sequences database
 
 Example:
 ********
-
-    $ hcatk tremolo -i data/orc1.fasta -d 10,143 --p2ipr data/protein2ipr.dat.gz -E 0.001 --hhblits-db hhsuite/uniprot20_2016_02/uniprot20_2016_02 -o data/orc1_tremolo.txt -w tremolo_tmp
+    
+    $ echo "using hhblits"
+    $ hcatk tremolo -i data/orc1.fasta -d 10,143 --p2ipr data/protein2ipr.dat.gz --config tremolo_config.ini --target-db hhsuite/uniprot20_2016_02/uniprot20_2016_02 -o data/orc1_tremolo.txt -w tremolo_tmp
 
 
 Output Format:

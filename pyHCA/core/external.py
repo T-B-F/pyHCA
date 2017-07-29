@@ -8,6 +8,8 @@ stop positions) on sequence databases.
 import os, sys, time, re
 import subprocess, shlex
 import sqlite3, gzip
+from Bio import AlignIO
+
 debug = True
 
 ### INTERPRO
@@ -209,9 +211,10 @@ def run_hhblits(pathquery, workdir, pathdb, parameters):
     parameters_cmd = " "
     for k in parameters["hhblits_options"].keys():
         try:
-            parameters+= " -{} {}".format(k.strip(), parameters["hhblits_options"].get(k))
+            parameters_cmd += " -{} {}".format(k.strip(), parameters["hhblits_options"].get(k))
         except:
             raise ValueError("Unable to parse value for key {} in section 'hhblits_options'".format(k))
+
     parameters_cmd  += " "
     pathout = os.path.join(workdir, "query_hhblits.hhr")
     #if not  os.path.isfile(pathout):
@@ -324,22 +327,22 @@ def run_phmmer(pathquery, workdir, pathdb, parameters):
     res_out = outpath+"_res.txt"
     log_file = outpath+"_plog.txt"
     
-    phmmer_path = parameters["path"].get(phmmer)
+    phmmer_path = parameters["path"].get("phmmer")
     parameters_cmd = " "
     for k in parameters["phmmer_options"].keys():
         val = parameters["phmmer_options"].get(k)
-        if len(val) == 1:
+        if len(k.strip()) == 1:
             try:
-                parameters+= " -{} {}".format(k.strip(), val)
+                parameters_cmd += " -{} {}".format(k.strip(), val)
             except:
                 raise ValueError("Unable to parse value for key {} in section 'phmmer_options'".format(k))
         else:
             try:
-                parameters+= " --{} {}".format(k.strip(), val)
+                parameters_cmd += " --{} {}".format(k.strip(), val)
             except:
                 raise ValueError("Unable to parse value for key {} in section 'phmmer_options'".format(k))
         
-    command = "{} {} -A {} -o {} {} {}".format(phmmer_path, parameters_cms, ali_out, res_out, pathquery, pathdb)
+    command = "{} {} -A {} -o {} {} {}".format(phmmer_path, parameters_cmd, ali_out, res_out, pathquery, pathdb)
     cmd = shlex.split(command)
     with open(log_file, "w") as logf:
         try:
@@ -380,12 +383,12 @@ def run_hmmsearch(pathquery, workdir, pathdb, parameters):
         val = parameters["hmmsearch_options"].get(k)
         if len(val) == 1:
             try:
-                parameters+= " -{} {}".format(k.strip(), val)
+                parameters_cmd+= " -{} {}".format(k.strip(), val)
             except:
                 raise ValueError("Unable to parse value for key {} in section 'hmmsearch_options'".format(k))
         else:
             try:
-                parameters+= " --{} {}".format(k.strip(), val)
+                parameters_cmd += " --{} {}".format(k.strip(), val)
             except:
                 raise ValueError("Unable to parse value for key {} in section 'hmmsearch_options'".format(k))
         
@@ -420,7 +423,7 @@ def read_input(path):
                 proteins.add(line[1:].strip().split()[0])
     return proteins
 
-def filter_hmmsearch_alignment(proteins, name, workdir, init_seq):
+def filter_hmmsearch_alignment(proteins, name, workdir, init_seq, parameters):
     """ filter results based on hit coverage of initial input and on regexp presence/absence
     """
     init_length = len(init_seq)
@@ -429,6 +432,7 @@ def filter_hmmsearch_alignment(proteins, name, workdir, init_seq):
     kept_regx = parameters["jackhmmer_like_options"].get("kept_reg")
     rm_regx = parameters["jackhmmer_like_options"].get("remove_reg")
     
+    print(workdir, name)
     outpath = os.path.join(workdir, name+"_filteredmsa.fasta")
     query_msa = proteins[name]
     
@@ -480,13 +484,13 @@ def compute_id_cov(query_msa, seq_msa, cutoff_coverage, cutoff_identity):
             
     return identity, coverage 
 
-def read_results_and_filter(ali_results, name, workdir, n, init_seq, parameters):
+def read_results_and_filter(ali_results, name, n, workdir, init_seq, parameters):
     """ apply read and filter to results
     """
     # read results
     hit_proteins = read_results(ali_results)
     # filter
-    res_proteins, filtered_ali = filter_hmmsearch_alignment(hit_proteins, name+"_iter_{}".format(n), workdir, init_seq)
+    res_proteins, filtered_ali = filter_hmmsearch_alignment(hit_proteins, name+"_iter_{}".format(n), workdir, init_seq, parameters)
     filtered_hmm = os.path.join(workdir, name+"_iter_{}_res.txt".format(n))
     return res_proteins, filtered_ali, filtered_hmm
 
@@ -565,7 +569,7 @@ def run_jackhmmer_like(pathquery, workdir, pathdb, parameters):
     """ run jackhmmer_like : phmmer, hmmbuild, hmmsearch
     """
    
-    name = os.path.splitext(os.path.basename(inpath))[0]
+    name = os.path.splitext(os.path.basename(pathquery))[0]
     init_proteins = [name]
     stop = False
     init_size = 1
@@ -578,12 +582,10 @@ def run_jackhmmer_like(pathquery, workdir, pathdb, parameters):
         sys.exit(1)
 
     coverage = parameters["jackhmmer_like_options"].getfloat("coverage")
-    db_target = parameters["jackhmmer_like_options"].getfloat("coverage")
     # run phmmer
-    ali_results = run_phmmer(inpath, workdir,db_target, parameters)
+    ali_results = run_phmmer(inpath, workdir, pathdb, parameters)
     res_proteins, filtered_ali_results, filtered_hmm_results = \
-                            read_results_and_filter(ali_results, name, params.workdir, 0, 
-                                                    init_seq, parameters)
+                            read_results_and_filter(ali_results, name, 0, workdir, init_seq, parameters)
     
     if len(res_proteins.intersection(init_proteins)) == len(res_proteins):
         # no new proteins

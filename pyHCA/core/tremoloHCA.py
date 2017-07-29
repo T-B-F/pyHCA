@@ -94,11 +94,16 @@ def jackhmmer_like_search(query, domains, database, parameters, workdir):
     return targets, alltargetids
 
 ## targets
-def search_domains(query, domains, database, method, parameters, workdir):
+def search_domains(query, domains, database, parameters, workdir):
     """ look for targets
     """
-    if method == "hhblits":
-        targets, alltargetids = hhblits_search(query, domains, database, parameters, workdir)
+    #if method == "hhblits":
+    targets, alltargetids = hhblits_search(query, domains, database, parameters, workdir)
+    #elif method =="jackhmmer_like":
+    #    targets, alltargetids = jackhmmer_like_search(query, domains, database, parameters, workdir)
+    #else:
+    #    raise ValueError("Unable to find method, check -m option [hhblits, or jackhmmer_like")
+    #    sys.exit(0)
     return targets, list(alltargetids)
 
 
@@ -133,9 +138,9 @@ def get_cmd():
             "To use the whole protein use -d whole.", required=True)
     parser.add_argument("-w", action="store", dest="workdir",
             help="working directory", required=True)
-    parser.add_argument("-m", action="store", dest="method", 
-            choices=["hhblist", "jackhmmer_like"], default="hhblits",
-            help="define sequence search method to use (default=%(default)s)")    
+    #parser.add_argument("-m", action="store", dest="method", 
+    #        choices=["hhblist", "jackhmmer_like"], default="hhblits",
+    #        help="define sequence search method to use (default=%(default)s)")    
     parser.add_argument("--p2ipr", action="store", dest="p2ipr",
             help="path to the Interpro annotation of UniproKBt proteins, "
                  "gzip format supported.")
@@ -152,6 +157,7 @@ def get_cmd():
 def default_config(config):
     """ create a default configuration
     """
+    config.optionxform=str
     config["path"] = dict()
     config["path"]["hhblits"] = "hhblits"
     config["path"]["phhmer"] = "phhmer"
@@ -177,7 +183,8 @@ def config_setup(path):
     """ process config file and user parameters
     """
     config = configparser.ConfigParser()
-    if path not None:
+    config.optionxform=str
+    if path is not None:
         config.read(path)
     else:
         default_config(config)
@@ -204,9 +211,9 @@ def main():
     # domains? whole sequence? segmentation?
     domains = read_domainpos(query, params.domains)
 
-    configuration = contig_setup(params.configfile )
+    configuration = config_setup(params.configfile)
     # perform search method on each selected parts
-    targets, alltargetids = search_domains(query, domains, params.targetdb, params.method, configuration, params.workdir)
+    targets, alltargetids = search_domains(query, domains, params.targetdb, configuration, params.workdir)
     if alltargetids == []:
         print("Unable to find any targets with hhblits in database {}".format(params.hhblitsdb), file=sys.stderr)
         print("with parameters {}".format(params.hhblitsparams), file=sys.stderr)
