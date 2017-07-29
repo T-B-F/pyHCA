@@ -24,11 +24,12 @@ def writeSVGheader(nbaa, fout):
     brief write header of svg file
     param fout is an object file open in writing
     """
-    
+#<svg width="%d" height="4100" version="1.1" viewBox="0 0 %d 4"
+    w = (((nbaa)/10.0)*90+150)*10
     fout.write("""<?xml version="1.0" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" 
 "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg width="%d" height="210" version="1.1"
+<svg viewBox="0 0 60 55" width="200" height="100"
 xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 
  <!-- ECMAScript with each click -->
@@ -54,9 +55,10 @@ xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 
 
 
-"""%(((nbaa)/20.0)*90+150))
+""")
+#%(w, int(w/100)))
     
-def getSVGheader(nbaa, height=210):
+def getSVGheader(nbaa, height=4100):
     """
     brief write header of svg file
     param fout is an object file open in writing
@@ -863,15 +865,18 @@ def draw_columns_lines(columns_prot, columns_prev_prot, cnt):
 def drawing(dfasta, annotation, pathout, window=-1, offset=list()):
     """ draw multiple fasta sequences
     """
-    #ext = os.path.splitext(pathout)[1]
-    #if ext == ".svg":
-    drawing_svg(dfasta, annotation, pathout, window, offset)
-    #else:
-        #print("Warning, HCA drawing with matplotlib module is experimental and can take some time")
-        #pass
-        #drawing_plot(dfasta, annotation, pathout, window)
+    ext = os.path.splitext(pathout)[1]
+    svg, svgheader = drawing_svg(dfasta, annotation, window, offset)
+    if ext == ".svg":
+        save_svg(pathout, svg, svgheader)
+    elif ext == ".png":
+        save_png(pathout, svg, svgheader)
+    else:
+        print("Warning, unknown save extension")
+        pass
+        drawing_plot(dfasta, annotation, pathout, window)
 
-def drawing_svg(dfasta, annotation, pathout, window=-1, idx_offset=()):
+def drawing_svg(dfasta, annotation, window=-1, idx_offset=()):
     """ draw hca plot on a svg file
     """
     svg = ""
@@ -917,10 +922,21 @@ def drawing_svg(dfasta, annotation, pathout, window=-1, idx_offset=()):
     # analys the new annotated domain, selective pressure from PAML
     #evolution_rate(pathnt, params.pathtree)
     svgheader = getSVGheader(max_aa, yoffset)
+    return svg, svgheader
+
+def save_svg(pathout, svg, svgheader):
     with open(pathout, "w") as fout:
         fout.write(svgheader)
         fout.write(svg)
         fout.write("</svg>")
+
+def save_png(pathout, svg, svgheader):
+    from cairosvg import svg2png
+
+    svg_code = """{}{}\n</svg>
+""".format(svgheader, svg)
+    svg2png(bytestring=svg_code ,write_to=pathout)
+            
             
 def colorize_positions(msa, seq, conservation, method="identity"):
     """ colorize positions according to position
@@ -1052,9 +1068,8 @@ def main():
             
     # draw
     ext = os.path.splitext(params.outputfile)[1]
-    
     drawing(dfasta, annotation, params.outputfile, params.window, params.offsets)
-    
+        
     sys.exit(0)
     
     
