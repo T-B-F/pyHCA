@@ -327,10 +327,17 @@ def run_phmmer(pathquery, workdir, pathdb, parameters):
     phmmer_path = parameters["path"].get(phmmer)
     parameters_cmd = " "
     for k in parameters["phmmer_options"].keys():
-        try:
-            parameters+= " --{} {}".format(k.strip(), parameters["phmmer_options"].get(k))
-        except:
-            raise ValueError("Unable to parse value for key {} in section 'phmmer_options'".format(k))
+        val = parameters["phmmer_options"].get(k)
+        if len(val) == 1:
+            try:
+                parameters+= " -{} {}".format(k.strip(), val)
+            except:
+                raise ValueError("Unable to parse value for key {} in section 'phmmer_options'".format(k))
+        else:
+            try:
+                parameters+= " --{} {}".format(k.strip(), val)
+            except:
+                raise ValueError("Unable to parse value for key {} in section 'phmmer_options'".format(k))
         
     command = "{} {} -A {} -o {} {} {}".format(phmmer_path, parameters_cms, ali_out, res_out, pathquery, pathdb)
     cmd = shlex.split(command)
@@ -370,10 +377,18 @@ def run_hmmsearch(pathquery, workdir, pathdb, parameters):
     hmmsearch_path = parameters["path"].get(hmmsearch)
     parameters_cmd = " "
     for k in parameters["hmmsearch_options"].keys():
-        try:
-            parameters+= " --{} {}".format(k.strip(), parameters["hmmsearch_options"].get(k))
-        except:
-            raise ValueError("Unable to parse value for key {} in section 'hmmsearch_options'".format(k))
+        val = parameters["hmmsearch_options"].get(k)
+        if len(val) == 1:
+            try:
+                parameters+= " -{} {}".format(k.strip(), val)
+            except:
+                raise ValueError("Unable to parse value for key {} in section 'hmmsearch_options'".format(k))
+        else:
+            try:
+                parameters+= " --{} {}".format(k.strip(), val)
+            except:
+                raise ValueError("Unable to parse value for key {} in section 'hmmsearch_options'".format(k))
+        
         
     command = "{} {} --notextw -A {} -o {} {} {}".format(hmmsearch_path, parameters_cmd, ali_out, res_out, pathquery, pathdb)
     cmd = shlex.split(command)

@@ -149,6 +149,40 @@ def get_cmd():
         
     return params
 
+def default_config(config):
+    """ create a default configuration
+    """
+    config["path"] = dict()
+    config["path"]["hhblits"] = "hhblits"
+    config["path"]["phhmer"] = "phhmer"
+    config["path"]["hmmbuild"] = "hmmbuild"
+    config["path"]["hmmsearch"] = "hmmsearch"
+    config["hhblits_options"] = dict()
+    config["hhblits_options"]["E"] = "1.0"
+    config["hhblits_options"]["cov"] = "10"
+    config["hhblits_options"]["id"] = "80"
+    config["jackhmmer_like_options"] = dict()
+    config["jackhmmer_like_options"]["coverage"] = "10"
+    config["jackhmmer_like_options"]["identity"] = "10"
+    config["jackhmmer_like_options"]["kept_reg"] = ""
+    config["jackhmmer_like_options"]["remove_reg"] = ""
+    config["phmmer_options"] = dict()
+    config["phmmer_options"]["E"] = "1.0"
+    config["phmmer_options"]["domE"] = "1.0"
+    config["hmmsearch_options"] = dict()
+    config["hmmsearch_options"]["E"] = "1.0"
+    config["hmmsearch_options"]["domE"] = "1.0"
+
+def config_setup(path):
+    """ process config file and user parameters
+    """
+    config = configparser.ConfigParser()
+    if path not None:
+        config.read(path)
+    else:
+        default_config(config)
+    return config
+
 #### MAIN
 def main():
     # main tremolo program
@@ -157,6 +191,7 @@ def main():
     if not os.path.isdir(params.workdir):
         os.makedirs(params.workdir)
 
+    
     # read input sequence
     inputquery = read_multifasta(params.inputfasta)
     names, seqs, descrs = list(), list(), list()
@@ -169,8 +204,9 @@ def main():
     # domains? whole sequence? segmentation?
     domains = read_domainpos(query, params.domains)
 
+    configuration = contig_setup(params.configfile )
     # perform search method on each selected parts
-    targets, alltargetids = search_domains(query, domains, params.targetdb, params.method, configuratiob, params.workdir)
+    targets, alltargetids = search_domains(query, domains, params.targetdb, params.method, configuration, params.workdir)
     if alltargetids == []:
         print("Unable to find any targets with hhblits in database {}".format(params.hhblitsdb), file=sys.stderr)
         print("with parameters {}".format(params.hhblitsparams), file=sys.stderr)
