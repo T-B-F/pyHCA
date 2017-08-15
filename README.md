@@ -19,8 +19,8 @@ A quick install can be perform using:
     pip3 install .
  
 However, the ete3 can be difficult to install as some features requires PyQt4 and sip.
-Please refer to the official ete3 insallation guidelines [http://etetoolkit.org/download/] (http://etetoolkit.org/download/) for any support.
-On Mac OS X, you will also need to install XQuartz to use ete3, please refer to [XQuartz documentation] (http://www.xquartz.org/).
+Please refer to the official ete3 insallation guidelines ![http://etetoolkit.org/download/](http://etetoolkit.org/download/) for any support.
+On Mac OS X, you will also need to install XQuartz to use ete3, please refer to ![XQuartz documentation](http://www.xquartz.org/).
 
 We recommend you to work on a conda virtual environment to properly build the non Python extention of the ete3 package and afterward install pyHCA in this new environment.
 
@@ -298,7 +298,7 @@ optional arguments:
 Example:
 ********
 
-    $ hcatk domOnTree -i data/orc1_tremolo.txt -o data/orc1_tremolo.pdf
+    $ hcatk domOnTree -i data/tremolo_result.txt -o data/tremolo_result.pdf
                           
 Output Format:
 **************    
@@ -311,10 +311,10 @@ Additional ressources
 ---------------------
 
 The interpo domain annoation can be downloaded at:
-wget ftp://ftp.ebi.ac.uk/pub/databases/interpro/protein2ipr.dat.gz
+    wget ftp://ftp.ebi.ac.uk/pub/databases/interpro/protein2ipr.dat.gz
 
 HHblits of the HH-suite package can be downlad at (v3 or higher):
-git clone git@github.com:soedinglab/hh-suite.git
+    git clone git@github.com:soedinglab/hh-suite.git
 
 And the uniprot hhblits compatible database at:
-http://wwwuser.gwdg.de/~compbiol/data/hhsuite/databases/hhsuite_dbs/
+    http://wwwuser.gwdg.de/~compbiol/data/hhsuite/databases/hhsuite_dbs/
