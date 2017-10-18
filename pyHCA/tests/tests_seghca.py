@@ -11,8 +11,8 @@ class TestSegHCA(unittest.TestCase):
     
     def setup(self):
         self.check_sequence = "NGRHTGFGRTCCDKGADHLKGEGHCCITLAKRGYFPCEPWCTLLFALNMFNMQNMMRQQFSDDHNNMGRLCQQTTHRFPFNSDNKEEYIWLYKVQRLGAW"
-        self.check_domains = {0: [26, 70, 0.0021107348166291562, -0.11363636363636363],
-                              1: [87, 100, 2.5160743828633869e-05, 1.6153846153846154]}
+        self.check_domains = {0: [26, 70, 0.00204900610938, -0.113636363636],
+                              1: [87, 100, np.nan, -np.inf]}
         self.check_clusters = {0: [ 6,  7,  np.array([1])],
                                1: [18, 19,  np.array([1])],
                                2: [26, 29,  np.array([1, 0, 1])],
@@ -26,8 +26,11 @@ class TestSegHCA(unittest.TestCase):
     def assert_domain(self, i, dom):
         self.assertEqual(self.check_domains[i][0], dom.start)
         self.assertEqual(self.check_domains[i][1], dom.stop)
-        assert(abs(self.check_domains[i][2] - dom.pvalue) < 1e-6)
-        assert(abs(self.check_domains[i][3] - dom.score) < 1e-6)
+        if np.isnan(dom.pvalue):
+            assert(np.isnan(self.check_domains[i][2]))
+        else:
+            assert(np.allclose(self.check_domains[i][2], dom.pvalue))
+        assert(np.allclose(self.check_domains[i][3], dom.score))
         
     def test_domains(self):
         self.setup()
