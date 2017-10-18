@@ -1,0 +1,7 @@
+language: python
+
+before_install:
+    pip install biopython
+    pip install numpy
+    pip install ete3
+
