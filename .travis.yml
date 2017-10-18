@@ -1,7 +1,9 @@
 language: python
-
+python:
+    - "3.5"
+    - "3.6"
+    - "nightly"
+    
 before_install:
-    pip install biopython
-    pip install numpy
-    pip install ete3
-
+    pip install -r requirements.txt
+    
