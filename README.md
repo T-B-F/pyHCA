@@ -1,4 +1,4 @@
-![Python 3.5](https://img.shields.io/badge/Python-3.5-blue.svg)
+![Python 3.5](https://img.shields.io/badge/Python-3.5-blue.svg) ![Python 3.6](https://img.shields.io/badge/Python-3.6-blue.svg) ![travis-ci](https://travis-ci.org/T-B-F/pyHCA.svg?branch=master)
 
 pyHCA and hcatk (HCA toolkit) are a python library and executable for the Hydrophobic Cluster Analysis of protein sequences.
 pyHCA implements various class and function for handling sequences and analyses them
