@@ -5,5 +5,13 @@ python:
     - "nightly"
     
 before_install:
-    pip install -r requirements.txt
+    - pip install -r requirements.txt
     
+    
+install:
+    - python setup.py install
+    
+    
+script:
+    - python pyHCA/tests/tests_hca.py
+    - python pyHCA/tests/tests_seghca.py
