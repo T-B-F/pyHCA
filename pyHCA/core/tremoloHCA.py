@@ -177,7 +177,7 @@ def config_setup(path):
     """ process config file and user parameters
     """
     config = configparser.ConfigParser()
-    if path not None:
+    if path is not None:
         config.read(path)
     else:
         default_config(config)
