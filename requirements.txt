@@ -1,0 +1,6 @@
+numpy 
+scipy
+biopython>=1.68
+requests
+six
+ete3

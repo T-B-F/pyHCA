@@ -6,8 +6,8 @@ from setuptools import setup, find_packages
 __version__ = "0.1"
 
 
-if sys.version_info < (3,5):
-    print("python version must be at least 3.5")
+if sys.version_info < (3,4):
+    print("python version must be at least 3.4")
     sys.exit(1)
 
 
