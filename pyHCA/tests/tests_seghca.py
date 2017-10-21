@@ -9,7 +9,7 @@ from pyHCA import HCA
 
 class TestSegHCA(unittest.TestCase):
     
-    def setup(self):
+    def setUp(self):
         self.check_sequence = "NGRHTGFGRTCCDKGADHLKGEGHCCITLAKRGYFPCEPWCTLLFALNMFNMQNMMRQQFSDDHNNMGRLCQQTTHRFPFNSDNKEEYIWLYKVQRLGAW"
         self.check_domains = {0: [26, 70, 0.00204900610938, -0.113636363636],
                               1: [87, 100, np.nan, -np.inf]}
@@ -33,7 +33,6 @@ class TestSegHCA(unittest.TestCase):
         assert(np.allclose(self.check_domains[i][3], dom.score))
         
     def test_domains(self):
-        self.setup()
         hca = HCA(seq=self.check_sequence)
         hca.segments()
         domains = hca.get_domains()
@@ -47,7 +46,6 @@ class TestSegHCA(unittest.TestCase):
         assert(np.all(self.check_clusters[i][2] == cluster.hydro_cluster))
         
     def test_clusters(self):
-        self.setup()
         hca = HCA(seq=self.check_sequence)
         hca.segments()
         clusters = hca.get_clusters()
