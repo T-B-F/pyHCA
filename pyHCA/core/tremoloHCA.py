@@ -183,7 +183,6 @@ def config_setup(path):
     """ process config file and user parameters
     """
     config = configparser.ConfigParser()
-    config.optionxform=str
     if path is not None:
         config.read(path)
     else:
