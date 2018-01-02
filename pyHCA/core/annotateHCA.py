@@ -4,7 +4,7 @@ sequences with domains defined by SegHCA or hydrophobic clusters
 """
 
 import os, sys, argparse, string, re
-from pyHCA.core.ioHCA import read_multifasta, write_annotHCA
+from pyHCA.core.ioHCA import read_multifasta_it, write_annotHCA
 from pyHCA.core.classHCA import HydroCluster, DomHCA
 from pyHCA.core.seq_util import six_frames
 from Bio import Seq
@@ -912,15 +912,14 @@ def _annotation_aminoacids(seq, t=0.1, method="domain", verbose=False):
     return annotat
 
 
-def _annotation(output, dseq, seq_type="aminoacid", t=0.1, method="domain", verbose=False):
+def _annotation(output, inputf, seq_type="aminoacid", t=0.1, method="domain", verbose=False):
     """ The main annotation function. Two methods are avaliable: 'domain' and 
     'cluster' 
     
     Parameters
     ----------
-    dseq : dictionary
-        the biological sequences, keys are string, values are biopython Sequence
-        object from SeqIO
+    inputf: string
+        path of the input file
     seq_type: string, ["aminoacids", "nucleotides"]
         the type of biological sequence
     t : float
@@ -940,8 +939,9 @@ def _annotation(output, dseq, seq_type="aminoacid", t=0.1, method="domain", verb
     """
     with open(output, "w") as outf:
         if seq_type == "aminoacid":
-            for prot in dseq:
-                sequence = str(dseq[prot].seq)
+            for prot, sequence in read_multifasta_it(inputf, verbose):
+                #for prot in dseq:
+                #sequence = str(dseq[prot].seq)
                 annotations = _annotation_aminoacids(sequence, t=t, method=method, verbose=verbose)
                 outf.write(">{} {}\n".format(prot, len(sequence)))
                 for domannot in annotations["domain"]:
@@ -950,8 +950,10 @@ def _annotation(output, dseq, seq_type="aminoacid", t=0.1, method="domain", verb
                     outf.write("{}\n".format(str(clustannot)))
         else:
             cnt, nb_dot = 0, 0
-            for name in dseq:
-                for strand, frame, start, protseq in six_frames(dseq[name]):
+            #for name in dseq:
+            for name, sequence in read_multifasta_it(path, verbose):
+                #for strand, frame, start, protseq in six_frames(dseq[name]):
+                for strand, frame, start, protseq in six_frames(sequence):
                     cnt += 1
                     if cnt == 1000:
                         cnt = 0
@@ -1011,8 +1013,9 @@ def _scores(output, dseq, seq_type="aminoacid", t=0.1, method="domain", verbose=
     """
     with open(output, "w") as outf:
         if seq_type == "aminoacid":
-            for prot in dseq:
-                sequence = str(dseq[prot].seq)
+            #for prot in dseq:
+            for prot, sequence in read_multifasta_it(inputfile):
+                #sequence = str(dseq[prot].seq)
                 annotations = _annotation_aminoacids(sequence, t=t, method=method, 
                                                     verbose=verbose, dist=dist)
                 outf.write(">{} {}\n".format(prot, len(sequence)))
@@ -1027,8 +1030,9 @@ def _scores(output, dseq, seq_type="aminoacid", t=0.1, method="domain", verbose=
                         outf.write("{:.5f}\tNaN\n".format(annotations["scores"][i]))
         else:
             cnt, nb_dot = 0, 0
-            for name in dseq:
-                for strand, frame, start, protseq in six_frames(dseq[name]):
+            #for name in dseq:
+            for name, sequence in read_multifasta_it(inputfile):
+                for strand, frame, start, protseq in six_frames(sequence):
                     cnt += 1
                     if cnt == 1000:
                         cnt = 0
@@ -1083,18 +1087,12 @@ def main_segment():
     """ the main function is called after direct invocation of the software
     """
     params = _process_params()
-    # read sequence
-    dseq = read_multifasta(params.inputf, verbose=params.verbose)
     
     # annotation
-    _annotation(params.outputf, dseq, seq_type=params.seqtype, t=0.1, 
+    _annotation(params.outputf, params.inputf, seq_type=params.seqtype, t=0.1, 
                               method=params.method, verbose=params.verbose)
-        
     sys.exit(0)
     
 if __name__ == "__main__":
     main_segment()
-    
-    
-    
     

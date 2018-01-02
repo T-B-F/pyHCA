@@ -41,7 +41,30 @@ def read_multifasta(path, verbose=False):
             #record_dict = SeqIO.to_dict(SeqIO.parse(handle, "fasta"))
     return record_dict
     
+def read_multifasta_it(path, verbose=False):
+    """ use Bio.SeqIO to read the fasta file and convert it into a dictionary
     
+    Parameter
+    ---------
+    path : string
+        path to the fasta file
+        
+    Return
+    ------
+    record_dict : dict
+        a dictionary containing the Bio sequence object
+    """
+    if verbose:
+        print("Read fasta inputfile ..")
+    if os.path.splitext(path)[1] in [".gz", ".gzip"]:
+        with gzip.open(path, 'rt', encoding='utf-8') as handle: #Python3 fix
+            for rec in SeqIO.parse(handle, "fasta"):
+                yield rec.id, rec
+    else:
+        with open(path, "rU") as handle:
+            for rec in SeqIO.parse(handle, "fasta"):
+                yield rec.id, rec
+
 def write_annotHCA(output, dannotate, sizes, verbose=False):
     """ write annotation output
     
