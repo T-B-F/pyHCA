@@ -92,6 +92,7 @@ class HCA(object):
         self.msa_seq = list()
         self.is_msa = False
         self.querynames = list()
+        self.__seqbin = dict()
         self.__domains = dict()
         self.__clusters = dict()
         self.__scores = dict()
@@ -126,6 +127,7 @@ class HCA(object):
                         self.querynames.append(name)
                         # initialize containers for domains and clusters
                         if name not in self.__domains:
+                            self.__seqbin[name] = ""
                             self.__domains[name] = list()
                             self.__clusters[name] = list()
                         else:
@@ -136,6 +138,7 @@ class HCA(object):
                         self.querynames.append(name)
                         # initialize containers for domains and clusters
                         if name not in self.__domains:
+                            self.__seqbin[name] = ""
                             self.__domains[name] = list()
                             self.__clusters[name] = list()
                         else:
@@ -148,6 +151,7 @@ class HCA(object):
                         self.querynames.append(name)
                         # initialize containers for domains and clusters
                         if name not in self.__domains:
+                            self.__seqbin[name] = ""
                             self.__domains[name] = list()
                             self.__clusters[name] = list()
                         else:
@@ -164,6 +168,7 @@ class HCA(object):
                     name = record.id
                     self.querynames.append(name)
                     self.sequences.append(str(record.seq))
+                    self.__seqbin[name] = ""
                     self.__domains[name] = list()
                     self.__clusters[name] = list()
                     self._number_of_sequences += 1
@@ -183,6 +188,14 @@ class HCA(object):
     @property
     def domains(self):
         return self.__domains
+    
+    @property
+    def clusters(self):
+        return self.__clusters
+    
+    @property
+    def seqbin(self):
+        return self.__seqbin
     
     @property
     def clusters(self):
@@ -229,7 +242,8 @@ class HCA(object):
             for i in range(len(self.sequences)):
                 seq = self.sequences[i]
                 prot = self.querynames[i]
-                annotations = _annotation_aminoacids(seq, t=t, method="domain", verbose=verbose)
+                annotations, seqbin = _annotation_aminoacids(seq, t=t, method="domain", return_seqbin=True, verbose=verbose)
+                self.seqbin[prot] = seqbin
                 self.domains[prot] = annotations["domain"]
                 self.clusters[prot] = annotations["cluster"]
                 self.scores[prot] = annotations["scores"]
@@ -241,6 +255,46 @@ class HCA(object):
         t2 = time.time()
         if verbose:
             print("Segmentation done in {}".format(t2-t1))
+    
+    def get_seqbin(self, prot=None):
+        """ function wrapper to return HCA binary sequence.
+        If only one sequence was provided return a string
+        If multiple sequences were provided return a dictionary with
+        protein querynames as keys and the list of string as values.
+        
+        Parameters:
+        -----------
+        prot: None or string
+            If None get all domains results of every proteins in a dictionary.
+            If a string is provided and corresponds to an analysed proteins, 
+            only return the list of domain of the protein.
+            If only one sequence was analysed a list of domain is returned
+        
+        Usage:
+        ------
+        
+        >>> seq_str_lst = ["ATGYHVVLIVQEAGFHILLV", "AGVVLATGYHHILLVFHILLV"]
+        >>> hca = HCA(seq=seq_str_lst, querynames=["my_query_1", "my_query_2"])
+        >>>        
+        >>> domains = hca.get_seqbin("my_query_1")
+        >>> print(domains)
+        [<pyHCA.core.classHCA.DomHCA object at 0x7f604cab0b88>]
+        >>> print(domains[0])
+        domain  4       20      0.00025890542325190946  0.7058823529411765
+        >>>
+        
+        """
+        if not self._segments_done:
+            self.segments()
+        if prot != None:
+            if prot not in self.domains:
+                raise KeyError("Error, unable to find proteins '{}' in domain results".format(prot))
+            return self.seqbin[prot]
+        elif self._number_of_sequences == 1:
+            return self.seqbin[self.querynames[0]]
+        else:
+            return dict([(prot, self.seqbin[prot]) for prot in self.querynames])
+    
     
     def get_domains(self, prot=None):
         """ function wrapper to return HCA domain annotation.
@@ -459,7 +513,7 @@ class HCA(object):
         >>> plt.show()
         
         """
-        print("Error, not yet implemented")
+        print("Not yet implemented")
     
     ## Tremolo-HCA 
     

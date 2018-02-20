@@ -841,7 +841,7 @@ def compute_loc_score(seq, clusters, dist=16):
         #smooth_scores.append(sum(sub_scores)/len(sub_scores))
     return np.array(scores)
 
-def _annotation_aminoacids(seq, t=0.1, method="domain", verbose=False):
+def _annotation_aminoacids(seq, t=0.1, method="domain", return_seqbin=False, verbose=False):
     """ The amino acids annotation function. Two methods are avaliable: 'domain'
     and 'cluster' 
     
@@ -878,10 +878,20 @@ def _annotation_aminoacids(seq, t=0.1, method="domain", verbose=False):
     # list_amas -> [ [position of the amas, amas], [...], ... ]
     if verbose:
         print("Create hydrophobic clusters")
+        
+    if method == "cluster_removeP":
+        seqtrans2 = seqtrans2.replace("P", "0")#_removeProline(seqtrans2)
+    
+    list_amas, seqamas = _getAmas(seqtrans2)
+    annotat["cluster"] = list_amas[:]
+    
+    keepCluster, newseq = _removeSmallAmas(list_amas, seqamas)
+    seqbin = _codeSequence(keepCluster, newseq, smooth = True)
+    
     if method == "domain":
-        list_amas, seqamas = _getAmas(seqtrans2)
-        keepCluster, newseq = _removeSmallAmas(list_amas, seqamas)
-        seqbin = _codeSequence(keepCluster, newseq, smooth = True)
+        #list_amas, seqamas = _getAmas(seqtrans2)
+        #keepCluster, newseq = _removeSmallAmas(list_amas, seqamas)
+        #seqbin = _codeSequence(keepCluster, newseq, smooth = True)
         #print(newseq)
         #print(seqbin)
         # get density of hydrophobe mean by windows
@@ -898,18 +908,13 @@ def _annotation_aminoacids(seq, t=0.1, method="domain", verbose=False):
         #print(list_of_group)
         domains = _findAccurateLimit(limit_domain, keepCluster, seqamas, final_only=True)
         #compute_pvalues_domains(domains)
-        annotat["cluster"] = list_amas 
         annotat["domain"] = domains
-        
     
-    elif method=="cluster_removeP":
-        seqtrans = seqtrans2.replace("P", "0")#_removeProline(seqtrans2)
-        list_amas, seqamas = _getAmas(seqtrans)
-        annotat["cluster"] = list_amas[:]
+    if return_seqbin:
+        return annotat, seqbin
     else:
-        list_amas, seqamas = _getAmas(seqtrans2)
-        annotat["cluster"] = list_amas[:]
-    return annotat
+        return annotat
+    
 
 
 def _annotation(output, inputf, seq_type="aminoacid", t=0.1, method="domain", verbose=False):
