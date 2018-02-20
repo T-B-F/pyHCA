@@ -28,6 +28,7 @@ all_scripts = list()
 for binf in ["hcatk"]: # add script names here
     all_scripts.append(os.path.join(script_dir, binf))
 
+
 setup(name='pyHCA',
     version=__version__,
     author='Tristan Bitard-Feildel, Guillem Faure',

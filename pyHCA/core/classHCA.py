@@ -5,12 +5,16 @@ domain created through hydrophobic clusters.
 
 import numpy as np
 import scipy.stats as st
+from sklearn.external.joblib import load
+import pkg_resources
 
 __author__ = "Tristan Bitard-Feildel"
 __licence__= "MIT"
 __version__ = 0.1
 __email__ = "tristan.bitard-feildel [you know what] impmc.upmc.fr"
 __institute__ = "IMPMC, UPMC"
+
+
 
 class Seq(object):
     """ A Sequence object """
@@ -143,6 +147,36 @@ class DomHCA(object):
         return domain
 
     def _compute_pvalue(self, clusters):
+        """ compute the domain pvalue based on length, and clusters
+        """
+        coef =  [14.76376808, -34.28491775,   6.63229591] #[ 14.53120892, -34.21923594,   6.83311063]
+        intercept = -4.67632801
+
+        size = self.stop - self.start
+        Hinside = 0
+        Pinside = 0
+        for clust in clusters:
+            if len(clust.hydro_cluster) > 2:
+                for i in range(len(clust.hydro_cluster)):
+                    if clust.hydro_cluster[i] == 1:
+                        Hinside += 1
+                    else:
+                        Pinside += 1
+        outside = size - Hinside - Pinside
+
+        x_test = np.array([outside, Hinside, Pinside])
+        x_test /= size
+        
+        V = x_test * coef
+        U = V.sum(axis=1) + intercept
+        U *= -1
+        A = np.exp(U)+1
+        P = np.reciprocal(A)
+        self.__score = U
+
+        return P 
+
+    def _compute_pvalue2(self, clusters):
         """ compute the domain pvalue based on length, and clusters
         """
         #return 0
