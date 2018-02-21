@@ -177,7 +177,7 @@ class DomHCA(object):
     def _compute_pvalue(self, clusters):
         """ compute the domain pvalue based on length, and clusters
         """
-        a, b, c = -10, 10 9
+        a, b, c = -10, 10, 9
         size = self.stop - self.start
         N = size # 2 * size
         nb_cluster = len(clusters)
@@ -194,7 +194,7 @@ class DomHCA(object):
         # PDB fitted paramters (0.0028441615833769331, -36.33441401336944, 0.10425345380333628)
         # DisProt fitted paramters (0.14091823798877751, -11.362093616044803, 0.54142167247756956)
         # return st.recipinvgauss.sf(score, *(0.14091823798877751, -11.362093616044803, 0.54142167247756956))
-        # PDB fitted parameters 3.21219077128e-10 2.00939946339e-08 7.03097577215e-07
-        # Disprot fitted parameters (4.89601638079e-05 0.06044046423 0.23998793941) 
-        return st.recipinvgauss.sf(score, *(4.89601638079e-05, 0.06044046423, 0.23998793941))
+        # PDB (0.0023527450356064881, -40.277311463079315, 0.095643136597401535) 
+        # DisProt (0.17521210606656379, -11.060272542998465, 0.6129194848871018)
+        return st.recipinvgauss.sf(score, *(0.17521210606656379, -11.060272542998465, 0.6129194848871018))
         
