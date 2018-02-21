@@ -5,8 +5,6 @@ domain created through hydrophobic clusters.
 
 import numpy as np
 import scipy.stats as st
-from sklearn.external.joblib import load
-import pkg_resources
 
 __author__ = "Tristan Bitard-Feildel"
 __licence__= "MIT"
@@ -146,7 +144,7 @@ class DomHCA(object):
             #return clusters
         return domain
 
-    def _compute_pvalue(self, clusters):
+    def _compute_pvalue2(self, clusters):
         """ compute the domain pvalue based on length, and clusters
         """
         coef =  [14.76376808, -34.28491775,   6.63229591] #[ 14.53120892, -34.21923594,   6.83311063]
@@ -164,11 +162,11 @@ class DomHCA(object):
                         Pinside += 1
         outside = size - Hinside - Pinside
 
-        x_test = np.array([outside, Hinside, Pinside])
-        x_test /= size
+        x = np.asarray([outside, Hinside, Pinside], dtype=float)
+        x /= size
         
-        V = x_test * coef
-        U = V.sum(axis=1) + intercept
+        V = x * coef
+        U = V.sum() + intercept
         U *= -1
         A = np.exp(U)+1
         P = np.reciprocal(A)
@@ -176,24 +174,27 @@ class DomHCA(object):
 
         return P 
 
-    def _compute_pvalue2(self, clusters):
+    def _compute_pvalue(self, clusters):
         """ compute the domain pvalue based on length, and clusters
         """
-        #return 0
+        a, b, c = -10, 10 9
         size = self.stop - self.start
         N = size # 2 * size
         nb_cluster = len(clusters)
         cov = np.zeros(size)
-        cov.fill(-3)
+        cov.fill(a)
         for clust in clusters:
             if len(clust.hydro_cluster) > 2:
-                cov[clust.start - self.start: clust.stop - self.start] = [2 if clust.hydro_cluster[i] == 1 else 1 for i in range(len(clust.hydro_cluster))]
+                cov[clust.start - self.start: clust.stop - self.start] = \
+                    [b if clust.hydro_cluster[i] == 1 else c for i in range(len(clust.hydro_cluster))]
         score = sum(cov) / size
         self.__score = score
 
         # inverse gaussian parameters fitted from disprot v7 sequence scores
         # PDB fitted paramters (0.0028441615833769331, -36.33441401336944, 0.10425345380333628)
         # DisProt fitted paramters (0.14091823798877751, -11.362093616044803, 0.54142167247756956)
-
-        return st.recipinvgauss.sf(score, *(0.14091823798877751, -11.362093616044803, 0.54142167247756956))
+        # return st.recipinvgauss.sf(score, *(0.14091823798877751, -11.362093616044803, 0.54142167247756956))
+        # PDB fitted parameters 3.21219077128e-10 2.00939946339e-08 7.03097577215e-07
+        # Disprot fitted parameters (4.89601638079e-05 0.06044046423 0.23998793941) 
+        return st.recipinvgauss.sf(score, *(4.89601638079e-05, 0.06044046423, 0.23998793941))
         
