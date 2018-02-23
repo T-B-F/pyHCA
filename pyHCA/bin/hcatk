@@ -40,16 +40,16 @@ from pyHCA import annotate_main
 #from pyHCA import score_main
 from pyHCA import draw_main
 from pyHCA import tremolo_main
-try:
-    from pyHCA import dom_ontree_main
-except:
-    try:
-        from ete3 import SeqMotifFace
-    except ImportError:
-        print('An error occured while importing ete3, please check that ete3 is correctly installed allong PyQt4 (run python -c "from ete3 import SeqMotifFace"', file=sys.stderr)
-        sys.exit(1)
-    print("Something went wrong importing dom_ontree_main", file=sys.stderr)
-    sys.exit(1)
+#try:
+from pyHCA import dom_ontree_main
+#except:
+#    try:
+#        from ete3 import SeqMotifFace
+#    except ImportError:
+#        print('An error occured while importing ete3, please check that ete3 is correctly installed allong PyQt4 (run python -c "from ete3 import SeqMotifFace"', file=sys.stderr)
+#        sys.exit(1)
+#    print("Something went wrong importing dom_ontree_main", file=sys.stderr)
+#    sys.exit(1)
 
 def usage():
     """ print usage
