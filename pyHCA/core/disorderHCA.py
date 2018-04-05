@@ -33,14 +33,18 @@ def compute_disorder(clusters, seq):
         logproba, proba = compute_seg_score(sub_outside, sub_Hinclust, sub_Pinclust)
         for j in range(i, i+windows):
             dprofile.setdefault(j, list()).append(logproba)
-    lprofile = [sum(dprofile[i]) for i in range(len(seq))]
+    lprofile = [sum(dprofile[i])/len(dprofile[i]) for i in range(len(seq))]
     return lprofile
 
 def compute_seg_score(outside, Hinside, Pinside):
     """ compute segment score
     """
-    coef = np.asarray([  0.55207689, -12.35924026,   0.51815519])
-    intercept = 2.35242882
+    #coef = np.asarray([  0.55207689, -12.35924026,   0.51815519])
+    #coef = np.asarray([  0.53857892, -13.48815193,   0.43683726])
+    coef = np.asarray([1.69536894, -11.21126274, 1.69447527])
+    #intercept = 2.35242882
+    #intercept = 0.56405864
+    intercept = 1.21383201
 
     x = np.asarray([outside, Hinside, Pinside], dtype=float)
     V = x * coef
@@ -66,30 +70,18 @@ def get_params():
 def main():
     params = get_params()
     
-    from pyHCA.core.ioHCA import read_multifasta
-    dfasta = read_multifasta(params.fastafile)
-    
-    is_an_msa = check_if_msa(dfasta)
-    if is_an_msa:
-        # if a msa is provided store sequence without gap character in a new dict
-        # store msa sequence to get conserved positions 
-        for rec in dfasta:
-            seq = dfasta[rec]
-            dmsa[rec] = seq
-            if isinstance(seq, Bio.SeqRecord.SeqRecord):
-                seq= str(seq.seq)
-            dfasta[rec] = transform_seq(seq)
-           
-    
+    from pyHCA.core.ioHCA import read_multifasta_it
+
     with open(params.outputfile, "w") as outf:
-        for record in dfasta:
-            seq = dfasta[record]
+        for prot, sequence in read_multifasta_it(params.fastafile):
+            sequence = str(sequence.seq)
+            seq = transform_seq(sequence)
             hca = HCA(seq=seq)
             clusters = hca.get_clusters()
             disorder = compute_disorder(clusters, seq)
-            outf.write(">{}\n".format(record))
+            outf.write(">{}\n".format(prot))
             for i in range(len(seq)):
-                outf.write("{} {} {}\n".format(i, seq[i], disorder[i]))
+                outf.write("{} {} {}\n".format(i+1, seq[i], disorder[i]))
                 
     sys.exit(0)
     

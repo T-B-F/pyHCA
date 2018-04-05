@@ -1097,6 +1097,7 @@ def main_segment():
     _annotation(params.outputf, params.inputf, seq_type=params.seqtype, t=0.1, 
                               method=params.method, verbose=params.verbose)
     sys.exit(0)
+
     
 if __name__ == "__main__":
     main_segment()

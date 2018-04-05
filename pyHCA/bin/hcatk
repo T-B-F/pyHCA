@@ -40,6 +40,8 @@ from pyHCA import annotate_main
 #from pyHCA import score_main
 from pyHCA import draw_main
 from pyHCA import tremolo_main
+from pyHCA import disorder_main
+from pyHCA import domainseq_main
 #try:
 from pyHCA import dom_ontree_main
 #except:
@@ -57,6 +59,8 @@ def usage():
     print("""
 Please use hcatk with one of the following argument:
 - 'segment'  : to compute clusters and hca based domains of a sequence
+- 'domainseq': to retrieve domain sequences of an HCA annotation
+- 'disorder' : to compute HCA based disorder per residue
 - 'draw'     : to draw hca pattern of a sequence in a svg file
 - 'tremolo'  : to perform remote domain search over a sequence database
 - 'domOnTree': to visuzalize tremolo results on a phylogenetic tree
@@ -78,7 +82,9 @@ def main():
     if len(sys.argv) < 2:
         print("Missing program argument")
         ext = print_exit()
-    elif sys.argv[1] not in ["segment", "scores", "draw", "tremolo", "domOnTree", "help"]:
+    elif sys.argv[1] not in ["segment", "domainseq", "disorder", 
+                             "scores", "draw", "tremolo", "domOnTree",
+                             "help"]:
         print("Program argument '{}' not recognized".format(sys.argv[1]))
         ext = print_exit()
     elif sys.argv[1] == "help":
@@ -90,6 +96,10 @@ def main():
             ext = annotate_main()
         #elif method == "scores":
             #ext = score_main()
+        elif method == "domainseq":
+            ext = domainseq_main()
+        elif method == "disorder":
+            ext = disorder_main()
         elif method == "draw":
             ext = draw_main()
         elif method == "tremolo":
