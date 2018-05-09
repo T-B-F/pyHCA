@@ -21,7 +21,7 @@ def read_domainpos(query, positions):
     """ read domain position in tuple format 1,10 20,30
     """
     domains = []
-    if positions == None:
+    if positions is None or positions == list():
         if len(query.seq) == 1:
             # perform segmentation if it's only one sequence
             seg = segmentation(str(query.seq[0]))
@@ -135,7 +135,7 @@ def get_cmd():
             "separated by comma : -d 1,10 20,30 60,100. If not provided "
             "the search will be performed on each domain found after "
             "segmentation of the input sequence. "
-            "To use the whole protein use -d whole.", required=True)
+            "To use the whole protein use -d whole.", default=list())
     parser.add_argument("-w", action="store", dest="workdir",
             help="working directory", required=True)
     #parser.add_argument("-m", action="store", dest="method", 

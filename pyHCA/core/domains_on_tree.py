@@ -16,21 +16,6 @@ from ete3 import SeqMotifFace, TreeStyle, NodeStyle, add_face_to_node
 #    sys.exit(1)
     
 
-def get_cmd():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-i", action="store", dest="tremolores", 
-                        help="tremolo results with domain matchs")
-    parser.add_argument("-t", action="store", dest="treefile", 
-                        help="phylogenetic tree with node as ncbi taxonomic ids")
-    parser.add_argument("-s", action="store", dest="prot2species", 
-                        help="file with prot to species informations")
-    parser.add_argument("-n", action="store", dest="ncbitaxid", nargs="+", default=list(),
-                        help="list of node for which leaves will be merged (internal node need to be in tree)")
-    parser.add_argument("-o", action="store", dest="output", 
-                        help="phylogenetic tree with tremolo hits")
-    params = parser.parse_args()
-    return params
-
 def retrieve_sp(proteins):
     """ retrieve uniprot data from API
     """
@@ -288,8 +273,8 @@ def combine_features(data, dsizes, tree, taxid2sp, prot2taxid, taxa_to_merge):
                             )
                     sizes_and_proteins.sort(reverse=True)
                     sizes, names, dom_archs, prots = zip(*sizes_and_proteins)
-                    proteins.append(names[0])
-                    features[names[0]] = (prots[0], dom_archs[0])
+                    proteins.append(names[0].replace(":", " "))
+                    features[names[0].replace(":", " ")] = (prots[0], dom_archs[0])
                 subtree = ete3.PhyloTree("({});".format(", ".join(proteins)))
                 node.add_child(subtree)
                 for new_node in subtree:
@@ -301,6 +286,21 @@ def combine_features(data, dsizes, tree, taxid2sp, prot2taxid, taxa_to_merge):
     #for dom in domain_color:
         #print(dom, domain_color[dom])
     return tree
+
+def get_cmd():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-i", action="store", dest="tremolores", 
+                        help="tremolo results with domain matchs")
+    parser.add_argument("-t", action="store", dest="treefile", 
+                        help="phylogenetic tree with node as ncbi taxonomic ids (optional)")
+    parser.add_argument("-s", action="store", dest="prot2species", 
+                        help="file with prot to species informations (optional)")
+    parser.add_argument("-n", action="store", dest="ncbitaxid", nargs="+", default=list(),
+                        help="list of node for which leaves will be merged (internal node need to be in tree)")
+    parser.add_argument("-o", action="store", dest="output", 
+                        help="phylogenetic tree with tremolo hits")
+    params = parser.parse_args()
+    return params
 
 def main():
     params = get_cmd()
