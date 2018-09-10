@@ -17,7 +17,7 @@ __email__ = "t.bitard.feildel [you know what] uni-muenster.de"
 __institute__ = "Institute for Evolution and Biodiversity, Muenster Germany"
 
 
-def _transformSequence(seq, low_complexity=[], hydrophobe="YIMLFWV"):
+def _transformSequence(seq, low_complexity=[], hydrophobe="YIMLFWVC"):
     """ transforme amino acid string chain into kind of HCA code as 1-> YIMLFWV  P-> P  0-> other 
     
     Parameters
@@ -879,21 +879,21 @@ def _annotation_aminoacids(seq, t=0.1, method="domain", return_seqbin=False, ver
     if verbose:
         print("Create hydrophobic clusters")
         
+    #print(seqtrans2)
     if method == "cluster_removeP":
         seqtrans2 = seqtrans2.replace("P", "0")#_removeProline(seqtrans2)
     
+    #print(seqtrans2)
     list_amas, seqamas = _getAmas(seqtrans2)
     annotat["cluster"] = list_amas[:]
+    #print(seqamas)
     
     keepCluster, newseq = _removeSmallAmas(list_amas, seqamas)
     seqbin = _codeSequence(keepCluster, newseq, smooth = True)
+    #print(seqbin)
+    #print(keepCluster)
     
     if method == "domain":
-        #list_amas, seqamas = _getAmas(seqtrans2)
-        #keepCluster, newseq = _removeSmallAmas(list_amas, seqamas)
-        #seqbin = _codeSequence(keepCluster, newseq, smooth = True)
-        #print(newseq)
-        #print(seqbin)
         # get density of hydrophobe mean by windows
         hydrotable, thresolds = _getDensity(seqbin, t)
         #print(hydrotable)
