@@ -4,6 +4,7 @@
 
 import os, sys, argparse
 import numpy as np
+from sklearn.externals import joblib
 from pyHCA import HCA 
 from pyHCA.core.seq_util import transform_seq, check_if_msa
 
@@ -16,6 +17,7 @@ def prepare_sequence(seq):
     hcadomains  = hcaprot.get_domains()
     return  hcadomains, hcaclusters
 
+polar = ["R", "K", "N", "D", "E", "Q"]
 def compute_features2(seq, domains, clusters, AA_sorted):
     """ list of features:
         - amino acid type
@@ -153,8 +155,7 @@ def main():
 
     with open(params.outputfile, "w") as outf:
         for prot, sequence in read_multifasta_it(params.fastafile):
-            sequence = str(sequence.seq)
-            seq = str(record.seq).upper()
+            seq = str(sequence.seq).upper()
             domains, clusters = prepare_sequence(seq)
             features = compute_features(seq, domains, clusters, AA_sorted)
             features = rbs_scaler.transform(features)
@@ -162,7 +163,7 @@ def main():
 
             outf.write(">{}\n".format(prot))
             for i in range(len(probas)):
-                outf.write("{} {} {}\n".format(seq[i], (probas[i] > 0.5)[0], probas[i, 0]))
+                outf.write("{} {} {}\n".format(i+1, seq[i],  probas[i, 0]))
     sys.exit(0)
     
 if __name__ == "__main__":
