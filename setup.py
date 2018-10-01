@@ -15,9 +15,9 @@ if sys.version_info < (3,4):
 try:
     import PyQt4
 except ImportError:
-    print("Error, PyQt4 test import failled", file=sys.stderr)
-    print("Error, You must first install PyQt4 for ete3 to drawing functionnalities", file=sys.stderr)
-    sys.exit(1)
+    print("Warning, PyQt4 test import failled", file=sys.stderr)
+    print("Warning, You must first install PyQt4 for ete3 to work", file=sys.stderr)
+    print("Warning, 'domOnTree' functionality will not be available", file=sys.stderr)
 
 def readme():
     with open("README.md") as inf:

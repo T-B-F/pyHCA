@@ -35,6 +35,9 @@ if sys.version_info < (3, 0):
     print("Error, python3 required")
     sys.exit(1)
 
+ete3_available = True
+dom_on_tree_available = True
+
 import pyHCA
 from pyHCA import annotate_main
 #from pyHCA import score_main
@@ -42,16 +45,16 @@ from pyHCA import draw_main
 from pyHCA import tremolo_main
 from pyHCA import disorder_main
 from pyHCA import domainseq_main
-#try:
-from pyHCA import dom_ontree_main
-#except:
-#    try:
-#        from ete3 import SeqMotifFace
-#    except ImportError:
-#        print('An error occured while importing ete3, please check that ete3 is correctly installed allong PyQt4 (run python -c "from ete3 import SeqMotifFace"', file=sys.stderr)
-#        sys.exit(1)
-#    print("Something went wrong importing dom_ontree_main", file=sys.stderr)
-#    sys.exit(1)
+try:
+    from pyHCA import dom_ontree_main
+    dom_on_tree_available = False
+except:
+    try:
+        from ete3 import SeqMotifFace
+    except ImportError:
+        print('An error occured while importing ete3, please check that ete3 is correctly installed allong PyQt4 (run python -c "from ete3 import SeqMotifFace"', file=sys.stderr)
+        ete3_available = False
+    print("Something went wrong importing dom_ontree_main", file=sys.stderr)
 
 def usage():
     """ print usage
@@ -105,7 +108,14 @@ def main():
         elif method == "tremolo":
             ext = tremolo_main()
         elif method == "domOnTree":
-            ext = dom_ontree_main()
+            if dom_on_tree_available:
+                ext = dom_ontree_main()
+            else:
+                ext = 1
+                print("Error, 'domOnTree' functionality is not available ", file=sys.stderr, end="")
+                print("as ete3 was not correctly installed", file=sys.stderr)
+                print("Please check you ete3/PyQt4 installation ", file=sys.stderr, end="")
+                print("and reinstall pyHCA ", file=sys.stderr)
         else:
             print("Error, something went wrong")
             ext = print_exit()
