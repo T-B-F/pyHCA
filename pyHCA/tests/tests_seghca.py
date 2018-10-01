@@ -11,17 +11,29 @@ class TestSegHCA(unittest.TestCase):
     
     def setUp(self):
         self.check_sequence = "NGRHTGFGRTCCDKGADHLKGEGHCCITLAKRGYFPCEPWCTLLFALNMFNMQNMMRQQFSDDHNNMGRLCQQTTHRFPFNSDNKEEYIWLYKVQRLGAW"
-        self.check_domains = {0: [26, 70, 0.0004118383429020378, 2.43181818182],
-                              1: [87, 100, np.nan, -np.inf]}
-        self.check_clusters = {0: [ 6,  7,  np.array([1])],
+        #self.check_domains = {0: [26, 70, 0.0004118383429020378],
+        #                      1: [87, 100, np.nan]}
+        self.check_domains = {0: [6, 100, 0.002042687753916028]}
+        #self.check_clusters = {0: [ 6,  7,  np.array([1])],
+        #                       1: [18, 19,  np.array([1])],
+        #                       2: [26, 29,  np.array([1, 0, 1])],
+        #                       3: [33, 35,  np.array([1, 1])],
+        #                       4: [39, 60,  np.array([1, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1])],
+        #                       5: [66, 70,  np.array([1, 0, 0, 1])],
+        #                       6: [77, 78,  np.array([1])],
+        #                       7: [79, 80,  np.array([1])],
+        #                       8: [87, 100, np.array([1, 1, 1, 1, 1, 0, 1, 0, 0, 1, 0, 0, 1])],
+        #                       }
+        self.check_clusters = {0: [ 6, 12,  np.array([1, 0, 0, 0, 1, 1])],
                                1: [18, 19,  np.array([1])],
-                               2: [26, 29,  np.array([1, 0, 1])],
+                               2: [24, 29,  np.array([1, 1, 1, 0, 1])],
                                3: [33, 35,  np.array([1, 1])],
-                               4: [39, 60,  np.array([1, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1])],
-                               5: [66, 70,  np.array([1, 0, 0, 1])],
-                               6: [77, 78,  np.array([1])],
-                               7: [79, 80,  np.array([1])],
-                               8: [87, 100, np.array([1, 1, 1, 1, 1, 0, 1, 0, 0, 1, 0, 0, 1])],
+                               4: [36, 37,  np.array([1])],
+                               5: [39, 60,  np.array([1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1])],
+                               6: [66, 71,  np.array([1, 0, 0, 1, 1])],
+                               7: [77, 78,  np.array([1])],
+                               8: [79, 80,  np.array([1])],
+                               9: [87, 100, np.array([1, 1, 1, 1, 1, 0, 1, 0, 0, 1, 0, 0, 1])],
                                }
     def assert_domain(self, i, dom):
         self.assertEqual(self.check_domains[i][0], dom.start)
@@ -30,7 +42,6 @@ class TestSegHCA(unittest.TestCase):
             assert(np.isnan(self.check_domains[i][2]))
         else:
             assert(np.allclose(self.check_domains[i][2], dom.pvalue))
-        assert(np.allclose(self.check_domains[i][3], dom.score))
         
     def test_domains(self):
         hca = HCA(seq=self.check_sequence)
