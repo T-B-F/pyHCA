@@ -33,6 +33,16 @@ If you do not plan to use this feature you can proceed to the installation witho
 
 We recommend you to work on a conda virtual environment to properly build the non Python extention of the ete3 package and afterward install pyHCA in this new environment.
 
+
+A Dockerfile is also available to install the executable inside a container:
+
+    docker build -t hcatk .
+    docker run hcatk -h
+
+
+Currently ete3/PyQt4 don't seem to be properly installed using this method, therefore the 'domOnTree' is not available if hcatk is built using docker.
+
+
 Example
 *******
 
