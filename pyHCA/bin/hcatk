@@ -35,9 +35,6 @@ if sys.version_info < (3, 0):
     print("Error, python3 required")
     sys.exit(1)
 
-ete3_available = True
-dom_on_tree_available = True
-
 import pyHCA
 from pyHCA import annotate_main
 #from pyHCA import score_main
@@ -45,16 +42,10 @@ from pyHCA import draw_main
 from pyHCA import tremolo_main
 from pyHCA import disorder_main
 from pyHCA import domainseq_main
-try:
+from pyHCA import dom_on_tree_available
+
+if dom_on_tree_available:
     from pyHCA import dom_ontree_main
-    dom_on_tree_available = False
-except:
-    try:
-        from ete3 import SeqMotifFace
-    except ImportError:
-        print('An error occured while importing ete3, please check that ete3 is correctly installed allong PyQt4 (run python -c "from ete3 import SeqMotifFace"', file=sys.stderr)
-        ete3_available = False
-    print("Something went wrong importing dom_ontree_main", file=sys.stderr)
 
 def usage():
     """ print usage
