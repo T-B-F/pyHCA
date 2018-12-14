@@ -115,14 +115,14 @@ Example:
 Output Format:
 **************
 
-The output is formated in a fasta like style, with an header storing the protein name and size:
+The output is formated in a fasta like style, with an header storing the protein name, size and HCA score over the full protein sequence:
 
-    >protein_name protein_size
+    >protein_name protein_size protein_hca_score
     
 followed by four columns:
 
-    domain  524     527     nan
-    domain  552     923     0.0032921164246364487
+    domain  524     527     nan 9.5
+    domain  552     923     0.0032921164246364487 2.3978494623655915
     cluster 1       2       11
     cluster 10      17      10001011
     cluster 23      23      1
@@ -130,8 +130,16 @@ followed by four columns:
 The first column correspond to the hca element identified, either a domain or a cluster.
 The second and third columns correspond to the start and stop (indexed from 1 to the sequence length) of the hca element.
 The fourth column either corresponds to a p-value if the element is a hca domain or to the hydrophobic cluster in binary mode if the element is a cluster.
-The p-value of the domain is computed against a reference distribution made of intrinsically disordered proteins and describe the "degree of foldability associated to the hca domain element.
-A nan value is returned if the domain has less than 30 residues
+The p-value of the domain is computed against a reference distribution made of intrinsically disordered proteins and describe the "degree of foldability" associated to the hca domain element.
+A nan value is returned if the domain has less than 30 residues.
+The fourth column corresponds to the HCA score of the domain sequence.
+
+/!\ Warning /!\
+
+HCA scores are provided for the whole protein sequence and domain with less than 30 amino acids for information only.
+The scores and p-values associated where designed on globular protein domains and intrinsically disordered regions of comparable lengths and with more than 30 amino acids.
+
+
 
     
 draw
