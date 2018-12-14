@@ -13,6 +13,20 @@ __email__ = "t.bitard.feildel [you know what] uni-muenster.de"
 __institute__ = "Institute for Evolution and Biodiversity, Muenster Germany"
 
 
+def read_singlefasta(path, verbose=False):
+    """ use Bio.SeqIO to read the fasta file and assert that it only contains 
+    one protein
+    """
+    cnt = 0
+    query, sequence = None, None
+    for record, seq in read_multifasta_it(path, verbose=False):
+        if cnt > 0:
+            raise RuntimeError("Error, multiple sequences found in file {}".format(path))
+        query = record
+        sequence = str(seq.seq)
+        cnt += 1
+    return query, sequence
+
 def read_multifasta(path, verbose=False):
     """ use Bio.SeqIO to read the fasta file and convert it into a dictionary
     

@@ -6,6 +6,7 @@ sequences with domains defined by SegHCA or hydrophobic clusters
 import os, sys, argparse, string, re
 from pyHCA.core.ioHCA import read_multifasta_it, write_annotHCA
 from pyHCA.core.classHCA import HydroCluster, DomHCA
+from pyHCA.core.classHCA import compute_disstat
 from pyHCA.core.seq_util import six_frames
 from Bio import Seq
 import numpy as np
@@ -943,12 +944,46 @@ def _annotation(output, inputf, seq_type="aminoacid", t=0.1, method="domain", ve
         sequences
     """
     with open(output, "w") as outf:
+        outf.write("""# pyHCA v0.1 segmentation results
+# 
+# Format:
+# 
+# >'protein_id' 'protein_length' 'hca_score computed on the whole sequence'
+# domain 'domain_start' 'domain_stop' 'hca_score' 'hca_pvalue' (if -m domain is used)
+# cluster 'cluster_start' 'cluster_stop' 'cluster_pattern'
+# 
+# The hca_score and associated p-value provide a way to measure the foldability
+# of a protein, i.e how similar is the score compared to scores from disordered
+# sequences.
+# Low p-values correspond to scores at the tail of the distribution of scores 
+# for disordered protein sequences.
+# 
+# /!\ Warning /!\
+# 1- The score computed at the whole protein level (in the line with '>') is for 
+# information only as some people found it useful.
+# No p-value is associated to this score as the scores used in the distributions
+# don't come from full protein sequences but domain or "disordered regions" of 
+# comparable lengths.
+#
+# 2- similarly, scores are displayed even for HCA domain shorted than 30 amino 
+# acids. 
+# As the sequences of length lower than 30 amino acids where filtered out to
+# compute distributions of scores, no p-values are given.
+# 
+# In these two cases, the scores provided must be analyzed carefully, keeping
+# in mind their origin and initial purpose
+# /!\ Warning /!\
+#
+#
+
+""")
         if seq_type == "aminoacid":
             for prot, sequence in read_multifasta_it(inputf, verbose):
                 #for prot in dseq:
                 #sequence = str(dseq[prot].seq)
                 annotations = _annotation_aminoacids(sequence, t=t, method=method, verbose=verbose)
-                outf.write(">{} {}\n".format(prot, len(sequence)))
+                score, pvalue = compute_disstat(0, len(sequence), annotations["cluster"])
+                outf.write(">{} {} {:.3f}\n".format(prot, len(sequence), score))
                 for domannot in annotations["domain"]:
                     outf.write("{}\n".format(str(domannot)))
                 for clustannot in annotations["cluster"]:
@@ -980,8 +1015,9 @@ def _annotation(output, inputf, seq_type="aminoacid", t=0.1, method="domain", ve
                     for clustannot in cur_annotation["cluster"]:
                         annotations["cluster"].append(clustannot)
                         
+                    score, pvalue = compute_disstat(0, len(protseq), annotations["cluster"])
                     if annotations:
-                        outf.write(">{} {}\n".format(new_name, len(protseq)))
+                        outf.write(">{} {} {:.3f}\n".format(new_name, len(protseq), score))
                         for domannot in annotations["domain"]:
                             outf.write("{}\n".format(str(domannot)))
                         for clustannot in annotations["cluster"]:
