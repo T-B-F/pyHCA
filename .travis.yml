@@ -56,7 +56,8 @@ install:
     # Replace dep1 dep2 ... with your dependencies
     - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION pip
     - source activate test-environment
-    - conda install -n test-environment pyqt=4.11.4
+    # - conda install -n test-environment pyqt=4.11.4
+    - conda install --yes --file requirements.txt
     - pip install -r requirements.txt
     - python setup.py install
     

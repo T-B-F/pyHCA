@@ -20,13 +20,23 @@ requirements=['numpy>=1.14',
               'six>=1.11',
               'ete3>=3.1.1',
               ]
-try:
-    import PyQt4
-except ImportError:
-    print("Warning, PyQt4 test import failled", file=sys.stderr)
-    print("Warning, You must first install PyQt4 for ete3 to work", file=sys.stderr)
-    print("Warning, 'domOnTree' functionality will not be available", file=sys.stderr)
-    requirements = requirements[:-1]
+if sys.version_info < (3, 6):
+    try:
+        import PyQt4
+    except ImportError:
+    
+        print("Warning, PyQt4 test import failled", file=sys.stderr)
+        print("Warning, You must first install PyQt4 for ete3 to work", file=sys.stderr)
+        print("Warning, 'domOnTree' functionality will not be available", file=sys.stderr)
+        requirements = requirements[:-1]
+elif sys.version_info == (3, 6):
+    try:
+        import PyQt5
+    except ImportError:
+        print("Warning, PyQt5 test import failled", file=sys.stderr)
+        print("Warning, You must first install PyQt4 for ete3 to work", file=sys.stderr)
+        print("Warning, 'domOnTree' functionality will not be available", file=sys.stderr)
+        requirements = requirements[:-1]
 
 def readme():
     with open("README.md") as inf:
