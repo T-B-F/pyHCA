@@ -25,8 +25,12 @@ def read_singlefasta(path, verbose=False):
 
 def get_cmd():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", action="store", dest="inputfasta")
-    parser.add_argument("-o", action="store", dest="outputfile")
+    parser.add_argument("-i", action="store", dest="inputfasta", 
+                        help="input alignment")
+    parser.add_argument("-c", action="store", dest="conservation",
+                        help="conservation cutoff", type=float)
+    parser.add_argument("-o", action="store", dest="outputfile", 
+                        help="output file")
     params = parser.parse_args()
     return params
 

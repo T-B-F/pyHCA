@@ -9,6 +9,7 @@ from .core.drawHCA import main as draw_main
 from .core.tremoloHCA  import main as tremolo_main
 from .core.HCA import HCA
 from .core.disorderHCA import main as disorder_main
+from .core.spacedseedHCA import main as seed_main
 
 ete3_available = True
 dom_on_tree_available = True

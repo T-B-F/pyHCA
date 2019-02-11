@@ -43,6 +43,7 @@ from pyHCA import tremolo_main
 from pyHCA import disorder_main
 from pyHCA import domainseq_main
 from pyHCA import dom_on_tree_available
+from pyHCA import seed_main
 
 if dom_on_tree_available:
     from pyHCA import dom_ontree_main
@@ -57,6 +58,7 @@ Please use hcatk with one of the following argument:
 - 'disorder' : to compute HCA based disorder per residue
 - 'draw'     : to draw hca pattern of a sequence in a svg file
 - 'tremolo'  : to perform remote domain search over a sequence database
+- 'ali2seed' : to convert clusters to spaced seeds from an MSA
 - 'domOnTree': to visuzalize tremolo results on a phylogenetic tree
 - 'help'     : to display this help message
 
@@ -77,7 +79,8 @@ def main():
         print("Missing program argument")
         ext = print_exit()
     elif sys.argv[1] not in ["segment", "domainseq", "disorder", 
-                             "scores", "draw", "tremolo", "domOnTree",
+                             "scores", "draw", "tremolo", 
+                             "ali2seed", "domOnTree",
                              "help"]:
         print("Program argument '{}' not recognized".format(sys.argv[1]))
         ext = print_exit()
@@ -98,6 +101,8 @@ def main():
             ext = draw_main()
         elif method == "tremolo":
             ext = tremolo_main()
+        elif method == "ali2seed": 
+            ext = seed_main()
         elif method == "domOnTree":
             if dom_on_tree_available:
                 ext = dom_ontree_main()
