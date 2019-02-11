@@ -24,5 +24,4 @@ except:
         print('An error occured while importing ete3, please check that ete3 is correctly installed allong PyQt4 (run python -c "from ete3 import SeqMotifFace"', file=sys.stderr)
     print("Something went wrong importing dom_ontree_main", file=sys.stderr)
 
-print(dom_on_tree_available)
 
