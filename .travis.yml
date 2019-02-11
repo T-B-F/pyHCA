@@ -1,7 +1,9 @@
 language: python
 python:
-    - "3.5"
-    - "3.6"
+    - 3.4
+    - 3.5
+    - 3.6
+
     
 before_install:
     - sudo mkdir -p /downloads
@@ -47,15 +49,20 @@ install:
     - export PATH="$HOME/miniconda/bin:$PATH"
     - hash -r
     - conda config --set always_yes yes --set changeps1 no
+    - conda config --add channels defaults
+    - conda config --add channels bioconda
+    - conda config --add channels conda-forge
     - conda update -q conda
+
     # Useful for debugging any issues with conda
     - conda info -a
 
     # Replace dep1 dep2 ... with your dependencies
     - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION pip
     - source activate test-environment
-    - conda install -n test-environment pyqt=4.11.4
-    - pip install -r requirements.txt
+    #- conda install -n test-environment pyqt=4.11.4
+    - conda install -n test-environment --yes --file requirements.txt
+    #- pip install -r requirements.txt
     - python setup.py install
     
     
