@@ -93,7 +93,7 @@ class HydroCluster(object):
 def compute_disstat(start, stop, clusters):
     """ compute the domain pvalue based on length, and clusters
     """
-    a, b, c = -10, 10, 9
+    a, b, c = -10, 9, 10
     size = stop - start
     N = size # 2 * size
     nb_cluster = len(clusters)
