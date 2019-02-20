@@ -22,15 +22,15 @@ def read_domainpos(query, positions):
     """
     domains = []
     if positions is None or positions == list():
-        if len(query.seq) == 1:
+        if isinstance(query.seq, str):
             # perform segmentation if it's only one sequence
-            seg = segmentation(str(query.seq[0]))
+            seg = segmentation(str(query.seq))
             for dom in seg["domain"]:
                 domains.append((dom.start, dom.stop))
         else:
             #use orphhca on multiple sequence alignments
             # TODO
-            print("Error, hca domain detection not yet implemented", file=sys.stderr)
+            print("Error, sequence ({}) not recognized for protein {}".format(query.name, query.seq), file=sys.stderr)
             sys.exit(1)
     elif positions[0] == "whole":
         # use the whole sequence
@@ -58,11 +58,11 @@ def hhblits_search(query, domains, database, parameters, workdir):
         # use sub part of sequence to search for targets
         pathquery = os.path.join(pathdom, "query_{}.fasta".format(i))
         with open(pathquery, "w") as outf:
-            for j, name in enumerate(query.name):
-                subseq = str(query.seq[j])[start: stop]
-                # IMPORTANT: the name of the sequence will be used as input for hhblits
-                # a regular expression is set on "Q query_" to catch input name
-                outf.write(">query_{} {} {}-{}\n{}\n".format(i, name, start+1, stop, subseq))
+            #for j, name in enumerate(query.name):
+            subseq = str(query.seq)[start: stop]
+            # IMPORTANT: the name of the sequence will be used as input for hhblits
+            # a regular expression is set on "Q query_" to catch input name
+            outf.write(">query_{} {} {}-{}\n{}\n".format(i, query.name, start+1, stop, subseq))
         # perform hhblits
         subtargets = targets_hhblits(pathquery, pathdom, database, parameters)
         alltargetids = alltargetids.union(set(subtargets.keys()))
@@ -82,11 +82,12 @@ def jackhmmer_like_search(query, domains, database, parameters, workdir):
         # use sub part of sequence to search for targets
         pathquery = os.path.join(pathdom, "query_{}.fasta".format(i))
         with open(pathquery, "w") as outf:
-            for j, name in enumerate(query.name):
-                subseq = str(query.seq[j])[start: stop]
-                # IMPORTANT: the name of the sequence will be used as input for hhblits
-                # a regular expression is set on "Q query_" to catch input name
-                outf.write(">query_{} {} {}-{}\n{}\n".format(i, name, start+1, stop, subseq))
+            #for j, name in enumerate(query.name):
+            #subseq = str(query.seq[j])[start: stop]
+            subseq = str(query.seq)[start: stop]
+            # IMPORTANT: the name of the sequence will be used as input for hhblits
+            # a regular expression is set on "Q query_" to catch input name
+            outf.write(">query_{} {} {}-{}\n{}\n".format(i, query.name, start+1, stop, subseq))
         # perform hhblits
         subtargets = targets_jackhmmer_like(pathquery, pathdom, database, parameters)
         alltargetids = alltargetids.union(set(subtargets.keys()))
@@ -193,11 +194,11 @@ def config_setup(path):
 def main():
     # main tremolo program
     params = get_cmd()
-
+    configuration = config_setup(params.configfile)
+    
     if not os.path.isdir(params.workdir):
         os.makedirs(params.workdir)
-
-    
+  
     # read input sequence
     inputquery = read_multifasta(params.inputfasta)
     names, seqs, descrs = list(), list(), list()
@@ -205,33 +206,86 @@ def main():
         names.append(inputquery[record].id)
         descrs.append(inputquery[record].description)
         seqs.append(str(inputquery[record].seq))
-    query = Seq(names, descrs, seqs, len(seqs[0]))
+    
+    if len(seqs) == 0:
+        print("Error, no fasta sequences found in inputfile {}".format(
+            params.inputfasta), sys.stder)
+        sys.exit(1)
+        
+    is_multifasta = False
+    if len(seqs) > 1:
+        is_multifasta = True
+    
+    # output for multifasta 
+    if is_multifasta :
+        if os.path.isfile(params.output):
+            print("Error, multifasta input file detected, output should be a directory", file=sys.stderr)
+            sys.exit(1)
+        else:
+            if not os.path.isdir(params.output):
+                os.makedirs(params.output)
+    
+    
+    # check domains positions
+    if params.domains is None or params.domains == list():
+        domains = [None] * len(seqs)
+    else:
+        if params.domains[0] == "whole":
+            domains = ["whole"] * len(seqs)
+        elif os.path.isfile(params.domains[0]):
+            with open(params.domains[0]) as inf:
+                prot2doms = dict()
+                for line in inf:
+                    tmp = line.split()
+                    prot2doms.setdefault(tmp[0], list()).append("{},{}".format(tmp[1], tmp[2]))
+            domains = []
+            for prot in names:
+                if prot in prot2doms:
+                    domains.append(prot2doms[prot])
+                else:
+                    print("Warning, protein {} not found in domain list file {}".format(prot, params.domains[0]), end=". ")
+                    print("Running HCA for this domain")
+                    domains.append(None)
+        else:
+            if not is_multifasta:
+                domains = params.domains[:]
+            else:
+                print("Error, a list of domain positions can only be specified "
+                      "along a fasta file with a single protein (multi protein "
+                      "sequences fasta file found)",  file=sys.stderr)
+                sys.exit(1)
+                
+    for i in range(len(seqs)):
+        query_workdir = os.path.join(params.workdir, "protein_{}".format(i+1))
+        if not os.path.isdir(query_workdir):
+            os.makedirs(query_workdir)
+            
+        query = Seq(names[i], descrs[i], seqs[i], len(seqs[i]))
+        # domains? whole sequence? segmentation?
+        domains = read_domainpos(query, domains[i])
+    
+        # perform search method on each selected parts
+        targets, alltargetids = search_domains(query, domains, params.targetdb, configuration, query_workdir)
+        if alltargetids == []:
+            print("Unable to find any targets with hhblits in database {}".format(params.hhblitsdb), file=sys.stderr)
+            print("with parameters {}".format(params.hhblitsparams), file=sys.stderr)
+            print("Please try less stringent parameters or a different database", file=sys.stderr)
+            with open(params.output, "w") as outf:
+                outf.write("# Unable to find any targets with hhblits in database {}\n".format(params.hhblitsdb))
+                outf.write("# with parameters {}\n".format(params.hhblitsparams))
+                outf.write("# Please try less stringent parameters or a different database\n")
 
-    # domains? whole sequence? segmentation?
-    domains = read_domainpos(query, params.domains)
+            sys.exit(0)
 
-    configuration = config_setup(params.configfile)
-    # perform search method on each selected parts
-    targets, alltargetids = search_domains(query, domains, params.targetdb, configuration, params.workdir)
-    if alltargetids == []:
-        print("Unable to find any targets with hhblits in database {}".format(params.hhblitsdb), file=sys.stderr)
-        print("with parameters {}".format(params.hhblitsparams), file=sys.stderr)
-        print("Please try less stringent parameters or a different database", file=sys.stderr)
-        with open(params.output, "w") as outf:
-            outf.write("# Unable to find any targets with hhblits in database {}\n".format(params.hhblitsdb))
-            outf.write("# with parameters {}\n".format(params.hhblitsparams))
-            outf.write("# Please try less stringent parameters or a different database\n")
+        # get domain from Interpro
+        annotation = interpro_search(alltargetids, query_workdir, params.p2ipr)
 
-        sys.exit(0)
+        # group by domain arrangement
+        groups = group_resda(targets, annotation)
 
-    # get domain from Interpro
-    annotation = interpro_search(alltargetids, params.workdir, params.p2ipr)
-
-    # group by domain arrangement
-    groups = group_resda(targets, annotation)
-
-    # write output
-    write_tremolo_results(query, domains, targets, annotation, groups, params.output)
+        # write output
+        output_file = os.path.join(params.output, "tremolo_output_{}.dat".format(i+1))
+        write_tremolo_results(query, domains, targets, annotation, groups, output_file)
 
     sys.exit(0)
 
