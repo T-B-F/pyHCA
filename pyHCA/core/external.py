@@ -22,7 +22,9 @@ def interpro_search(listofids, workdir, path_p2ipr):
         return local_interpro_search(listofids, path_p2ipr)
     else:
         #return web_interpro_search(listofids, workdir)
-        print("Web search not yet implemented")
+        print("Interpro web search not yet implemented, please use the local "
+              "interpro file available at "
+              "ftp://ftp.ebi.ac.uk/pub/databases/interpro/protein2ipr.dat.gz")
         sys.exit(1)
 
 #def read_annotation_sqlite3(uniprotids, path_p2ipr):
