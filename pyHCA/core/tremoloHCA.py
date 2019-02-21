@@ -246,6 +246,7 @@ def main():
                     print("Warning, protein {} not found in domain list file {}".format(prot, params.domains[0]), end=". ")
                     print("Running HCA for this domain")
                     domains.append(None)
+            assert len(domains) == len(seqs), "Error, the number of domain found is different than the number of sequence"
         else:
             if not is_multifasta:
                 domains = params.domains[:]
@@ -256,7 +257,7 @@ def main():
                 sys.exit(1)
                 
     for i in range(len(seqs)):
-        query_workdir = os.path.join(params.workdir, "protein_{}".format(i+1))
+        query_workdir = os.path.join(params.workdir, "workdir_protein_{}".format(i+1))
         if not os.path.isdir(query_workdir):
             os.makedirs(query_workdir)
             
