@@ -258,26 +258,28 @@ def main():
                 
     for i in range(len(seqs)):
         query_workdir = os.path.join(params.workdir, "workdir_protein_{}".format(i+1))
+        output_file = os.path.join(params.output, "tremolo_output_{}.dat".format(i+1))
+        
         if not os.path.isdir(query_workdir):
             os.makedirs(query_workdir)
             
         query = Seq(names[i], descrs[i], seqs[i], len(seqs[i]))
         # domains? whole sequence? segmentation?
-        domains = read_domainpos(query, domains[i])
+        positions = read_domainpos(query, domains[i])
     
         # perform search method on each selected parts
-        targets, alltargetids = search_domains(query, domains, params.targetdb, configuration, query_workdir)
+        targets, alltargetids = search_domains(query, positions, params.targetdb, configuration, query_workdir)
         if alltargetids == []:
-            print("Unable to find any targets with hhblits in database {}".format(params.hhblitsdb), file=sys.stderr)
-            print("with parameters {}".format(params.hhblitsparams), file=sys.stderr)
+            print("Unable to find any targets with hhblits in database {}".format(params.targetdb), file=sys.stderr)
+            #print("with parameters {}".format(params.hhblitsparams), file=sys.stderr)
             print("Please try less stringent parameters or a different database", file=sys.stderr)
-            with open(params.output, "w") as outf:
-                outf.write("# Unable to find any targets with hhblits in database {}\n".format(params.hhblitsdb))
-                outf.write("# with parameters {}\n".format(params.hhblitsparams))
+            with open(output_file, "w") as outf:
+                outf.write("# Unable to find any targets with hhblits in database {}\n".format(params.targetdb))
+                #outf.write("# with parameters {}\n".format(params.hhblitsparams))
                 outf.write("# Please try less stringent parameters or a different database\n")
-
+        
             sys.exit(0)
-
+        
         # get domain from Interpro
         annotation = interpro_search(alltargetids, query_workdir, params.p2ipr)
 
@@ -285,8 +287,7 @@ def main():
         groups = group_resda(targets, annotation)
 
         # write output
-        output_file = os.path.join(params.output, "tremolo_output_{}.dat".format(i+1))
-        write_tremolo_results(query, domains, targets, annotation, groups, output_file)
+        write_tremolo_results(query, positions, targets, annotation, groups, output_file)
 
     sys.exit(0)
 
