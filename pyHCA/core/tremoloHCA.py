@@ -298,6 +298,9 @@ def main():
 
     sys.exit(0)
 
+def foobar():
+    print("pwet")
+
 if __name__ == "__main__":
     main()
 
