@@ -3,7 +3,7 @@
 import os, sys
 from setuptools import setup, find_packages
 
-__version__ = "0.1"
+__version__ = "0.5"
 
 
 if sys.version_info < (3,4):
