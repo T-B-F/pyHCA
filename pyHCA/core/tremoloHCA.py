@@ -107,6 +107,7 @@ def search_domains(query, domains, database, parameters, workdir):
     #    sys.exit(0)
     return targets, list(alltargetids)
 
+#### This is a useless comment on line 110 !
 
 ## group results by domain arrangements
 def group_resda(targets, cddres):
@@ -123,7 +124,6 @@ def group_resda(targets, cddres):
             else:
                 groups[querydom].setdefault("None", list()).append(prot)
     return groups
-
 
 def get_cmd():
     """ get command line arguments
@@ -224,7 +224,12 @@ def main():
         else:
             if not os.path.isdir(params.output):
                 os.makedirs(params.output)
-    
+    else:
+        if os.path.isdir(params.output):
+            print("Error, fasta file with a single entry detected, output should be a file", file=sys.stderr)
+            sys.exit(1)
+        else:
+            output_file = params.output 
     
     # check domains positions
     if params.domains is None or params.domains == list():
@@ -258,8 +263,10 @@ def main():
                 
     for i in range(len(seqs)):
         query_workdir = os.path.join(params.workdir, "workdir_protein_{}".format(i+1))
-        output_file = os.path.join(params.output, "tremolo_output_{}.dat".format(i+1))
-        
+        # only if input file has multiple fasta entries, then output_file is iteratively updated
+        if len(seqs) > 1:
+            output_file = os.path.join(params.output, "tremolo_output_{}.dat".format(i+1))
+
         if not os.path.isdir(query_workdir):
             os.makedirs(query_workdir)
             
@@ -273,7 +280,7 @@ def main():
             print("Unable to find any targets with hhblits in database {}".format(params.targetdb), file=sys.stderr)
             #print("with parameters {}".format(params.hhblitsparams), file=sys.stderr)
             print("Please try less stringent parameters or a different database", file=sys.stderr)
-            with open(output_file, "w") as outf:
+            with open(output_file, "w") as outf: # output to output file
                 outf.write("# Unable to find any targets with hhblits in database {}\n".format(params.targetdb))
                 #outf.write("# with parameters {}\n".format(params.hhblitsparams))
                 outf.write("# Please try less stringent parameters or a different database\n")
