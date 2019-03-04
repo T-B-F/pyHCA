@@ -11,19 +11,7 @@ class TestSegHCA(unittest.TestCase):
     
     def setUp(self):
         self.check_sequence = "NGRHTGFGRTCCDKGADHLKGEGHCCITLAKRGYFPCEPWCTLLFALNMFNMQNMMRQQFSDDHNNMGRLCQQTTHRFPFNSDNKEEYIWLYKVQRLGAW"
-        #self.check_domains = {0: [26, 70, 0.0004118383429020378],
-        #                      1: [87, 100, np.nan]}
-        self.check_domains = {0: [6, 100, 0.0022]}
-        #self.check_clusters = {0: [ 6,  7,  np.array([1])],
-        #                       1: [18, 19,  np.array([1])],
-        #                       2: [26, 29,  np.array([1, 0, 1])],
-        #                       3: [33, 35,  np.array([1, 1])],
-        #                       4: [39, 60,  np.array([1, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1])],
-        #                       5: [66, 70,  np.array([1, 0, 0, 1])],
-        #                       6: [77, 78,  np.array([1])],
-        #                       7: [79, 80,  np.array([1])],
-        #                       8: [87, 100, np.array([1, 1, 1, 1, 1, 0, 1, 0, 0, 1, 0, 0, 1])],
-        #                       }
+        self.check_domains = {0: [6, 100, 0.0022]}        
         self.check_clusters = {0: [ 6, 12,  np.array([1, 0, 0, 0, 1, 1])],
                                1: [18, 19,  np.array([1])],
                                2: [24, 29,  np.array([1, 1, 1, 0, 1])],
