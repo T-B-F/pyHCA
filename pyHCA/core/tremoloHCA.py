@@ -193,6 +193,8 @@ def config_setup(path):
 def main():
     # main tremolo program
     params = get_cmd()
+    
+    print(params.domains)
 
     if not os.path.isdir(params.workdir):
         os.makedirs(params.workdir)
