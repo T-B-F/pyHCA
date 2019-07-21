@@ -256,8 +256,10 @@ def read_hcadomain(inputfile):
     annotation = dict()
     with open(inputfile) as inf:
         for line in inf:
-            if line[0] == ">":
-                prot, size = line[1:-1].split()
+            if line[0] == "#" or line[0] == " " or line[0] == "\n":
+                continue
+            elif line[0] == ">":
+                prot, size, score= line[1:-1].split()
                 annotation[prot] = []
             else:
                 tmp = line.split()

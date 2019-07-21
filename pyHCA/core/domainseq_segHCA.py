@@ -23,7 +23,7 @@ def domain_sequence(inputf, domainf, outputf, verbose=False):
             seq = str(sequence.seq)
             for i, domain in enumerate(annotation.get(prot, [])):
                 start, stop = domain[:2]
-                outf.write(">{}-{}\n{}\n".format(prot, i, seq[start: stop]))
+                outf.write(">{}-{} {}-{}\n{}\n".format(prot, i, start+1, stop, seq[start: stop]))
 
 def _process_params():
     """ Process parameters when the script annotateHCA is directly called
