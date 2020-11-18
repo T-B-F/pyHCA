@@ -2,6 +2,7 @@ numpy
 scipy
 biopython>=1.68
 scikit-learn>=0.19
+joblib
 requests
 six
 ete3
