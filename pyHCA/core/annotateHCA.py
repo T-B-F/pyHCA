@@ -685,7 +685,9 @@ def _findAccurateLimit(limit_domain, keepCluster, seq, final_only = False):
             #print(start, stop, hstart, hstop)
             if start <= hstart and hstop <= stop:
                 hydro_dom.append(hydroclust)
-        final_domains.append(DomHCA(start, stop, hydro_dom))
+        dom_hca = DomHCA(start, stop)
+        dom_hca.compute_pvalue(hydro_dom, seq)
+        final_domains.append(dom_hca)
     return final_domains
     
         
@@ -907,7 +909,7 @@ def _annotation_aminoacids(seq, t=0.1, method="domain", return_seqbin=False, ver
         #list_of_group = _clusterizeCluster(seqbin)
         # get limits
         #print(list_of_group)
-        domains = _findAccurateLimit(limit_domain, keepCluster, seqamas, final_only=True)
+        domains = _findAccurateLimit(limit_domain, keepCluster, seqori, final_only=True)
         #compute_pvalues_domains(domains)
         annotat["domain"] = domains
     

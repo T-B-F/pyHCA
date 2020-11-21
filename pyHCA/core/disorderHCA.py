@@ -20,6 +20,7 @@ def prepare_sequence(seq):
     hcadomains  = hcaprot.get_domains()
     return  hcadomains, hcaclusters
 
+
 polar = ["R", "K", "N", "D", "E", "Q"]
 def compute_features2(seq, domains, clusters, AA_sorted):
     """ list of features:

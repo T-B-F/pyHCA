@@ -24,6 +24,26 @@ class Seq(object):
         self.descr = description
         self.seq = seq
 
+hca_score_weights ={
+'a_A': 1.0, 'a_C': 8.0, 'a_D': 0.0, 'a_E': 5.0, 
+'a_F': -2.0, 'a_G': 3.0, 'a_H': -10.0, 'a_I': 10.0, 
+'a_K': 5.0, 'a_L': 7.0, 'a_M': 8.0, 'a_N': 6.0, 
+'a_P': 1.0, 'a_Q': 3.0, 'a_R': -3.0, 'a_S': 3.0,
+'a_T': -6.0, 'a_V': 10.0, 'a_W': 4.0, 'a_X': -7.0, 
+'a_Y': 2.0, 
+'b_A': -8.0, 'b_C': -8.0, 'b_D': -10.0, 'b_E': -10.0, 
+'b_F': -10.0, 'b_G': 5.0, 'b_H': 9.0, 'b_I': -10.0, 
+'b_K': -5.0, 'b_L': 0.0, 'b_M': 9.0, 'b_N': 6.0, 
+'b_P': -8.0, 'b_Q': -2.0, 'b_R': -1.0, 'b_S': -4.0, 
+'b_T': 1.0, 'b_V': -8.0, 'b_W': -10.0, 'b_X': 9.0, 
+'b_Y': -9.0, 
+'c_A': -1.0, 'c_C': 7.0, 'c_D': 6.0, 'c_E': -3.0, 
+'c_F': 2.0, 'c_G': 6.0, 'c_H': 8.0, 'c_I': 4.0, 
+'c_K': -1.0, 'c_L': -8.0, 'c_M': 9.0, 'c_N': -7.0, 
+'c_P': 0.0, 'c_Q': -8.0, 'c_R': -7.0, 'c_S': 1.0, 
+'c_T': 4.0, 'c_V': 7.0, 'c_W': -10.0, 'c_X': -10.0,
+'c_Y': 7.0}
+
 PDB_SEQRES_FREQ = {
 "A":       0.0859929227395,
 "C":       0.0206946259759,
@@ -90,19 +110,29 @@ class HydroCluster(object):
             raise ValueError("Unknown argument for function "
                              "HydroCluster.get({}".format(method))
 
-def compute_disstat(start, stop, clusters):
+def compute_disstat(start, stop, clusters, seq):
     """ compute the domain pvalue based on length, and clusters
     """
-    a, b, c = -10, 9, 10
+    #a, b, c = -10, 9, 10
     size = stop - start
     N = size # 2 * size
     nb_cluster = len(clusters)
     cov = np.zeros(size)
-    cov.fill(a)
+    #cov.fill(a)
+    for i in range(size):
+        aa = seq[start + i]
+        cov[i] = hca_score_weights["a_{}".format(aa)]
+
     for clust in clusters:
         if len(clust.hydro_cluster) > 2:
-            cov[clust.start - start: clust.stop - start] = \
-                [b if clust.hydro_cluster[i] == 1 else c for i in range(len(clust.hydro_cluster))]
+            offset = clust.start - start
+            for i in range(len(clust.hydro_cluster)):
+                if clust.hydro_cluster[i] == 1:
+                    cov[offset + 1] = hca_score_weights["b_{}".format(aa)]
+                else:
+                    cov[offset + 1] = hca_score_weights["c_{}".format(aa)]
+            #cov[clust.start - start: clust.stop - start] = \
+            #    [b if clust.hydro_cluster[i] == 1 else c for i in range(len(clust.hydro_cluster))]
     score = sum(cov) / size
     score = score
 
@@ -122,13 +152,18 @@ class DomHCA(object):
     """
     __slots__ = ["__start", "__stop", "__pvalue", "__score"]
  
-    def __init__(self, start, stop, clusters): #, list_of_hcclusters):
+    def __init__(self, start, stop): #, list_of_hcclusters):
         self.__start = start
         self.__stop = stop
         self.__score = np.nan 
-        self.__pvalue = self._compute_pvalue(clusters)
         if stop - start < 30:
             self.__pvalue = np.nan
+
+    def compute_pvalue(self, clusters, sequence):
+        if self.__stop - self.__start < 30:
+            self.__pvalue = np.nan
+        else:
+            self.__pvalue = self._compute_pvalue(clusters, sequence)
         
         #self.__clusters = list_of_hcclusters[:]
     @property
@@ -197,8 +232,8 @@ class DomHCA(object):
 
     #    return P 
 
-    def _compute_pvalue(self, clusters):
-        score, pval = compute_disstat(self.start, self.stop, clusters)
+    def _compute_pvalue(self, clusters, sequence):
+        score, pval = compute_disstat(self.start, self.stop, clusters, sequence)
         self.__score = score
         return pval
 
