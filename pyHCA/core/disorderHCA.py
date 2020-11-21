@@ -4,7 +4,8 @@
 
 import os, sys, argparse
 import numpy as np
-from sklearn.externals import joblib
+#from sklearn.externals import joblib
+import joblib
 from pyHCA import HCA 
 from pyHCA.core.seq_util import transform_seq, check_if_msa
 

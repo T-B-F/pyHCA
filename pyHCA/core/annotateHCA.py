@@ -983,7 +983,7 @@ def _annotation(output, inputf, seq_type="aminoacid", t=0.1, method="domain", ve
                 #sequence = str(dseq[prot].seq)
                 annotations = _annotation_aminoacids(sequence, t=t, method=method, verbose=verbose)
                 score, pvalue = compute_disstat(0, len(sequence), annotations["cluster"])
-                outf.write(">{} {} {:.3f}\n".format(prot, len(sequence), score))
+                outf.write(">{} {} {:.3f} {:.3f}\n".format(prot, len(sequence), pvalue, score))
                 for domannot in annotations["domain"]:
                     outf.write("{}\n".format(str(domannot)))
                 for clustannot in annotations["cluster"]:

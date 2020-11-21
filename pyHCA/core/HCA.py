@@ -13,7 +13,10 @@ import time, os, tempfile, sys
 import Bio
 from Bio import Seq 
 from Bio import SeqIO
-from Bio.Alphabet import IUPAC
+try:
+    from Bio.Alphabet import IUPAC
+except:
+    from Bio.Data import IUPACData as IUPAC
 import numpy as np
 import warnings
 import functools
@@ -630,7 +633,10 @@ def check_if_msa(querynames, sequences):
     """
     msa_length, msa_seq, new_sequences = list(), list(), list()
     is_msa = False
-    prot_alphabet = set(IUPAC.protein.letters)
+    if hasattr(IUPAC, "protein"):
+        prot_alphabet = set(IUPAC.protein.letters)
+    else:
+        prot_alphabet = set(IUPAC.protein_letters)
     gaps = set(["-", "."])
     for i, seq in enumerate(sequences):
         new_seq = ""
