@@ -17,6 +17,7 @@ try:
     from Bio.Alphabet import IUPAC
 except:
     from Bio.Data import IUPACData as IUPAC
+
 import numpy as np
 import warnings
 import functools
