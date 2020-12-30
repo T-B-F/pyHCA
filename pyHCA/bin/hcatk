@@ -24,10 +24,10 @@ hcatk is a script to perform various hca taks
 """
 
 __author__  = "Tristan Bitard-Feildel"
-__email__   = "tristan.bitard.feildel@upmc.fr"
-__year__    = 2016
+__email__   = "isabelle.callebaut@upmc.fr"
+__year__    = 2020
 __licence__ = "MIT"
-__version__ = 0.1
+__version__ = 0.9
 
 import sys
 
