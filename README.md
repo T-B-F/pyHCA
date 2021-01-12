@@ -7,7 +7,7 @@ hcatk provides off the hands set of program to perform hydrophobic cluster analy
 Requires
 ========
 
-- python3      >= 3.5
+- python3      >= 3.6
 - Biopython    >= 1.65
 - scipy        >= 1.0
 - numpy        >= 1.14
@@ -38,6 +38,7 @@ A Dockerfile is also available to install the executable inside a container:
 
     docker build -t hcatk .
     docker run hcatk -h
+    docker run --rm -v /path/to/data:/data hcatk draw -i /data/orc1.fasta -o /data/orc1_output.svg
 
 
 Currently ete3/PyQt4 don't seem to be properly installed using this method, therefore the 'domOnTree' is not available if hcatk is built using docker.
@@ -60,7 +61,7 @@ on Linux (64 bits installer)
 
 create a virtual environment and switch to the environment
 
-    conda create -n test_pyHCA python=3.5 pip
+    conda create -n test_pyHCA python=3.6 pip
     source activate test_pyHCA
     
 and install pyqt4 before running pyHCA installer
